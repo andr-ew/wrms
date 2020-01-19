@@ -13,10 +13,6 @@ function init()
   softcut.level_input_cut(2, 2, 1.0)
   softcut.level_input_cut(1, 3, 1.0)
   softcut.level_input_cut(2, 4, 1.0)
-  softcut.enable(1,1)
-  softcut.enable(2,1)
-  softcut.enable(3,1)
-  softcut.enable(4,1)
   softcut.buffer(1,1)
   softcut.buffer(2,2)
   softcut.buffer(3,1)
@@ -28,6 +24,7 @@ function init()
   softcut.pan(4, 1)
   
   for i = 1,4 do
+    softcut.enable(i, 1)
     softcut.loop(i, 1)
     softcut.fade_time(i, 0.1)
     softcut.rec_level(i, 1)
@@ -205,7 +202,7 @@ wrms_pages = {
       event = function(v, t) end
     },
     k3 = {
-      worm = 1,
+      worm = "both",
       label = "share",
       value = 0,
       behavior = "toggle",

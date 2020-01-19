@@ -68,8 +68,8 @@ function wrms_key(n,z)
 end
 
 function wrms_redraw()
-  -- pager
   
+  -- pager
   for i,v in ipairs(wrms_pages) do
     screen.move(128 - 4, i * 7)
     screen.level(get_page_n() == i and 8 or 2)
@@ -95,7 +95,7 @@ function wrms_redraw()
     screen.move(2 + ex[i] * 29, 44)
     screen.level(4)
     screen.text(v.label)
-    screen.move(2 + (ex[i] * 29) + ((string.len(v.label) + 1) * 5), 44)
+    screen.move(2 + (ex[i] * 29) + ((string.len(v.label) + 0.5) * 5), 44)
     screen.level(10)
     screen.text(v.value)
   end
