@@ -31,26 +31,32 @@ wrms_loops = {
 }
 
 function wrms_init()
+  for i,v in ipairs(wrms_pages) do
+  end
 end
 
 function wrms_enc(n, delta)
-  if n == 1 then
-    if delta > 0 then
-      wrms_page_n = wrms_page_n + ((get_page_n() == #wrms_pages) and 0 or 0.5)
-    else
-      wrms_page_n = wrms_page_n - ((get_page_n() == 1) and 0 or 0.25)
-    end
+  if n == 1 then wrms_page_n = util.clamp(wrms_page_n + (util.clamp(delta, -1, 1) * 0.25), 1, #wrms_pages)
   else
-    
+    local e = wrms_pages[get_page_n()]["e" .. n]
+    e.value = util.clamp(e.value + (delta * (e.sens == nil and wrms_sens or e.sens)), e.range[1], e.range[2])
   end
 end
 
 function wrms_key(n,z)
   if n == 1 then
   else
+    local k = wrms_pages[get_page_n()]["k" .. n]
+    
     if z == 1 then
+      k.time = util.time()
+      if k.behavior == "momentary" then k.value = 1 end
     else
+      if k.behavior == "momentary" then k.value = 0
+      elseif k.behavior == "toggle" then k.value = k.value == 0 and 1 or 0
+      elseif k.behavior == "enum" then k.value = k.value == #k.label and 1 or k.value + 1 end
       
+      k.event(k.value, util.time() - k.time)
     end
   end
 end
@@ -78,7 +84,6 @@ function wrms_redraw()
   end
   
   -- enc
-  
   local ex = get_x_pos(wrms_pages[get_page_n()].e2.worm, wrms_pages[get_page_n()].e3.worm)
   for i,v in ipairs({ wrms_pages[get_page_n()].e2, wrms_pages[get_page_n()].e3 }) do
     screen.move(2 + ex[i] * 29, 44)
@@ -102,5 +107,4 @@ function wrms_redraw()
       screen.text(v.label)
     end
   end
-  
 end
