@@ -98,7 +98,7 @@ wrms_pages = {
       event = function(v) end
     },
     e3 = {
-      worm = 2,
+      worm = "both",
       label = "wgl",
       value = 0.0,
       range = { 0.0, 10.0 },
