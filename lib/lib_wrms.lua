@@ -32,6 +32,12 @@ wrms_loops = {
 
 function wrms_init()
   for i,v in ipairs(wrms_pages) do
+    for j,w in ipairs({ v.e2, v.e3 }) do
+      w.event(w.value)
+    end
+    for j,w in ipairs({ v.k2, v.k3 }) do
+      if w.behavior ~= "momentary" then w.event(w.value) end
+    end
   end
 end
 
