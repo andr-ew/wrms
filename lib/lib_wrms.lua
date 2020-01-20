@@ -12,7 +12,7 @@ wrms_loop = {
     region_start = 200,
     region_end = 300,
     loop_start = 200,
-    loop_end = 230,
+    loop_end = 30,
     wrm_wgl = 0.2,
     wrm_bend = 0,
     wrm_lvl = 0
@@ -64,6 +64,7 @@ function wrms_key(n,z)
       elseif k.behavior == "enum" then k.value = k.value == #k.label and 1 or k.value + 1 end
       
       k.event(k.value, util.time() - k.time)
+      k.time = nil
     end
   end
 end
