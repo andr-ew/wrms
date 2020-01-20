@@ -5,20 +5,20 @@ local get_page_n = function() return math.floor(wrms_page_n) end
 
 wrms_pages = {}
 
-wrms_loops = {
+wrms_loop = {
   {
-    is_punch_in = false,
-    has_initial = false,
-    region_start = 0,
-    region_end = 200,
-    loop_start = 0,
-    loop_end = 0,
+    punch_in_time = nil,
+    has_initial = true,
+    region_start = 200,
+    region_end = 300,
+    loop_start = 200,
+    loop_end = 230,
     wrm_wgl = 0.2,
     wrm_bend = 0,
     wrm_lvl = 0
   },
   {
-    is_punch_in = false,
+    punch_in_time = nil,
     has_initial = false,
     region_start = 0,
     region_end = 200,
@@ -36,7 +36,7 @@ function wrms_init()
       w.event(w.value)
     end
     for j,w in ipairs({ v.k2, v.k3 }) do
-      if w.behavior ~= "momentary" then w.event(w.value) end
+      if w.behavior ~= "momentary" then w.event(w.value, 0) end
     end
   end
 end
@@ -46,6 +46,7 @@ function wrms_enc(n, delta)
   else
     local e = wrms_pages[get_page_n()]["e" .. n]
     e.value = util.clamp(e.value + (delta * (e.sens == nil and wrms_sens or e.sens)), e.range[1], e.range[2])
+    e.event(e.value)
   end
 end
 

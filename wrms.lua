@@ -7,6 +7,8 @@ include 'wrms/lib/lib_wrms'
 function init()
   wrms_init()
   
+  -- softcut initial settings
+  
   audio.level_adc_cut(1)
   audio.level_eng_cut(1)
   softcut.level_input_cut(1, 1, 1.0)
@@ -31,51 +33,123 @@ function init()
     softcut.position(i, 0)
   end
   
+  softcut.play(1, 1)
+  softcut.play(2, 1)
+  
+  softcut.loop_start(3, 0)
+  softcut.loop_start(4, 0)
+  
+  softcut.pre_level(1, 0)
+  softcut.pre_level(2, 0)
+  
   redraw()
 end
 
-wrms_pages = {
+wrms_pages = { -- ordered pages of visual controls and actions (event callback functions)
   {
     label = "v",
-    e2 = {
+    e2 = { -- wrm 1 volume
       worm = 1,
       label = "vol",
       value = 1.0,
       range = { 0.0, 2.0 },
-      event = function(v) end
+      event = function(v) 
+        softcut.level(1, v)
+        softcut.level(2, v)
+      end
     },
-    e3 = {
+    e3 = { -- wrm 2 volume
       worm = 2,
       label = "vol",
       value = 1.0,
       range = { 0.0, 2.0 },
-      event = function(v) end
+      event = function(v) 
+        softcut.level(3, v)
+        softcut.level(4, v)
+      end
     },
-    k2 = {
+    k2 = { -- wrm 2 record toggle
       worm = 1,
       label = "rec",
       value = 1,
       behavior = "toggle",
-      event = function(v, t) end
+      event = function(v, t)
+        if t < 2 then -- if short press toggle record
+          softcut.rec(1, v)
+          softcut.rec(2, v)
+        else -- else long press clears loop region
+          softcut.rec(1, 0)
+          softcut.rec(2, 0)
+          
+          softcut.buffer_clear_region(wrms_loop[1].region_start, wrms_loop[1].region_end)
+        end
+      end
     },
-    k3 = {
+    k3 = { -- wrm 2 record toggle + loop punch-in
       worm = 2,
       label = "rec",
       value = 0,
       behavior = "toggle",
-      event = function(v, t) end
+      event = function(v, t)
+        if t < 2 then -- if short press
+          if wrms_loop[2].has_initial then -- if inital loop has been recorded, toggle recording (/ overdub)
+            softcut.rec(3, v)
+            softcut.rec(4, v)
+          elseif wrms_loop[2].punch_in_time ~= nil then -- else if inital loop is being punched in, stop punch-in (stop recording, set loop points to punch-in time)
+            softcut.rec(3, 0)
+            softcut.rec(4, 0)
+            
+            local lt = util.clamp(util.time() - wrms_loop[2].punch_in_time, 0, 200) -- loop duration = now - when we punched-in
+            wrms_loop[2].region_end = lt
+            wrms_loop[2].loop_end = lt
+            softcut.loop_end(3, lt)
+            softcut.loop_end(4, lt)
+            
+            -- softcut.position(3, 0)
+            -- softcut.position(4, 0)
+            
+            wrms_loop[2].has_initial = true
+          else -- else start loop punch-in (start recording, set loop points to max)
+            wrms_loop[2].region_end = 200
+            wrms_loop[2].loop_end = 200
+            softcut.loop_end(3, 200)
+            softcut.loop_end(4, 200)
+            
+            softcut.rec(3, 1)
+            softcut.rec(4, 1)
+            softcut.play(3, 1)
+            softcut.play(4, 1)
+            
+            wrms_loop[2].punch_in_time = util.time()
+          end
+        else -- else long press clears loop region, resets loop points
+          softcut.rec(3, 0)
+          softcut.rec(4, 0)
+          softcut.play(3, 0)
+          softcut.play(4, 0)
+          
+          wrms_loop[2].punch_in_time = nil
+          wrms_loop[2].has_initial = false
+        
+          softcut.buffer_clear_region(wrms_loop[1].region_start, wrms_loop[1].region_end)
+        end
+      end
     }
   },
   {
     label = "o",
-    e2 = {
+    e2 = { -- wrm 1 old volume (using level_cut_cut)
       worm = 1,
       label = "old",
       value = 0.5,
       range = { 0.0, 1.0 },
-      event = function(v) end
+      event = function(v)
+        if wrms_pages[6].k2 == 1 then -- if ping-pong is enabled (from '>' page)
+        else
+        end
+      end
     },
-    e3 = {
+    e3 = { -- wrm 2 old volume (using pre_level)
       worm = 2,
       label = "old",
       value = 1.0,
@@ -103,14 +177,14 @@ wrms_pages = {
     },
     k2 = {
       worm = 2,
-      label = "x0.5",
+      label = "<<",
       value = 0,
       behavior = "momentary",
       event = function(v, t) end
     },
     k3 = {
       worm = 2,
-      label = "x2",
+      label = ">>",
       value = 0,
       behavior = "momentary",
       event = function(v, t) end
