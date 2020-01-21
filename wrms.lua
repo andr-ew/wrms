@@ -6,42 +6,35 @@
 include 'wrms/lib/lib_wrms'
 
 function init()
-  wrms_init()
   
   -- softcut initial settings
+  softcut.buffer_clear()
   
   audio.level_adc_cut(1)
   audio.level_eng_cut(1)
-  softcut.level_input_cut(1, 1, 1.0)
-  softcut.level_input_cut(2, 2, 1.0)
-  softcut.level_input_cut(1, 3, 1.0)
-  softcut.level_input_cut(2, 4, 1.0)
-  softcut.buffer(1,1)
-  softcut.buffer(2,2)
-  softcut.buffer(3,1)
-  softcut.buffer(4,2)
   
-  softcut.pan(1, -1)
-  softcut.pan(2, 1)
-  softcut.pan(3, -1)
-  softcut.pan(4, 1)
-  
-  for i = 1,4 do
-    softcut.enable(i, 1)
-    softcut.loop(i, 1)
-    softcut.fade_time(i, 0.1)
-    softcut.rec_level(i, 1)
-    softcut.position(i, 0)
+  for h, i in ipairs({ 0, 2 }) do
+    softcut.play(h, 1)
+    softcut.pre_level(h, 0.0)
+    softcut.rate_slew_time(h, 0.2)
+    softcut.rec_level(h + 2, 1.0)
+    
+    for j = 1,2 do
+      softcut.enable(i + j, 1)
+      softcut.loop(i + j, 1)
+      softcut.fade_time(i + j, 0.1)
+      
+      softcut.level_input_cut(j, i + j, 1.0)
+      softcut.buffer(i + j,j)
+      softcut.pan(i + j, j == 1 and -1 or 1)
+      
+      softcut.loop_start(i+j, wrms_loop[j].loop_start)
+      softcut.loop_start(i+j, wrms_loop[j].loop_end)
+      softcut.position(i+j, wrms_loop[j].loop_start)
+    end
   end
   
-  softcut.play(1, 1)
-  softcut.play(2, 1)
-  
-  softcut.loop_start(3, 0)
-  softcut.loop_start(4, 0)
-  
-  softcut.pre_level(1, 0)
-  softcut.pre_level(2, 0)
+  wrms_init()
   
   redraw()
 end
@@ -75,12 +68,14 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       value = 1,
       behavior = "toggle",
       event = function(v, t)
-        if t < 2 then -- if short press toggle record
+        if t < 1 then -- if short press toggle record
           softcut.rec(1, v)
           softcut.rec(2, v)
         else -- else long press clears loop region
           softcut.rec(1, 0)
           softcut.rec(2, 0)
+          
+          wrms_pages[1].k2.value = 0
           
           softcut.buffer_clear_region(wrms_loop[1].region_start, wrms_loop[1].region_end)
         end
@@ -92,10 +87,12 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       value = 0,
       behavior = "toggle",
       event = function(v, t)
-        if t < 2 then -- if short press
+        if t < 1 then -- if short press
           if wrms_loop[2].has_initial then -- if inital loop has been recorded
             softcut.rec(3, v) -- toggle recording
             softcut.rec(4, v)
+            
+            print("toggle")
           elseif wrms_loop[2].punch_in_time ~= nil then -- else if inital loop is being punched in, punch out
             softcut.rec(3, 0) -- stop recording but keep playing
             softcut.rec(4, 0)
@@ -106,15 +103,18 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
             softcut.loop_end(3, lt)
             softcut.loop_end(4, lt)
             
-            -- softcut.position(3, 0)
-            -- softcut.position(4, 0)
+            -- softcut.position(3, wrms_loop[2].loop_start)
+            -- softcut.position(4, wrms_loop[2].loop_start)
             
             wrms_loop[2].has_initial = true -- this is how we know we're done with the punch-in
+            
           elseif v == 1 then -- else start loop punch-in
-            wrms_loop[2].region_end = 200 -- set loop end to max
-            wrms_loop[2].loop_end = 200
-            softcut.loop_end(3, 200)
-            softcut.loop_end(4, 200)
+            wrms_loop[2].region_end = 201 -- set loop end to max
+            wrms_loop[2].loop_end = 201
+            softcut.loop_end(3, 201)
+            softcut.loop_end(4, 201)
+            softcut.position(3, wrms_loop[2].loop_start)
+            softcut.position(4, wrms_loop[2].loop_start)
             
             softcut.rec(3, 1) -- start recording
             softcut.rec(4, 1)
@@ -140,19 +140,14 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
   },
   {
     label = "o",
-    e2 = { -- wrm 1 old volume (using level_cut_cut)
+    e2 = { -- wrm 1 old volume (using rec_level)
       worm = 1,
       label = "old",
       value = 0.5,
       range = { 0.0, 1.0 },
       event = function(v)
-        if wrms_pages[6].k2.value == 1 then -- if ping-pong is enabled (from '>' page)
-          softcut.level_cut_cut(1, 2, v)
-          softcut.level_cut_cut(2, 1, v)
-        else -- else (ping-pong is not enabled)
-          softcut.level_cut_cut(1, 1, v)
-          softcut.level_cut_cut(2, 2, v)
-        end
+        softcut.rec_level(1, v)
+        softcut.rec_level(2, v)
       end
     },
     e3 = { -- wrm 2 old volume (using pre_level)
@@ -161,8 +156,8 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       value = 1.0,
       range = { 0.0, 1.0 },
       event = function(v) 
-        softcut.pre_level(3,  1 - v) -- pre-level = inverted value
-        softcut.pre_level(4,  1 - v)
+        softcut.pre_level(3,  v)
+        softcut.pre_level(4,  v)
       end
     },
     k2 = {},
@@ -174,8 +169,11 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       worm = 1,
       label = "bnd",
       value = 1.0,
-      range = { 0.0, 2.0 },
-      event = function(v) end
+      range = { 1, 2.0 },
+      event = function(v) 
+        softcut.rate(1, 2^v)
+        softcut.rate(2, 2^v)
+      end
     },
     e3 = {
       worm = "both",
@@ -207,9 +205,9 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       value = 0.0,
       range = { 0.0, 1.0 },
       event = function(v) 
-        wrms_pages[4].e2.range[2] = wrms_loop[1].region_start - wrms_loop[1].region_end -- set encoder range
+        wrms_pages[4].e2.range[2] = wrms_loop[1].region_end - wrms_loop[1].region_start -- set encoder range
         
-        wrms_loop[1].loop_start = v + wrms_loop[1].region_start -- set start point
+        wrms_loop[1].loop_start = v + wrms_loop[1].region_start + 1 -- set start point
         softcut.loop_start(1, wrms_loop[1].loop_start)
         softcut.loop_start(2, wrms_loop[1].loop_start)
       end
@@ -220,9 +218,9 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       value = 0.3,
       range = { 0.0, 1.0 },
       event = function(v) 
-        wrms_pages[4].e3.range[2] = wrms_loop[1].region_start - wrms_loop[1].region_end -- set encoder range
+        wrms_pages[4].e3.range[2] = wrms_loop[1].region_end - wrms_loop[1].region_start -- set encoder range
         
-        wrms_loop[1].loop_end = v + wrms_loop[1].loop_start + wrms_loop[1].region_start -- set loop end from length
+        wrms_loop[1].loop_end = v + wrms_loop[1].loop_start + 1 -- set loop end from length
         softcut.loop_end(1, wrms_loop[1].loop_end)
         softcut.loop_end(2, wrms_loop[1].loop_end)
       end
@@ -301,7 +299,17 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       value = 0,
       behavior = "toggle",
       event = function(v, t) 
-          wrms_pages[2].e2.event(wrms_pages[2].k2.value) -- update wrm1 old (which looks at pp)
+        if v == 1 then -- if ping-pong is enabled, route across voices
+          softcut.level_cut_cut(1, 2, 1)
+          softcut.level_cut_cut(2, 1, 1)
+          softcut.level_cut_cut(1, 1, 0)
+          softcut.level_cut_cut(2, 2, 0)
+        else -- else (ping-pong is not enabled) route voice to voice
+          softcut.level_cut_cut(1, 2, 0)
+          softcut.level_cut_cut(2, 1, 0)
+          softcut.level_cut_cut(1, 1, 1)
+          softcut.level_cut_cut(2, 2, 1)
+        end
       end
     },
     k3 = { -- toggle share buffer region
@@ -314,8 +322,8 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
           wrms_loop[1].region_start = wrms_loop[2].region_start -- set wrm 1 region points to wrm 2 region points
           wrms_loop[1].region_end = wrms_loop[2].region_end
         else -- else (not sharing)
-          wrms_loop[1].region_start = 200 -- set wrm 1 region points to default
-          wrms_loop[1].region_end = 300
+          wrms_loop[1].region_start = 201 -- set wrm 1 region points to default
+          wrms_loop[1].region_end = 301
         end
         
         wrms_pages[4].e2.event(wrms_pages[4].k2.value) -- update loop points
