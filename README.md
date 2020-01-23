@@ -1,5 +1,7 @@
 **wrms**
+
 norns interface only
+
 2 wrms (stereo loops) with unique characteristics
 
 **v** channel volumes plus record toggle
