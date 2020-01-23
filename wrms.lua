@@ -101,6 +101,8 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
             wrms_loop[2].loop_end = lt + wrms_loop[2].loop_start
             softcut.loop_end(3, wrms_loop[2].loop_end)
             softcut.loop_end(4, wrms_loop[2].loop_end)
+            softcut.position(3, wrms_loop[2].loop_start)
+            softcut.position(4, wrms_loop[2].loop_start)
             
             wrms_loop[2].has_initial = true -- this is how we know we're done with the punch-in
             
@@ -169,18 +171,18 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       value = 1.0,
       range = { 1, 2.0 },
       event = function(v) 
-        softcut.rate(1, 2^v)
-        softcut.rate(2, 2^v)
-        wrms_loop[1].rate = 2^v
+        softcut.rate(1, 2^(v-1))
+        softcut.rate(2, 2^(v-1))
+        wrms_loop[1].rate = 2^(v-1)
       end
     },
-    e3 = {
-      worm = "both",
-      label = "wgl",
-      value = 0.0,
-      range = { 0.0, 10.0 },
-      event = function(v) end
-    },
+    -- e3 = {
+    --   worm = "both",
+    --   label = "wgl",
+    --   value = 0.0,
+    --   range = { 0.0, 10.0 },
+    --   event = function(v) end
+    -- },
     k2 = {
       worm = 2,
       label = "<<",
@@ -222,12 +224,14 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       event = function(v) 
         wrms_pages[4].e2.range[2] = wrms_loop[1].region_end - wrms_loop[1].region_start -- set encoder range
         
-        wrms_loop[1].loop_start = v + wrms_loop[1].region_start + 1 -- set start point
+        wrms_loop[1].loop_start = v + wrms_loop[1].region_start-- set start point
         softcut.loop_start(1, wrms_loop[1].loop_start)
         softcut.loop_start(2, wrms_loop[1].loop_start)
+        
+        wrms_pages[4].e3.event(wrms_pages[4].e3.value)
       end
     },
-    e3 = { -- wrm 1 loop end point
+    e3 = { -- wrm 1 loop length
       worm = 1,
       label = "l",
       value = 0.3,
@@ -235,57 +239,58 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       event = function(v) 
         wrms_pages[4].e3.range[2] = wrms_loop[1].region_end - wrms_loop[1].region_start -- set encoder range
         
-        wrms_loop[1].loop_end = v + wrms_loop[1].loop_start + 1 -- set loop end from length
+        wrms_loop[1].loop_end = v + wrms_loop[1].loop_start -- set loop end from length
         softcut.loop_end(1, wrms_loop[1].loop_end)
         softcut.loop_end(2, wrms_loop[1].loop_end)
       end
-    },
-    k2 = {
-      worm = 1,
-      label = "p",
-      value = 0,
-      behavior = "toggle",
-      event = function(v, t) end
-    },
-    k3 = {
-      worm = 1,
-      label = "p",
-      value = 0,
-      behavior = "toggle",
-      event = function(v, t) end
     }
+    -- ,
+    -- k2 = {
+    --   worm = 1,
+    --   label = "p",
+    --   value = 0,
+    --   behavior = "toggle",
+    --   event = function(v, t) end
+    -- },
+    -- k3 = {
+    --   worm = 1,
+    --   label = "p",
+    --   value = 0,
+    --   behavior = "toggle",
+    --   event = function(v, t) end
+    -- }
   },
-  {
-    label = "f",
-    e2 = {
-      worm = 1,
-      label = "f",
-      value = 1.0,
-      range = { 0.0, 1.0 },
-      event = function(v) end
-    },
-    e3 = {
-      worm = 1,
-      label = "q",
-      value = 0.3,
-      range = { 0.0, 1.0 },
-      event = function(v) end
-    },
-    k2 = {
-      worm = 1,
-      label = { "1", "2" },
-      value = 1,
-      behavior = "enum",
-      event = function(v, t) end
-    },
-    k3 = {
-      worm = 1,
-      label = { "lp", "bp", "hp"  },
-      value = 1,
-      behavior = "enum",
-      event = function(v, t) end
-    }
-  },
+  -- {
+  --   label = "f",
+  --   e2 = {
+  --     worm = 1,
+  --     label = "f",
+  --     value = 1.0,
+  --     range = { 0.0, 1.0 },
+  --     event = function(v) end
+  --   },
+  --   e3 = {
+  --     worm = 1,
+  --     label = "q",
+  --     value = 0.3,
+  --     range = { 0.0, 1.0 },
+  --     event = function(v) end
+  --   },
+  --   k2 = {
+  --     worm = 1,
+  --     label = { "1", "2" },
+  --     value = 1,
+  --     behavior = "enum",
+  --     event = function(v, t) end
+  --   },
+  --   k3 = {
+  --     worm = 1,
+  --     label = { "lp", "bp", "hp"  },
+  --     value = 1,
+  --     behavior = "enum",
+  --     event = function(v, t) end
+  --   }
+  -- },
   {
     label = ">",
     e2 = { -- feed wrm 1 to wrm 2
@@ -341,8 +346,8 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
           wrms_loop[1].region_end = 301
         end
         
-        wrms_pages[4].e2.event(wrms_pages[4].k2.value) -- update loop points
-        wrms_pages[4].e3.event(wrms_pages[4].k3.value)
+        wrms_pages[4].e2.event(wrms_pages[4].e2.value) -- update loop points
+        wrms_pages[4].e3.event(wrms_pages[4].e3.value)
       end
     }
   }
