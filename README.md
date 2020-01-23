@@ -2,8 +2,7 @@
 norns only
 2 wrms (stereo loops) with unique characteristics
 
-# v
-channel volumes plus record toggle
+*v* channel volumes plus record toggle
 wrm1 is a simple toggle, wrm2 a loop pedal-style punch-in
 
 # o
