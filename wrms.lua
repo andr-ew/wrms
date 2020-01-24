@@ -255,7 +255,7 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       worm = 1,
       label = "l",
       value = 0.3,
-      range = { 0.0, 1.0 },
+      range = { 0.01, 1.0 },
       event = function(v) 
         wrms_pages[4].e3.range[2] = wrms_loop[1].region_end - wrms_loop[1].region_start -- set encoder range
         
@@ -280,8 +280,8 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
     --   event = function(v, t) end
     -- }
   },
-  -- {
-  --   label = "f",
+  {
+    label = "f",
   --   e2 = {
   --     worm = 1,
   --     label = "f",
@@ -310,7 +310,7 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
   --     behavior = "enum",
   --     event = function(v, t) end
   --   }
-  -- },
+  },
   {
     label = ">",
     e2 = { -- feed wrm 1 to wrm 2
