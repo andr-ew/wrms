@@ -280,8 +280,8 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
     --   event = function(v, t) end
     -- }
   },
-  -- {
-  --   label = "f",
+  {
+    label = "f",
   --   e2 = {
   --     worm = 1,
   --     label = "f",
@@ -310,7 +310,7 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
   --     behavior = "enum",
   --     event = function(v, t) end
   --   }
-  -- },
+  },
   {
     label = ">",
     e2 = { -- feed wrm 1 to wrm 2
