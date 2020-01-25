@@ -7,30 +7,58 @@ wrms_pages = {}
 
 wrms_loop = {
   {
-    punch_in_time = nil,
+    is_punch_in = false,
     has_initial = true,
-    region_start = 200,
-    region_end = 301,
-    loop_start = 201,
-    loop_end = 230,
+    phase = 0,
+    default_region_start = 295,
+    default_region_end = 300,
+    region_start = 0,
+    region_end = 0,
+    loop_start = 0,
+    loop_end = 0,
     rate = 1,
     wrm_wgl = 0.2,
     wrm_bend = 0,
     wrm_lvl = 0
   },
   {
-    punch_in_time = nil,
+    is_punch_in = false,
     has_initial = false,
-    region_start = 1,
-    region_end = 201,
-    loop_start = 1,
-    loop_end = 201,
+    phase = 0,
+    default_region_start = 1,
+    default_region_end = 60,
+    region_start = 0,
+    region_end = 0,
+    loop_start = 0,
+    loop_end = 0,
     rate = 1,
     wrm_wgl = 0.2,
     wrm_bend = 0,
     wrm_lvl = 0
   }
 }
+
+for i,v in ipairs(wrms_loop) do
+  v.region_start = v.default_region_start
+  v.region_end = v.default_region_end
+  v.loop_start = v.default_region_start
+  v.loop_end = v.default_region_end
+end
+
+function wrm_phase_event(voice, p)
+  if voice == 1 or voice == 3 then
+    local l = voice == 1 and 1 or 2
+    wrms_loop[l].phase = p
+    
+    redraw()
+  end
+end
+
+softcut.phase_quant(1, 0.001)
+softcut.phase_quant(3, 0.001)
+
+softcut.event_phase(wrm_phase_event)
+softcut.poll_start_phase()
 
 function wrms_init()
   for i,v in ipairs(wrms_pages) do
@@ -105,10 +133,10 @@ function wrms_redraw()
   local ex = get_x_pos(wrms_pages[get_page_n()].e2, wrms_pages[get_page_n()].e3)
   for i,v in ipairs({ wrms_pages[get_page_n()].e2, wrms_pages[get_page_n()].e3 }) do
     if v ~= nil then
-      screen.move(2 + ex[i] * 29, 44)
+      screen.move(2 + ex[i] * 29, 46)
       screen.level(4)
       screen.text(v.label)
-      screen.move(2 + (ex[i] * 29) + ((string.len(v.label) + 0.5) * 5), 44)
+      screen.move(2 + (ex[i] * 29) + ((string.len(v.label) + 0.5) * 5), 46)
       screen.level(10)
       screen.text(v.value)
     end
@@ -118,7 +146,7 @@ function wrms_redraw()
   local kx = get_x_pos(wrms_pages[get_page_n()].k2, wrms_pages[get_page_n()].k3)
   for i,v in ipairs({ wrms_pages[get_page_n()].k2, wrms_pages[get_page_n()].k3 }) do
     if v ~= nil then
-      screen.move(2 + kx[i] * 29, 44 + 10)
+      screen.move(2 + kx[i] * 29, 46 + 10)
       
       if v.behavior == "enum" then
         screen.level(8)
@@ -127,6 +155,31 @@ function wrms_redraw()
         screen.level(v.value * 10 + 2)
         screen.text(v.label)
       end
+    end
+  end
+  
+  --phase
+  for i,v in ipairs(wrms_loop) do
+    screen.level(2)
+    if v.is_punch_in == false then
+      screen.pixel(2 + (i-1) * 58 + 44 * (v.loop_start - v.region_start) / (v.region_end - v.region_start), 34)
+      screen.fill()
+    end
+    if v.has_initial then
+      screen.pixel(2 + (i-1) * 58 + 44 * (v.loop_end- v.region_start) / (v.region_end - v.region_start), 34)
+      screen.fill()
+    end
+    
+    screen.level(12)
+    if v.has_initial == false then
+      if v.is_punch_in then
+        screen.move(2 + (i-1) * 58 + 44 * (v.loop_start - v.region_start) / (v.region_end - v.region_start), 35)
+        screen.line(3 + (i-1) * 58 + 44 * (v.phase - v.region_start) / (v.region_end - v.region_start), 35)
+        screen.stroke()
+      end
+    else
+      screen.pixel(2 + (i-1) * 58 + 44 * (v.phase - v.region_start) / (v.region_end - v.region_start), 34)
+      screen.fill()
     end
   end
 end
