@@ -112,36 +112,36 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
           if wrms_loop[2].has_initial then -- if inital loop has been recorded
             softcut.rec(3, v) -- toggle recording
             softcut.rec(4, v)
-          elseif wrms_loop[2].punch_in_time ~= nil then -- else if inital loop is being punched in, punch out
+          elseif wrms_loop[2].is_punch_in then -- else if inital loop is being punched in, punch out
             softcut.rec(3, 0) -- stop recording but keep playing
             softcut.rec(4, 0)
             
-            local lt = util.clamp(util.time() - wrms_loop[2].punch_in_time, 0, 200) -- loop time = now - when we punched-in
-            wrms_loop[2].region_end = lt + wrms_loop[2].region_start -- set loop end to loop time
-            wrms_loop[2].loop_end = lt + wrms_loop[2].loop_start
+            wrms_loop[2].region_end = wrms_loop[2].phase -- set loop & region end to loop time
+            wrms_loop[2].loop_end = wrms_loop[2].region_end
             softcut.loop_end(3, wrms_loop[2].loop_end)
             softcut.loop_end(4, wrms_loop[2].loop_end)
             softcut.position(3, wrms_loop[2].loop_start)
             softcut.position(4, wrms_loop[2].loop_start)
             
             wrms_loop[2].has_initial = true -- this is how we know we're done with the punch-in
+            wrms_loop[2].is_punch_in = false
             
           elseif v == 1 then -- else start loop punch-in
-            wrms_loop[2].region_end = 201 -- set loop end to max
-            wrms_loop[2].loop_end = 201
-            softcut.loop_start(3, wrms_loop[2].loop_start)
-            softcut.loop_start(4, wrms_loop[2].loop_start)
-            softcut.loop_end(3, 201)
-            softcut.loop_end(4, 201)
-            softcut.position(3, wrms_loop[2].loop_start)
-            softcut.position(4, wrms_loop[2].loop_start)
-            
             softcut.rec(3, 1) -- start recording
             softcut.rec(4, 1)
             softcut.play(3, 1)
             softcut.play(4, 1)
             
-            wrms_loop[2].punch_in_time = util.time() -- store the punch in time for when we punch out
+            wrms_loop[2].region_end = wrms_loop[2].default_region_end -- set loop & region end to default
+            wrms_loop[2].loop_end = wrms_loop[2].region_end
+            softcut.loop_start(3, wrms_loop[2].loop_start)
+            softcut.loop_start(4, wrms_loop[2].loop_start)
+            softcut.loop_end(3, wrms_loop[2].loop_end)
+            softcut.loop_end(4, wrms_loop[2].loop_end)
+            softcut.position(3, wrms_loop[2].loop_start)
+            softcut.position(4, wrms_loop[2].loop_start)
+            
+            wrms_loop[2].is_punch_in = true -- this is how we started the punch in
           end
         else -- else (long press)
           softcut.rec(3, 0) -- stop recording
@@ -150,7 +150,16 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
           softcut.play(4, 0)
           wrms_pages[1].k3.value = 0
           
-          wrms_loop[2].punch_in_time = nil
+          wrms_loop[2].region_end = wrms_loop[2].default_region_end -- set loop & region end to default
+          wrms_loop[2].loop_end = wrms_loop[2].region_end
+          softcut.loop_start(3, wrms_loop[2].loop_start)
+          softcut.loop_start(4, wrms_loop[2].loop_start)
+          softcut.loop_end(3, wrms_loop[2].loop_end)
+          softcut.loop_end(4, wrms_loop[2].loop_end)
+          softcut.position(3, wrms_loop[2].loop_start)
+          softcut.position(4, wrms_loop[2].loop_start)
+          
+          wrms_loop[2].punch_in_time = false
           wrms_loop[2].has_initial = false
         
           softcut.buffer_clear_region(wrms_loop[2].region_start, wrms_loop[2].region_end) -- clear loop region
@@ -362,8 +371,8 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
           wrms_loop[1].region_start = wrms_loop[2].region_start -- set wrm 1 region points to wrm 2 region points
           wrms_loop[1].region_end = wrms_loop[2].region_end
         else -- else (not sharing)
-          wrms_loop[1].region_start = 201 -- set wrm 1 region points to default
-          wrms_loop[1].region_end = 301
+          wrms_loop[1].region_start = wrms_loop[1].default_region_start -- set wrm 1 region points to default
+          wrms_loop[1].region_end = wrms_loop[1].default_region_end
         end
         
         wrms_pages[4].e2.event(wrms_pages[4].e2.value) -- update loop points
