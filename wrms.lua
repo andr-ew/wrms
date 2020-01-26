@@ -27,6 +27,28 @@ include 'wrms/lib/lib_wrms'
 
 function init()
   
+  --wigl lfo setup via @justmat hnds lib
+  wrms_lfo.init()
+  wrms_lfo[1].freq = 0.5 -- keep the lfos out of phase
+  wrms_lfo[2].freq = 0.4
+  wrms_lfo.process = function() -- called on each lfo update
+    for i = 1,2 do
+      local rate = wrms_loop[1].rate + wrms_lfo[1].delta -- set wrm 1 rate = change in lfo1 each time it updates
+      
+      softcut.rate(i, rate)
+      softcut.rate(i, rate)
+      wrms_loop[1].rate = rate
+    end
+    
+    for i = 3,4 do
+      local rate = wrms_loop[2].rate + wrms_lfo[2].delta -- set wrm 2 rate = change in lfo2 each time it updates
+      
+      softcut.rate(i, rate)
+      softcut.rate(i, rate)
+      wrms_loop[2].rate = rate
+    end
+  end
+  
   -- softcut initial settings
   softcut.buffer_clear()
   
@@ -206,13 +228,17 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
         wrms_loop[1].rate = 2^(v-1)
       end
     },
-    -- e3 = {
-    --   worm = "both",
-    --   label = "wgl",
-    --   value = 0.0,
-    --   range = { 0.0, 10.0 },
-    --   event = function(v) end
-    -- },
+    e3 = {
+      worm = "both",
+      label = "wgl",
+      value = 0.0,
+      range = { 0.0, 10.0 },
+      event = function(v) 
+        local d = (util.linexp(0, 1, 0.01, 1, v) - 0.01) * 100
+        wrms_lfo[1].depth = d
+        wrms_lfo[2].depth = d
+      end
+    },
     k2 = {
       worm = 2,
       label = "<<",
@@ -265,7 +291,7 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       worm = 1,
       label = "l",
       value = 0.3,
-      range = { 0.01, 1.0 },
+      range = { 0.001, 1.0 },
       event = function(v) 
         wrms_pages[4].e3.range[2] = wrms_loop[1].region_end - wrms_loop[1].region_start -- set encoder range
         
@@ -313,8 +339,8 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       value = 1.0,
       range = { 0.0, 1.0 },
       event = function(v) 
-        softcut.post_filter_fc(1,12000 * v)
-        softcut.post_filter_fc(2,12000 * v)
+        softcut.post_filter_fc(1, util.linexp(0, 1, 1, 12000, v))
+        softcut.post_filter_fc(2, util.linexp(0, 1, 1, 12000, v))
       end
     },
     e3 = { -- wrm 1 filter resonance
