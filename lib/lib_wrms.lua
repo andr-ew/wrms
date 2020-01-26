@@ -1,9 +1,11 @@
-wrms_sens = 0.1
+wrms_sens = 0.01
 
 wrms_page_n = 1
 local get_page_n = function() return math.floor(wrms_page_n) end
 
 wrms_pages = {}
+
+wrms_lfo = include 'wrms/lib/hnds_wrms'
 
 wrms_loop = {
   {
@@ -17,6 +19,7 @@ wrms_loop = {
     loop_start = 0,
     loop_end = 0,
     rate = 1,
+    bend = 1,
     wrm_wgl = 0.2,
     wrm_bend = 0,
     wrm_lvl = 0
@@ -32,6 +35,7 @@ wrms_loop = {
     loop_start = 0,
     loop_end = 0,
     rate = 1,
+    bend = 1,
     wrm_wgl = 0.2,
     wrm_bend = 0,
     wrm_lvl = 0
