@@ -35,16 +35,16 @@ function init()
     for i = 1,2 do
       local rate = wrms_loop[1].rate + wrms_lfo[1].delta -- set wrm 1 rate = change in lfo1 each time it updates
       
-      softcut.rate(i, rate)
-      softcut.rate(i, rate)
+      softcut.rate(i, rate * wrms_loop[1].bend)
+      softcut.rate(i, rate * wrms_loop[1].bend)
       wrms_loop[1].rate = rate
     end
     
     for i = 3,4 do
       local rate = wrms_loop[2].rate + wrms_lfo[2].delta -- set wrm 2 rate = change in lfo2 each time it updates
       
-      softcut.rate(i, rate)
-      softcut.rate(i, rate)
+      softcut.rate(i, rate * wrms_loop[2].bend)
+      softcut.rate(i, rate * wrms_loop[2].bend)
       wrms_loop[2].rate = rate
     end
   end
@@ -60,13 +60,13 @@ function init()
     softcut.pre_level(h, 0.0)
     softcut.rate_slew_time(h, 0.2)
     softcut.rec_level(h + 2, 1.0)
-    softcut.rate(h + 2, 1.0)
+    softcut.rate(h + 2, wrms_loop[2].rate * wrms_loop[2].bend)
     softcut.post_filter_dry(h, 0)
     
     for j = 1,2 do
       softcut.enable(i + j, 1)
       softcut.loop(i + j, 1)
-      softcut.fade_time(i + j, 0.1)
+      softcut.fade_time(i+j, 0.1)
       
       softcut.level_input_cut(j, i + j, 1.0)
       softcut.buffer(i + j,j)
@@ -75,6 +75,9 @@ function init()
       softcut.loop_start(i+j, wrms_loop[j].loop_start)
       softcut.loop_end(i+j, wrms_loop[j].loop_end)
       softcut.position(i+j, wrms_loop[j].loop_start)
+      
+      softcut.level_slew_time(i+j, 0.1)
+      softcut.recpre_slew_time(i+j, 0.01)
     end
   end
   
@@ -94,6 +97,8 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       event = function(v) 
         softcut.level(1, v)
         softcut.level(2, v)
+        
+        wrms_pages[6].e2.event(wrms_pages[6].e2.value)
       end
     },
     e3 = { -- wrm 2 volume
@@ -104,6 +109,8 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       event = function(v)
         softcut.level(3, v)
         softcut.level(4, v)
+        
+        wrms_pages[6].e3.event(wrms_pages[6].e3.value)
       end
     },
     k2 = { -- wrm 2 record toggle
@@ -136,15 +143,15 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
             softcut.rec(3, v) -- toggle recording
             softcut.rec(4, v)
           elseif wrms_loop[2].is_punch_in then -- else if inital loop is being punched in, punch out
-            softcut.rec(3, 0) -- stop recording but keep playing
-            softcut.rec(4, 0)
-            
-            wrms_loop[2].region_end = wrms_loop[2].phase -- set loop & region end to loop time
+            wrms_loop[2].region_end = wrms_loop[2].phase - 0.1 -- set loop & region end to loop time
             wrms_loop[2].loop_end = wrms_loop[2].region_end
             softcut.loop_end(3, wrms_loop[2].loop_end)
             softcut.loop_end(4, wrms_loop[2].loop_end)
-            softcut.position(3, wrms_loop[2].loop_start)
-            softcut.position(4, wrms_loop[2].loop_start)
+            -- softcut.position(3, wrms_loop[2].loop_start)
+            -- softcut.position(4, wrms_loop[2].loop_start)
+            
+            softcut.rec(3, 0) -- stop recording but keep playing
+            softcut.rec(4, 0)
             
             wrms_loop[2].has_initial = true -- this is how we know we're done with the punch-in
             wrms_loop[2].is_punch_in = false
@@ -223,9 +230,9 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       value = 1.0,
       range = { 1, 2.0 },
       event = function(v) 
-        softcut.rate(1, 2^(v-1))
-        softcut.rate(2, 2^(v-1))
-        wrms_loop[1].rate = 2^(v-1)
+        wrms_loop[1].bend = 2^(v-1)
+        softcut.rate(1, wrms_loop[1].rate * wrms_loop[1].bend)
+        softcut.rate(2, wrms_loop[1].rate * wrms_loop[1].bend)
       end
     },
     e3 = {
@@ -250,8 +257,8 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
         softcut.rate_slew_time(4, st)
         
         wrms_loop[2].rate = wrms_loop[2].rate / 2
-        softcut.rate(3, wrms_loop[2].rate)
-        softcut.rate(4, wrms_loop[2].rate)
+        softcut.rate(3, wrms_loop[2].rate * wrms_loop[2].bend)
+        softcut.rate(4, wrms_loop[2].rate * wrms_loop[2].bend)
       end
     },
     k3 = {
@@ -265,8 +272,8 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
         softcut.rate_slew_time(4, st)
         
         wrms_loop[2].rate = wrms_loop[2].rate * 2
-        softcut.rate(3, wrms_loop[2].rate)
-        softcut.rate(4, wrms_loop[2].rate)
+        softcut.rate(3, wrms_loop[2].rate * wrms_loop[2].bend)
+        softcut.rate(4, wrms_loop[2].rate * wrms_loop[2].bend)
       end
     }
   },
@@ -306,13 +313,14 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       value = 0,
       behavior = "momentary",
       event = function(v, t)
+        
         local st = (1 + (math.random() * 0.5)) * t
-        softcut.rate_slew_time(3, st)
-        softcut.rate_slew_time(4, st)
+        softcut.rate_slew_time(1, st)
+        softcut.rate_slew_time(2, st)
         
         wrms_loop[1].rate = wrms_loop[1].rate / 2
-        softcut.rate(1, wrms_loop[1].rate)
-        softcut.rate(2, wrms_loop[1].rate)
+        softcut.rate(1, wrms_loop[1].rate * wrms_loop[1].bend)
+        softcut.rate(2, wrms_loop[1].rate * wrms_loop[1].bend)
       end
     },
     k3 = {
@@ -326,8 +334,8 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
         softcut.rate_slew_time(2, st)
         
         wrms_loop[1].rate = wrms_loop[1].rate * 2
-        softcut.rate(1, wrms_loop[1].rate)
-        softcut.rate(2, wrms_loop[1].rate)
+        softcut.rate(1, wrms_loop[1].rate * wrms_loop[1].bend)
+        softcut.rate(2, wrms_loop[1].rate * wrms_loop[1].bend)
       end
     }
   },
@@ -421,8 +429,8 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       value = 0.0,
       range = { 0.0, 1.0 },
       event = function(v) 
-        softcut.level_cut_cut(3, 1, v * wrms_pages[2].e2.value)
-        softcut.level_cut_cut(4, 2, v * wrms_pages[2].e2.value)
+        softcut.level_cut_cut(3, 1, v * wrms_pages[2].e3.value)
+        softcut.level_cut_cut(4, 2, v * wrms_pages[2].e3.value)
       end
     },
     k2 = {
