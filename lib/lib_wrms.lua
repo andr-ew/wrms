@@ -1,4 +1,5 @@
 wrms_sens = 0.01
+wrms_phase_quant = 0.01
 
 wrms_page_n = 1
 local get_page_n = function() return math.floor(wrms_page_n) end
@@ -20,9 +21,7 @@ wrms_loop = {
     loop_end = 0,
     rate = 1,
     bend = 1,
-    wrm_wgl = 0.2,
-    wrm_bend = 0,
-    wrm_lvl = 0
+    wgl = 0
   },
   {
     is_punch_in = false,
@@ -36,9 +35,7 @@ wrms_loop = {
     loop_end = 0,
     rate = 1,
     bend = 1,
-    wrm_wgl = 0.2,
-    wrm_bend = 0,
-    wrm_lvl = 0
+    wgl = 0
   }
 }
 
@@ -58,8 +55,8 @@ function wrm_phase_event(voice, p)
   end
 end
 
-softcut.phase_quant(1, 0.001)
-softcut.phase_quant(3, 0.001)
+softcut.phase_quant(1, wrms_phase_quant)
+softcut.phase_quant(3, wrms_phase_quant)
 
 softcut.event_phase(wrm_phase_event)
 softcut.poll_start_phase()
@@ -162,27 +159,53 @@ function wrms_redraw()
     end
   end
   
-  --phase
   for i,v in ipairs(wrms_loop) do
+    local left = 2 + (i-1) * 58
+    local top = 34
+    local width = 44
+    
+    --phase
     screen.level(2)
     if v.is_punch_in == false then
-      screen.pixel(2 + (i-1) * 58 + 44 * (v.loop_start - v.region_start) / (v.region_end - v.region_start), 34)
+      screen.pixel(left + width * (v.loop_start - v.region_start) / (v.region_end - v.region_start), top)
       screen.fill()
     end
     if v.has_initial then
-      screen.pixel(2 + (i-1) * 58 + 44 * (v.loop_end- v.region_start) / (v.region_end - v.region_start), 34)
+      screen.pixel(left + width * (v.loop_end- v.region_start) / (v.region_end - v.region_start), top)
       screen.fill()
     end
     
     screen.level(12)
     if v.has_initial == false then
       if v.is_punch_in then
-        screen.move(2 + (i-1) * 58 + 44 * (v.loop_start - v.region_start) / (v.region_end - v.region_start), 35)
-        screen.line(3 + (i-1) * 58 + 44 * (v.phase - v.region_start) / (v.region_end - v.region_start), 35)
+        screen.move(left + width * (v.loop_start - v.region_start) / (v.region_end - v.region_start), top + 1)
+        screen.line(1 + left + width * (v.phase - v.region_start) / (v.region_end - v.region_start), top + 1)
         screen.stroke()
       end
     else
-      screen.pixel(2 + (i-1) * 58 + 44 * (v.phase - v.region_start) / (v.region_end - v.region_start), 34)
+      screen.pixel(left + width * (v.phase - v.region_start) / (v.region_end - v.region_start), top)
+      screen.fill()
+    end
+    
+    --wrm friends
+    
+    local top = 18
+    local width = 24
+    local lowamp = 0.3
+    local highamp = 1.75
+    
+    local width = util.linexp(0, (v.region_end - v.region_start), 0.01, width, (v.loop_end  + 4.125 - v.loop_start))
+    for j = 1, width do
+      screen.level(10)
+      local amp = v.has_initial and math.sin(((v.phase - v.loop_start) * (i == 1 and 1 or 2) / (v.loop_end - v.loop_start) + j / width) * (i == 1 and 2 or 4) * math.pi) * util.linlin(1, width / 2, lowamp, highamp + v.wgl, j < (width / 2) and j or width - j) - (util.linexp(0, 1, 0.5, 6, j/width) * (v.bend - 1)) or 0
+      local left = left - (v.loop_start - v.region_start) / (v.region_end - v.region_start) * (width - 44)
+      
+      screen.pixel(left - 1 + j, top + amp)
+      -- if i > 1 and i < width then
+      --   screen.pixel(left - 1 + i, top + amp - 1)
+      --   screen.pixel(left - 1 + i, top + amp + 1)
+      -- end
+      
       screen.fill()
     end
   end
