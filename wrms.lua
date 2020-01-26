@@ -1,27 +1,10 @@
 -- wrms
+--
 -- minimal, extensible dual 
 -- echo looper
+--
 -- v011820 @andrew
 -- llllllll.co/t/22222
--- norns interface only
--- 2 wrms (stereo loops) with 
--- unique characteristics
--- v - channel volumes plus 
--- record toggle wrm1 is a 
--- simple toggle, wrm2 a loop 
--- pedal-style punch-in
--- o - old controls how much 
--- of the past remains as wrms 
--- circle thru time
--- b - 2 controls for rate/pitch 
--- as wrms apprach light speed
--- s - length of wrm1 and where 
--- he begins - allows tiny bit 
--- chopping and subtle delay 
--- movement
--- > - config for telepathic 
--- inter-wrm time loop 
--- communication
 
 include 'wrms/lib/lib_wrms'
 
@@ -244,6 +227,8 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
         local d = (util.linexp(0, 1, 0.01, 1, v) - 0.01) * 100
         wrms_lfo[1].depth = d
         wrms_lfo[2].depth = d
+        wrms_loop[1].wgl = v
+        wrms_loop[2].wgl = v + 0.5
       end
     },
     k2 = {
