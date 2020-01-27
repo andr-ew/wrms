@@ -6,7 +6,7 @@
 -- v011820 @andrew
 -- llllllll.co/t/22222
 
-include 'wrms/lib/lib_wrms'
+include 'lib/lib_wrms'
 
 function init()
   
@@ -80,6 +80,7 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       event = function(v) 
         softcut.level(1, v)
         softcut.level(2, v)
+        wrms_loop[1].vol = v
         
         wrms_pages[6].e2.event(wrms_pages[6].e2.value)
       end
@@ -92,6 +93,7 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       event = function(v)
         softcut.level(3, v)
         softcut.level(4, v)
+        wrms_loop[2].vol = v
         
         wrms_pages[6].e3.event(wrms_pages[6].e3.value)
       end
@@ -102,12 +104,14 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       value = 1,
       behavior = "toggle",
       event = function(v, t)
-        if t < 1 then -- if short press toggle record
+        if t < 0.5 then -- if short press toggle record
           softcut.rec(1, v)
           softcut.rec(2, v)
+          wrms_loop[1].rec = v
         else -- else long press clears loop region
           softcut.rec(1, 0)
           softcut.rec(2, 0)
+          wrms_loop[1].rec = 0
           
           wrms_pages[1].k2.value = 0
           
@@ -121,23 +125,26 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       value = 0,
       behavior = "toggle",
       event = function(v, t)
-        if t < 1 then -- if short press
+        wrms_loop[2].rec = v
+        
+        if t < 0.5 then -- if short press
           if wrms_loop[2].has_initial then -- if inital loop has been recorded
             softcut.rec(3, v) -- toggle recording
             softcut.rec(4, v)
+            
           elseif wrms_loop[2].is_punch_in then -- else if inital loop is being punched in, punch out
             wrms_loop[2].region_end = wrms_loop[2].phase - 0.1 -- set loop & region end to loop time
             wrms_loop[2].loop_end = wrms_loop[2].region_end
             softcut.loop_end(3, wrms_loop[2].loop_end)
             softcut.loop_end(4, wrms_loop[2].loop_end)
-            -- softcut.position(3, wrms_loop[2].loop_start)
-            -- softcut.position(4, wrms_loop[2].loop_start)
             
             softcut.rec(3, 0) -- stop recording but keep playing
             softcut.rec(4, 0)
             
             wrms_loop[2].has_initial = true -- this is how we know we're done with the punch-in
             wrms_loop[2].is_punch_in = false
+            
+            wrms_loop[2].wake()
             
           elseif v == 1 then -- else start loop punch-in
             softcut.rec(3, 1) -- start recording
@@ -162,6 +169,7 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
           softcut.play(3, 0)
           softcut.play(4, 0)
           wrms_pages[1].k3.value = 0
+          wrms_loop[2].rec = 0
           
           wrms_loop[2].region_end = wrms_loop[2].default_region_end -- set loop & region end to default
           wrms_loop[2].loop_end = wrms_loop[2].region_end
@@ -176,6 +184,8 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
           wrms_loop[2].has_initial = false
         
           softcut.buffer_clear_region(wrms_loop[2].region_start, wrms_loop[2].region_end) -- clear loop region
+          
+          wrms_loop[2].sleep()
         end
       end
     }
@@ -222,7 +232,7 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       worm = "both",
       label = "wgl",
       value = 0.0,
-      range = { 0.0, 10.0 },
+      range = { 0.0, 100.0 },
       event = function(v) 
         local d = (util.linexp(0, 1, 0.01, 1, v) - 0.01) * 100
         wrms_lfo[1].depth = d
@@ -283,11 +293,11 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       worm = 1,
       label = "l",
       value = 0.3,
-      range = { 0.001, 1.0 },
+      range = { 0, 1.0 },
       event = function(v) 
         wrms_pages[4].e3.range[2] = wrms_loop[1].region_end - wrms_loop[1].region_start -- set encoder range
         
-        wrms_loop[1].loop_end = v + wrms_loop[1].loop_start -- set loop end from length
+        wrms_loop[1].loop_end = v + wrms_loop[1].loop_start + 0.001 -- set loop end from length
         softcut.loop_end(1, wrms_loop[1].loop_end)
         softcut.loop_end(2, wrms_loop[1].loop_end)
       end
@@ -406,6 +416,7 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       event = function(v)
         softcut.level_cut_cut(1, 3, v * wrms_pages[1].e2.value)
         softcut.level_cut_cut(2, 4, v * wrms_pages[1].e2.value)
+        wrms_loop[1].feed = v
       end
     },
     e3 = { -- feed wrm 2 to wrm 1
@@ -414,8 +425,9 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       value = 0.0,
       range = { 0.0, 1.0 },
       event = function(v) 
-        softcut.level_cut_cut(3, 1, v * wrms_pages[2].e3.value)
-        softcut.level_cut_cut(4, 2, v * wrms_pages[2].e3.value)
+        softcut.level_cut_cut(3, 1, v * wrms_pages[1].e3.value)
+        softcut.level_cut_cut(4, 2, v * wrms_pages[1].e3.value)
+        wrms_loop[2].feed = v
       end
     },
     k2 = {

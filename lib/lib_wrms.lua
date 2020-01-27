@@ -6,7 +6,7 @@ local get_page_n = function() return math.floor(wrms_page_n) end
 
 wrms_pages = {}
 
-wrms_lfo = include 'wrms/lib/hnds_wrms'
+wrms_lfo = include 'lib/hnds_wrms'
 
 wrms_loop = {
   {
@@ -21,7 +21,10 @@ wrms_loop = {
     loop_end = 0,
     rate = 1,
     bend = 1,
-    wgl = 0
+    vol = 1,
+    wgl = 0,
+    feed = 1,
+    rec = 1
   },
   {
     is_punch_in = false,
@@ -35,7 +38,10 @@ wrms_loop = {
     loop_end = 0,
     rate = 1,
     bend = 1,
-    wgl = 0
+    vol = 1,
+    wgl = 0,
+    feed = 0,
+    rec = 0
   }
 }
 
@@ -44,6 +50,27 @@ for i,v in ipairs(wrms_loop) do
   v.region_end = v.default_region_end
   v.loop_start = v.default_region_start
   v.loop_end = v.default_region_end
+end
+
+-- for putting wrms to sleep zZzz :)
+for i,v in ipairs(wrms_loop) do
+  v.segment_is_awake = {}
+  v.sleep_index = 24
+  
+  local sleep_closure = function(i) return function() 
+    wrms_loop[i].sleep_index = 1
+  end end
+  
+  local wake_closure = function(i) return function() 
+    wrms_loop[i].sleep_index = 24
+  end end
+  
+  v.sleep = wake_closure(i)
+  v.wake = v.sleep
+  
+  for j = 1, 24 do
+    v.segment_is_awake[j] = false
+  end
 end
 
 function wrm_phase_event(voice, p)
@@ -78,7 +105,8 @@ function wrms_enc(n, delta)
     local e = wrms_pages[get_page_n()]["e" .. n]
     
     if e ~= nil then
-      e.value = util.clamp(e.value + (delta * (e.sens == nil and wrms_sens or e.sens)), e.range[1], e.range[2])
+      local sens = e.sens == nil and wrms_sens or e.sens
+      e.value = util.round(util.clamp(e.value + (delta * sens), e.range[1], e.range[2]), sens)
       e.event(e.value)
     end
   end
@@ -159,6 +187,19 @@ function wrms_redraw()
     end
   end
   
+  --feed indicators
+  screen.level(math.floor(wrms_loop[1].feed * 4))
+  screen.pixel(42, 23)
+  screen.pixel(43, 24)
+  screen.pixel(42, 25)
+  screen.fill()
+  
+  screen.level(math.floor(wrms_loop[2].feed * 4))
+  screen.pixel(54, 23)
+  screen.pixel(53, 24)
+  screen.pixel(54, 25)
+  screen.fill()
+  
   for i,v in ipairs(wrms_loop) do
     local left = 2 + (i-1) * 58
     local top = 34
@@ -175,7 +216,7 @@ function wrms_redraw()
       screen.fill()
     end
     
-    screen.level(12)
+    screen.level(6 + 10 * v.rec)
     if v.has_initial == false then
       if v.is_punch_in then
         screen.move(left + width * (v.loop_start - v.region_start) / (v.region_end - v.region_start), top + 1)
@@ -187,26 +228,25 @@ function wrms_redraw()
       screen.fill()
     end
     
-    --wrm friends
-    
+    --fun wrm animaions
     local top = 18
     local width = 24
-    local lowamp = 0.3
+    local lowamp = 0.5
     local highamp = 1.75
     
+    if v.sleep_index > 0 and v.sleep_index <= 24 then
+      v.segment_is_awake[math.floor(v.sleep_index)] = v.has_initial
+      v.sleep_index = v.sleep_index + (0.25 * (v.has_initial and -1 or -4))
+    end
+    
+    screen.level(math.floor(v.vol * 10))
     local width = util.linexp(0, (v.region_end - v.region_start), 0.01, width, (v.loop_end  + 4.125 - v.loop_start))
     for j = 1, width do
-      screen.level(10)
-      local amp = v.has_initial and math.sin(((v.phase - v.loop_start) * (i == 1 and 1 or 2) / (v.loop_end - v.loop_start) + j / width) * (i == 1 and 2 or 4) * math.pi) * util.linlin(1, width / 2, lowamp, highamp + v.wgl, j < (width / 2) and j or width - j) - (util.linexp(0, 1, 0.5, 6, j/width) * (v.bend - 1)) or 0
+      local amp = v.segment_is_awake[j] and math.sin(((v.phase - v.loop_start) * (i == 1 and 1 or 2) / (v.loop_end - v.loop_start) + j / width) * (i == 1 and 2 or 4) * math.pi) * util.linlin(1, width / 2, lowamp, highamp + v.wgl, j < (width / 2) and j or width - j) - 0.75 * util.linlin(1, width / 2, lowamp, highamp + v.wgl, j < (width / 2) and j or width - j) - (util.linexp(0, 1, 0.5, 6, j/width) * (v.bend - 1)) or 0
       local left = left - (v.loop_start - v.region_start) / (v.region_end - v.region_start) * (width - 44)
       
       screen.pixel(left - 1 + j, top + amp)
-      -- if i > 1 and i < width then
-      --   screen.pixel(left - 1 + i, top + amp - 1)
-      --   screen.pixel(left - 1 + i, top + amp + 1)
-      -- end
-      
-      screen.fill()
     end
+    screen.fill()
   end
 end
