@@ -1,5 +1,7 @@
 **wrms**
 
+**installing** - [download](https://github.com/AndrewShike/wrms/archive/master.zip) + [add](https://monome.org/docs/norns/fileshare/) to dust/code
+
 norns interface only
 
 2 wrms (stereo loops) with unique characteristics
