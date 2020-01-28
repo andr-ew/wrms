@@ -7,6 +7,7 @@ local get_page_n = function() return math.floor(wrms_page_n) end
 wrms_pages = {}
 
 wrms_lfo = include 'lib/hnds_wrms'
+softloop = include 'lib/softloop'
 
 wrms_loop = {
   {
