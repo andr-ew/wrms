@@ -54,7 +54,7 @@ lastly - `share` creates a new instrument. toggle a shared past and memory for b
 
 ### 1.1 
 
-- get some actual params in there
+- get < 0 params in there sheesh
     - input mixer
     - param per control for midi mapping
 - wrms mods (!!!)
