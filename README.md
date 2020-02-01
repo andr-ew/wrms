@@ -53,4 +53,4 @@ lastly - `share` creates a new instrument. toggle a shared past and memory for b
 
 # roadmap
 
-* thing
+- thing
