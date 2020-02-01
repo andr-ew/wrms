@@ -53,8 +53,14 @@ lastly - `share` creates a new instrument. toggle a shared past and memory for b
 
 # roadmap
 
+### 1.1 
+
 - get some actual params in there
     - input mixer
     - param per control for midi mapping
 - wrms mods (!!!)
-- `K1`alt
+- wrms mod synth engine combos
+
+### 2.0 ?
+
+- `K1`alt menu with pattern record + presets per page
