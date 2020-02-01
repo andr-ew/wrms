@@ -7,7 +7,7 @@ norns
 
 ### Download
 head to `norns.local` + click on the books
-tab ovr 2 available & refresh community catalog
+tab ovr to available & refresh community catalog
 
 
 # Documentation
