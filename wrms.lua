@@ -1,7 +1,7 @@
--- wrms
+-- ~ wrms  ~~
 --
--- minimal, extensible dual 
--- echo looper
+-- dual asyncronous 
+-- time-wigglers / echo loopers
 --
 -- v011820 @andrew
 -- llllllll.co/t/22222
@@ -82,7 +82,7 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
         softcut.level(2, v)
         wrms_loop[1].vol = v
         
-        wrms_pages[6].e2.event(wrms_pages[6].e2.value)
+        wrms_pages[5].e2.event(wrms_pages[5].e2.value)
       end
     },
     e3 = { -- wrm 2 volume
@@ -95,7 +95,7 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
         softcut.level(4, v)
         wrms_loop[2].vol = v
         
-        wrms_pages[6].e3.event(wrms_pages[6].e3.value)
+        wrms_pages[5].e3.event(wrms_pages[5].e3.value)
       end
     },
     k2 = { -- wrm 2 record toggle
@@ -335,78 +335,6 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
     }
   },
   {
-    label = "f",
-    e2 = { -- wrm 1 filter cutoff
-      worm = 1,
-      label = "f",
-      value = 1.0,
-      range = { 0.0, 1.0 },
-      event = function(v) 
-        softcut.post_filter_fc(1, util.linexp(0, 1, 1, 12000, v))
-        softcut.post_filter_fc(2, util.linexp(0, 1, 1, 12000, v))
-      end
-    },
-    e3 = { -- wrm 1 filter resonance
-      worm = 1,
-      label = "q",
-      value = 0.3,
-      range = { 0.0, 1.0 },
-      event = function(v) 
-        softcut.post_filter_rq(1,1 - v)
-        softcut.post_filter_rq(2,1 - v)
-      end
-    },
-    k2 = { -- wrm 1 filter on/off
-      worm = 1,
-      label = "filt",
-      value = 0,
-      behavior = "toggle",
-      event = function(v, t) 
-        if v == 0 then
-          softcut.post_filter_dry(1, 1)
-          softcut.post_filter_dry(2, 1)
-          softcut.post_filter_lp(1, 0)
-          softcut.post_filter_lp(2, 0)
-          softcut.post_filter_bp(1, 0)
-          softcut.post_filter_bp(2, 0)
-          softcut.post_filter_hp(1, 0)
-          softcut.post_filter_hp(2, 0)
-        else
-          wrms_pages[5].k3.event(wrms_pages[5].k3.value)
-        end
-      end
-    },
-    k3 = { -- wrm 1 filter type
-      worm = 1,
-      label = { "lp", "bp", "hp"  },
-      value = 1,
-      behavior = "enum",
-      event = function(v, t)
-        if wrms_pages[5].k2.value == 1 then
-          softcut.post_filter_dry(1, 0)
-          softcut.post_filter_dry(2, 0)
-          softcut.post_filter_lp(1, 0)
-          softcut.post_filter_lp(2, 0)
-          softcut.post_filter_bp(1, 0)
-          softcut.post_filter_bp(2, 0)
-          softcut.post_filter_hp(1, 0)
-          softcut.post_filter_hp(2, 0)
-          
-          if v == 1 then -- v is lowpass
-            softcut.post_filter_lp(1, 1)
-            softcut.post_filter_lp(2, 1)
-          elseif v == 2 then -- v is bandpass
-            softcut.post_filter_bp(1, 1)
-            softcut.post_filter_bp(2, 1)
-          elseif v == 3 then -- v is hightpass
-            softcut.post_filter_hp(1, 1)
-            softcut.post_filter_hp(2, 1)
-          end
-        end
-      end
-    }
-  },
-  {
     label = ">",
     e2 = { -- feed wrm 1 to wrm 2
       worm = 1,
@@ -469,7 +397,79 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
     }
   }
 }
-
+-- ,
+-- {
+  --   label = "f",
+  --   e2 = { -- wrm 1 filter cutoff
+  --     worm = 1,
+  --     label = "f",
+  --     value = 1.0,
+  --     range = { 0.0, 1.0 },
+  --     event = function(v) 
+  --       softcut.post_filter_fc(1, util.linexp(0, 1, 1, 12000, v))
+  --       softcut.post_filter_fc(2, util.linexp(0, 1, 1, 12000, v))
+  --     end
+  --   },
+  --   e3 = { -- wrm 1 filter resonance
+  --     worm = 1,
+  --     label = "q",
+  --     value = 0.3,
+  --     range = { 0.0, 1.0 },
+  --     event = function(v) 
+  --       softcut.post_filter_rq(1,1 - v)
+  --       softcut.post_filter_rq(2,1 - v)
+  --     end
+  --   },
+  --   k2 = { -- wrm 1 filter on/off
+  --     worm = 1,
+  --     label = "filt",
+  --     value = 0,
+  --     behavior = "toggle",
+  --     event = function(v, t) 
+  --       if v == 0 then
+  --         softcut.post_filter_dry(1, 1)
+  --         softcut.post_filter_dry(2, 1)
+  --         softcut.post_filter_lp(1, 0)
+  --         softcut.post_filter_lp(2, 0)
+  --         softcut.post_filter_bp(1, 0)
+  --         softcut.post_filter_bp(2, 0)
+  --         softcut.post_filter_hp(1, 0)
+  --         softcut.post_filter_hp(2, 0)
+  --       else
+  --         wrms_pages[5].k3.event(wrms_pages[5].k3.value)
+  --       end
+  --     end
+  --   },
+  --   k3 = { -- wrm 1 filter type
+  --     worm = 1,
+  --     label = { "lp", "bp", "hp"  },
+  --     value = 1,
+  --     behavior = "enum",
+  --     event = function(v, t)
+  --       if wrms_pages[5].k2.value == 1 then
+  --         softcut.post_filter_dry(1, 0)
+  --         softcut.post_filter_dry(2, 0)
+  --         softcut.post_filter_lp(1, 0)
+  --         softcut.post_filter_lp(2, 0)
+  --         softcut.post_filter_bp(1, 0)
+  --         softcut.post_filter_bp(2, 0)
+  --         softcut.post_filter_hp(1, 0)
+  --         softcut.post_filter_hp(2, 0)
+          
+  --         if v == 1 then -- v is lowpass
+  --           softcut.post_filter_lp(1, 1)
+  --           softcut.post_filter_lp(2, 1)
+  --         elseif v == 2 then -- v is bandpass
+  --           softcut.post_filter_bp(1, 1)
+  --           softcut.post_filter_bp(2, 1)
+  --         elseif v == 3 then -- v is hightpass
+  --           softcut.post_filter_hp(1, 1)
+  --           softcut.post_filter_hp(2, 1)
+  --         end
+  --       end
+  --     end
+  --   }
+  -- },
 wrms_pages[2].k2 = wrms_pages[1].k2
 wrms_pages[2].k3 = wrms_pages[1].k3
 
