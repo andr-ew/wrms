@@ -22,7 +22,7 @@ two wrms (stereo loops), similar in function but each with thier own quirks + ab
 
 let's start with page `v`, ok ?
 
-generally, `rec` decides whether new time is gobbled. notice at load, `wrm1` is echoing via continuously gobbling new time and fading old time. `wrm2` however, is dead asleep. wake her up by toggling record once, and then again. the length of her orbit is detirmined by the time between these initial toggles - after which gobble toggling returns to normal. to go back to sleep, hold `rec`, and begin again. `wrm2` mimics many of yr fav loop pedals. notice that `wrm1` feeds into `wrm2`. we'll get back to this later.
+generally, `rec` decides whether new time is gobbled. notice at load, `wrm1` is echoing via continuously gobbling new time and fading old time. `wrm2` however, is dead asleep. wake her up by toggling record once, and then again. the length of her orbit is detirmined by the time between these initial toggles - after which gobble toggling returns to normal. to go back to sleep, hold `rec`, and begin again. (`wrm2` mimics many of yr fav loop pedals). notice that `wrm1` feeds into `wrm2`. we'll get back to this later.
 
 oh, and `vol` controls the volumes
 
