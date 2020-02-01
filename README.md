@@ -14,5 +14,5 @@ tab ovr to available & refresh community catalog
 
 ### basics
 
-two wrms (stereo loops), similar in function but each with thier own quirks
+two wrms (stereo loops), similar in function but each with thier own quirks + abilities
 
