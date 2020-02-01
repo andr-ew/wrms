@@ -40,7 +40,7 @@ page `o` is for the past.
 
 `s` affects `wrm1` alone
 
-finally, here, we can make `wrm1` longer using `l` (which admittedly just looks like a vertical line, lol). with `s` we can scoot wrm for subtle delay fizzles, or powerful past-time explorations unlocked in `share` mode. `<<` and `>>` repeat actions from the previous page, useful for dual phase-orbiting looping configurations.
+finally, here, we can make `wrm1` longer using `l` (which admittedly just looks like a vertical line, lol). with `s` we can scoot wrm for subtle delay fizzles or sub-loop glitchy stuff. `<<` and `>>` repeat actions from the previous page, useful for dual phase-orbiting looping configurations.
 
 `>` communicates
 
