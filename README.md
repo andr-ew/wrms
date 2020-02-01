@@ -1,14 +1,17 @@
 # wrms
-a sample playground for norns
+dual asyncronous time-benders / echo loopers
+a remix of the cranes for norns
 
-## Requirements
+### Requirements
+norns
 
-
-
-## Download
-
+### Download
+head to `norns.local` + click on the books
+tab ovr 2 available & refresh community catalog
 
 
 # Documentation
+
+
 
 ### basics
