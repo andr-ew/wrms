@@ -3,7 +3,7 @@ dual asyncronous time-benders / echo loopers
 a remix of cranes for norns
 
 ### Requirements
-norns
+a norns !
 
 ### Download
 head to `norns.local` + click on the books
