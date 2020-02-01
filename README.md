@@ -1,6 +1,6 @@
 # wrms
 dual asyncronous time-benders / echo loopers
-a remix of the cranes for norns
+a remix of cranes for norns
 
 ### Requirements
 norns
@@ -12,6 +12,7 @@ tab ovr 2 available & refresh community catalog
 
 # Documentation
 
-
-
 ### basics
+
+two wrms (stereo loops), similar in function but each with thier own quirks
+
