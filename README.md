@@ -1,5 +1,6 @@
 # ~ wrms ~~
-dual asyncronous time-benders / echo loopers
+dual asyncronous time-wigglers / echo loopers
+
 
 ![screen shot](wrm.gif)
 
