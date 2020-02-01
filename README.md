@@ -36,5 +36,16 @@ page `o` is for the past.
 
 (a technicality: the rate of time is inversely proportional to orbital altitude)
 
-`wgl` scales time-varying orbits for both wrms - a low value makes a nice wobbly sound. a high wiggle will start pass through the singularity, but i'll let you decide whether that's an issue.
+`wgl` scales time-varying orbits for both wrms - a low value makes a nice wobbly sound. a high wiggle will start pass through the singularity, but i'll let you decide whether that's an issue :*)
 
+`s` affects `wrm1` alone
+
+finally, here, we can make `wrm1` longer using `l` (which admittedly just looks like a vertical line, lol). with `s` we can scoot wrm for subtle delay fizzles, or powerful past-time explorations unlocked in `share` mode. `<<` and `>>` repeat actions from the previous page, useful for dual phase-orbiting looping configurations.
+
+`>` communicates
+
+remember how `wrm2` gobbles the input of `wrm1` ? we can change that with `>` and `<`. feel free to place your delay after the loop for an alternate workflow, or feed both wrms to each other for more suprising results.
+
+feed a stereo panned field to `wrm1` to hear the results of `pp` - it reverses `old` on each pass for a ping-pong effect
+
+lastly - `share` creates a new instrument. toggle a shared past and memory for both wrms + telepathic time loop conversations. obviously this unlocks new feaures underneath every other control, but i won't spoil them !
