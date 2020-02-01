@@ -2,15 +2,15 @@
 dual asyncronous time-benders / echo loopers
 a remix of cranes for norns
 
-### Requirements
+### requirements
 a norns !
 
-### Download
+### download
 head to `norns.local` + click on the books
 tab ovr to available & refresh community catalog
 
 
-# Documentation
+# documentation
 
 ### basics
 
@@ -49,3 +49,8 @@ remember how `wrm1` feeds into `wrm2` ? we can change that with `>` and `<`. fee
 feed a stereo panned field to `wrm1` to hear the effect of `pp` - it reverses `old` on each pass for a ping-pong effect
 
 lastly - `share` creates a new instrument. toggle a shared past and memory for both wrms + telepathic time loop conversations. obviously this unlocks new feaures underneath every other control, but i won't spoil them !
+
+
+# roadmap
+
+* thing
