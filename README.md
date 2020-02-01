@@ -32,7 +32,7 @@ page `o` is for the past.
 
 `b` bends time
 
-`bnd` is the most tactile example. bend between single and double while the past follows along. `wrm2` has more flexibility here - `<<` and `>>` halve and double time's rate as wrms approach light speed, hapily gliding between while you hold and release.
+`bnd` is the most tactile example. bend between single and double while the past follows along. `wrm2` has more flexibility - `<<` and `>>` halve and double time's rate as wrms approach light speed, hapily gliding between while you hold and release.
 
 (a technicality: the rate of time is inversely proportional to orbital altitude)
 
