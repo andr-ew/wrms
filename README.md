@@ -46,6 +46,6 @@ finally, here, we can make `wrm1` longer using `l` (which admittedly just looks 
 
 remember how `wrm1` feeds into `wrm2` ? we can change that with `>` and `<`. feel free to place your delay after the loop for an alternate workflow, or feed both wrms to each other for more suprising results.
 
-feed a stereo panned field to `wrm1` to hear the results of `pp` - it reverses `old` on each pass for a ping-pong effect
+feed a stereo panned field to `wrm1` to hear the effect of `pp` - it reverses `old` on each pass for a ping-pong effect
 
 lastly - `share` creates a new instrument. toggle a shared past and memory for both wrms + telepathic time loop conversations. obviously this unlocks new feaures underneath every other control, but i won't spoil them !
