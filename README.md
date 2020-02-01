@@ -28,7 +28,7 @@ oh, and `vol` controls the volumes
 
 page `o` is for the past.
 
-`old` decides how loud the past is, && how long it resonates. use `old` to alter `wrm1`'s echo chain, or fade `wrm2`'s past to make room for the future. with a high `old`, `wrm1` can be used more like a looper. likewise, a low `old` on a short `wrm2` will sound an echo.
+`old` decides how loud the past is, && how long it resonates. use `old` to alter `wrm1`'s echo chain, or fade `wrm2`'s past to make room for the future. with a high `old`, `wrm1` can be used more like a looper. likewise, a low `old` on a shorter `wrm2` will sound an echo.
 
 `b` bends time
 
