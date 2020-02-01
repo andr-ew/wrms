@@ -115,6 +115,7 @@ end
 
 function wrms_key(n,z)
   if n == 1 then
+    rec = z
   else
     local k = wrms_pages[get_page_n()]["k" .. n]
     
