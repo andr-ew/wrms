@@ -36,7 +36,7 @@ page `o` is for the past.
 
 (a technicality: the rate of time is inversely proportional to orbital altitude)
 
-`wgl` scales time-varying orbits for both wrms - a low value makes a nice wobbly sound. a high wiggle will start pass through the singularity, but i'll let you decide whether that's an issue :~)
+`wgl` scales time-varying orbits for both wrms - a low value makes a nice wobbly sound. a high wiggle will start to pass through the singularity, but i'll let you decide whether that's an issue :~)
 
 `s` affects `wrm1` alone
 
