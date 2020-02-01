@@ -1,6 +1,8 @@
 # ~ wrms ~~
 dual asyncronous time-benders / echo loopers
 
+![screen shot](wrms.gif)
+
 ### requirements
 a norns !
 
