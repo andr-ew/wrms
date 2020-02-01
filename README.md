@@ -1,6 +1,5 @@
 # ~ wrms ~~
 dual asyncronous time-benders / echo loopers
-a remix of cranes for norns
 
 ### requirements
 a norns !
