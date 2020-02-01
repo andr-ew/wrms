@@ -30,7 +30,7 @@ page `o` is for the past.
 
 `old` decides how loud the past is, && how long it resonates. use `old` to alter `wrm1`'s echo chain, or fade `wrm2`'s past to make room for the future. with a high `old`, `wrm1` can be used more like a looper. likewise, a low `old` on a shorter `wrm2` will sound an echo.
 
-`b` bends time
+`b` wiggles time
 
 `bnd` is the most tactile example. bend `wrm1` between single and double time rate as she approaches light speed. `wrm2` has more flexibility - `<<` and `>>` halve and double time, hapily gliding between while you hold and release.
 
