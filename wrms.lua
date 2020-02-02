@@ -44,7 +44,7 @@ function init()
     softcut.rate_slew_time(h, 0.2)
     softcut.rec_level(h + 2, 1.0)
     softcut.rate(h + 2, wrms_loop[2].rate * wrms_loop[2].bend)
-    softcut.post_filter_dry(h, 0)
+    -- softcut.post_filter_dry(h, 0)
     
     for j = 1,2 do
       softcut.enable(i + j, 1)
@@ -396,9 +396,8 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       end
     }
   }
-}
--- ,
--- {
+  -- ,
+  -- {
   --   label = "f",
   --   e2 = { -- wrm 1 filter cutoff
   --     worm = 1,
@@ -469,7 +468,8 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
   --       end
   --     end
   --   }
-  -- },
+  -- }
+}
 wrms_pages[2].k2 = wrms_pages[1].k2
 wrms_pages[2].k3 = wrms_pages[1].k3
 
@@ -482,7 +482,7 @@ wrms_page_n = 1
 local get_page_n = function() return math.floor(wrms_page_n) end
 
 wrms_lfo = include 'lib/hnds_wrms'
-softloop = include 'lib/softloop'
+-- softloop = include 'lib/softloop'
 
 wrms_loop = {
   {
