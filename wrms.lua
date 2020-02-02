@@ -4,7 +4,7 @@
 -- time-wigglers / echo loopers
 --
 -- v011820 @andrew
--- llllllll.co/t/22222
+-- llllllll.co/t/wrms/28954
 
 -- include 'lib/lib_wrms'
 
