@@ -44,7 +44,7 @@ function init()
     softcut.rate_slew_time(h, 0.2)
     softcut.rec_level(h + 2, 1.0)
     softcut.rate(h + 2, wrms_loop[2].rate * wrms_loop[2].bend)
-    softcut.post_filter_dry(h, 0)
+    -- softcut.post_filter_dry(h, 0)
     
     for j = 1,2 do
       softcut.enable(i + j, 1)

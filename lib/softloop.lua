@@ -223,6 +223,11 @@ softloop.level = function(voice, val)
     softcut.level(softloop_data[i].subvoices[2], val * (p < 0) and 1 - math.abs(p) or 1)
   end
 end
+
+local update_regions = function()
+  
+end
+
 softloop.home_region_start = function(voice, val) end
 softloop.home_region_end = function(voice, val) end
 softloop.home_region_length = function(voice, val) end
