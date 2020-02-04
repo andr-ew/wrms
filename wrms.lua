@@ -3,10 +3,25 @@
 -- dual asyncronous 
 -- time-wigglers / echo loopers
 --
--- v011820 @andrew
--- llllllll.co/t/22222
+-- version 1.0.0 @andrew
+-- https://llllllll.co/t/wrms/28954
+--
+-- two wrms (stereo loops), 
+-- similar in function but each 
+-- with thier own quirks + 
+-- abilities
+-- 
+-- E1 up top changes which page 
+-- is displayed. pages contain 
+-- controls, mapped to norns’ 
+-- lower keys and encoders.
+-- the location of the control 
+-- dictates which wrm will be
+-- affected.
 
--- include 'lib/lib_wrms'
+wrms_lfo = include 'lib/hnds_wrms'
+softloop = include 'lib/softloop'
+
 
 function init()
   
@@ -480,9 +495,6 @@ wrms_phase_quant = 0.01
 
 wrms_page_n = 1
 local get_page_n = function() return math.floor(wrms_page_n) end
-
-wrms_lfo = include 'lib/hnds_wrms'
-softloop = include 'lib/softloop'
 
 wrms_loop = {
   {
