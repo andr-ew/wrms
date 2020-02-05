@@ -168,6 +168,8 @@ softpal.io = function(voice, val)
   
   softpal_data[voice].io = val
   delegate()
+  
+  softpal.enable(voice, 1)
 end
 
 softpal.rate = function(voice, val) 

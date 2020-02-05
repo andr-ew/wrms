@@ -3,7 +3,7 @@
 -- dual asyncronous 
 -- time-wigglers / echo loopers
 --
--- version 1.0.0 @andrew
+-- version 1.1.0 @andrew
 -- https://llllllll.co/t/wrms/28954
 --
 -- two wrms (stereo loops), 
@@ -20,7 +20,7 @@
 -- affected.
 
 wrms_lfo = include 'lib/hnds_wrms'
-softloop = include 'lib/softloop'
+softpal = include 'lib/softpal'
 
 
 function init()
@@ -53,15 +53,17 @@ function init()
   audio.level_adc_cut(1)
   audio.level_eng_cut(1)
   
-  for h, i in ipairs({ 0, 2 }) do
-    softcut.play(h, 1)
+  for i = 1,2 do
+    softpal.io(i, "stereo")
+    
+    softcut.play(1, 1)
     softcut.pre_level(h, 0.0)
     softcut.rate_slew_time(h, 0.2)
     softcut.rec_level(h + 2, 1.0)
     softcut.rate(h + 2, wrms_loop[2].rate * wrms_loop[2].bend)
     -- softcut.post_filter_dry(h, 0)
     
-    for j = 1,2 do
+    -- for j = 1,2 do
       softcut.enable(i + j, 1)
       softcut.loop(i + j, 1)
       softcut.fade_time(i+j, 0.1)
@@ -76,7 +78,7 @@ function init()
       
       softcut.level_slew_time(i+j, 0.1)
       softcut.recpre_slew_time(i+j, 0.01)
-    end
+    -- end
   end
   
   wrms_init()
