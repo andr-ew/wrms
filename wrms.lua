@@ -20,7 +20,7 @@
 -- affected.
 
 wrms_lfo = include 'lib/hnds_wrms'
-softpal = include 'lib/softpal'
+supercut = include 'lib/supercut'
 
 
 function init()
@@ -30,21 +30,11 @@ function init()
   wrms_lfo[1].freq = 0.5 -- keep the lfos out of phase
   wrms_lfo[2].freq = 0.4
   wrms_lfo.process = function() -- called on each lfo update
-    for i = 1,2 do
-      local rate = wrms_loop[1].rate + wrms_lfo[1].delta -- set wrm 1 rate = change in lfo1 each time it updates
-      
-      softcut.rate(i, rate * wrms_loop[1].bend)
-      softcut.rate(i, rate * wrms_loop[1].bend)
-      wrms_loop[1].rate = rate
-    end
+    local rate = supercut.rate(1) + wrms_lfo[1].delta -- set wrm 1 rate = change in lfo1 each time it updates
+    supercut.rate(1, rate)
     
-    for i = 3,4 do
-      local rate = wrms_loop[2].rate + wrms_lfo[2].delta -- set wrm 2 rate = change in lfo2 each time it updates
-      
-      softcut.rate(i, rate * wrms_loop[2].bend)
-      softcut.rate(i, rate * wrms_loop[2].bend)
-      wrms_loop[2].rate = rate
-    end
+    local rate = supercut.rate(2) + wrms_lfo[2].delta -- set wrm 2 rate = change in lfo2 each time it updates
+    supercut.rate(2, rate)
   end
   
   -- softcut initial settings
@@ -53,38 +43,38 @@ function init()
   audio.level_adc_cut(1)
   audio.level_eng_cut(1)
   
+  supercut.init(1, "stereo")
+  supercut.init(2, "stereo")
+  
+  supercut.play(1, 1)
+  supercut.pre_level(1, 0.0)
+  supercut.rate_slew_time(1, 0.2)
+  supercut.home_region_length(1, 5)
+  
+  supercut.rec_level(2, 1.0)
+  supercut.rate(2, 1)
+  
   for i = 1,2 do
-    softpal.io(i, "stereo")
+    supercut.enable(i, 1)
+    supercut.loop(i, 1)
+    supercut.fade_time(i, 0.1)
+    supercut.position(i, 0)
     
-    softcut.play(1, 1)
-    softcut.pre_level(h, 0.0)
-    softcut.rate_slew_time(h, 0.2)
-    softcut.rec_level(h + 2, 1.0)
-    softcut.rate(h + 2, wrms_loop[2].rate * wrms_loop[2].bend)
-    -- softcut.post_filter_dry(h, 0)
+    supercut.level_input_cut(1, i, 1.0, 1)
+    supercut.level_input_cut(2, i, 1.0, 2)
     
-    -- for j = 1,2 do
-      softcut.enable(i + j, 1)
-      softcut.loop(i + j, 1)
-      softcut.fade_time(i+j, 0.1)
-      
-      softcut.level_input_cut(j, i + j, 1.0)
-      softcut.buffer(i + j,j)
-      softcut.pan(i + j, j == 1 and -1 or 1)
-      
-      softcut.loop_start(i+j, wrms_loop[j].loop_start)
-      softcut.loop_end(i+j, wrms_loop[j].loop_end)
-      softcut.position(i+j, wrms_loop[j].loop_start)
-      
-      softcut.level_slew_time(i+j, 0.1)
-      softcut.recpre_slew_time(i+j, 0.01)
-    -- end
+    supercut.pan(i, 0)
+    
+    supercut.level_slew_time(i, 0.1)
+    supercut.recpre_slew_time(i, 0.01)
   end
   
   wrms_init()
   
   redraw()
 end
+
+--------------------------------------------------- supercutify below
 
 wrms_pages = { -- ordered pages of visual controls and actions (event callback functions)
   {
@@ -94,10 +84,8 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       label = "vol",
       value = 1.0,
       range = { 0.0, 2.0 },
-      event = function(v) 
-        softcut.level(1, v)
-        softcut.level(2, v)
-        wrms_loop[1].vol = v
+      event = function(v)
+        supercut.level(1, v)
         
         wrms_pages[5].e2.event(wrms_pages[5].e2.value)
       end
@@ -108,9 +96,7 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       value = 1.0,
       range = { 0.0, 2.0 },
       event = function(v)
-        softcut.level(3, v)
-        softcut.level(4, v)
-        wrms_loop[2].vol = v
+        supercut.level(2, v)
         
         wrms_pages[5].e3.event(wrms_pages[5].e3.value)
       end
@@ -122,17 +108,13 @@ wrms_pages = { -- ordered pages of visual controls and actions (event callback f
       behavior = "toggle",
       event = function(v, t)
         if t < 0.5 then -- if short press toggle record
-          softcut.rec(1, v)
-          softcut.rec(2, v)
-          wrms_loop[1].rec = v
+          supercut.rec(1, v)
         else -- else long press clears loop region
-          softcut.rec(1, 0)
-          softcut.rec(2, 0)
-          wrms_loop[1].rec = 0
+          supercut.rec(1, 0)
           
           wrms_pages[1].k2.value = 0
           
-          softcut.buffer_clear_region(wrms_loop[1].region_start, wrms_loop[1].region_end)
+          supercut.buffer_clear_region(1)
         end
       end
     },

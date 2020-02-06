@@ -1,0 +1,483 @@
+-- temporary override
+local SC = softcut
+
+function SC.defaults()
+   zeros = {}
+   for i=1, SC.VOICE_COUNT do zeros[i] = 0 end
+   
+   local state = {}
+   for i=1,SC.VOICE_COUNT do
+     state[i] = {}
+     
+     state[i].enable = 0
+     state[i].play = 0
+     state[i].record = 0
+     
+     state[i].buffer = (i%2 + 1)
+     state[i].level = 0
+     state[i].pan = 0
+     
+     state[i].level_input_cut = {0,0}
+     state[i].level_cut_cut = zeros
+     
+     state[i].rate = 1
+     state[i].loop_start = (i-1)*2
+     state[i].loop_end = (i-1)*2+1
+     state[i].loop = 1
+     
+     state[i].fade_time =  0.0005
+     state[i].rec_level = 0
+     state[i].pre_level = 0
+     state[i].rec = 0
+     state[i].rec_offset = -0.00015
+     state[i].position = 0
+     
+     state[i].pre_filter_fc = 16000
+     state[i].pre_filter_dry = 0
+     state[i].pre_filter_lp = 1
+     state[i].pre_filter_hp = 0
+     state[i].pre_filter_bp = 0
+     state[i].pre_filter_br = 0
+     state[i].pre_filter_fc_mod = 1
+
+     state[i].post_filter_fc = 12000
+     state[i].post_filter_dry = 0
+     state[i].post_filter_lp = 0
+     state[i].post_filter_hp = 0
+     state[i].post_filter_bp = 0
+     state[i].post_filter_br = 0
+     
+     state[i].level_slew_time = 0.001
+     state[i].rate_slew_time = 0.001
+     state[i].phase_quant = 1
+     state[i].phase_offset = 0
+  end
+  return state
+end
+
+supercut = {}
+
+local supercut_data = softcut.defaults()
+
+-- create default functions
+for k,v in pairs(supercut_data[1]) do
+  local f = function(key)
+    local key = key
+    
+    return function(voice, ...)
+      if arg ~= nil then
+        if #arg == 1 then
+          supercut_data[voice][key] = arg[1]
+        else
+          supercut_data[voice][key][arg[1]] = arg[2]
+        end
+        
+        for i,v in ipairs(supercut_data[voice].subvoices) do
+          softcut[key](v, unpack(arg))
+        end
+      else
+        return supercut_data[voice][key]
+      end
+    end
+  end
+  
+  supercut[k] = f(k)
+end
+
+-- divide buffers into default regions per voice
+local home = {}
+local cant_math = {}
+local cant_math2 = {}
+local div = softcut.VOICE_COUNT / 2
+
+local j = 0
+local i = 1
+while i <= softcut.VOICE_COUNT do
+  cant_math[i] = j
+  cant_math[i + 1] = j
+  
+  cant_math2[i] = 1
+  cant_math2[i + 1] = 2
+  
+  i = i + 2
+  j = j + 1
+end
+
+for i = 1, softcut.VOICE_COUNT do
+  home[i] = {
+    region_start = cant_math[i] * softcut.BUFFER_SIZE / div,
+    region_end = (cant_math[i] + 1) * softcut.BUFFER_SIZE / div,
+    buffer = cant_math2[i]
+  }
+end
+
+-- set defaults to match regions
+for i = 1, softcut.VOICE_COUNT do
+  supercut.buffer(i, home[i].buffer)
+  supercut.loop_start(i, home[i].region_start)
+  supercut.loop_end(i, home[i].region_end)
+end
+
+-- additional data to store
+for i,v in ipairs(supercut_data) do
+  v.level_input_cut = { { 0 }, { 0 } }
+  
+  v.io = "mono"
+  v.subvoices = { i }
+  v.home_region_start = home[i].region_start
+  v.home_region_end = home[i].region_end
+  v.home_region_length = home[i].region_end - home[i].region_start
+  v.home_buffer = { home[i].buffer }
+  v.region_start = v.home_region_start
+  v.region_end = v.home_region_end
+  v.region_length = v.region_end - v.region_start
+  v.loop_length = v.region_length
+  v.rate2 = 1
+  v.rate3 = 1
+  v.rate4 = 1
+  v.home_region_position = 0
+  v.region_position = 0
+  v.loop_position = 0
+  v.buffer = { home[i].buffer }
+end
+
+-- delagate subvoices
+local delegate = function()
+  local i = 1
+  local iv = 1
+  
+  while i <= softcut.VOICE_COUNT do
+    if supercut_data[i].io == "mono" then
+      supercut_data[i].subvoices = { i }
+      
+      for j,v in ipairs(supercut_data[i].level_input_cut) do
+        supercut_data[i].level_input_cut[j] = { 0 }
+      end
+      for j,v in ipairs(supercut_data[i].level_cut_cut) do
+        supercut_data[i].level_cut_cut[j] = { 0 }
+      end
+      
+      i = i + 1
+    else
+      supercut_data[i].subvoices = { i, i + 1 }
+      
+      for j,v in ipairs(supercut_data[i].level_cut_cut) do
+        supercut_data[i].level_cut_cut[j] = { 0, 0 }
+      end
+      for j,v in ipairs(supercut_data[i].level_cut_cut) do
+        supercut_data[i].level_cut_cut[j] = { 0, 0 }
+      end
+      
+      i = i + 2
+    end
+    
+    iv = iv + 1
+  end
+  
+  for i = iv + 1, softcut.VOICE_COUNT do 
+    supercut_data[i].io = "mono"
+    supercut_data[i].subvoices = {}
+  end
+  
+  for i,v in ipairs(supercut_data) do
+    v.buffer = {}
+    
+    for j,w in ipairs(v.subvoices) do
+      table.insert(v.buffer, home[w].buffer)
+    end
+  end
+end
+
+-- manually defined voice functions
+
+supercut.io = function(voice, val) 
+  if val == nil then return supercut_data[voice].io end
+  
+  supercut_data[voice].io = val
+  delegate()
+end
+
+supercut.init = function(vocie, iio)
+  supercut.io(voice, iio)
+  supercut.enable(voice, 1)
+end
+
+supercut.rate = function(voice, val) 
+  if val == nil then return supercut_data[voice].rate end
+  
+  supercut_data[voice].rate = val
+  
+  for i,v in ipairs(supercut_data[voice].subvoices) do
+    softcut.rate(v, supercut.rate * supercut.rate2 * supercut.rate3 * supercut.rate4)
+  end
+end
+supercut.rate2 = function(voice, val) 
+  if val == nil then return supercut_data[voice].rate2 end
+  
+  supercut_data[voice].rate2 = val
+  
+  for i,v in ipairs(supercut_data[voice].subvoices) do
+    softcut.rate(v, supercut.rate * supercut.rate2 * supercut.rate3 * supercut.rate4)
+  end
+end
+supercut.rate3 = function(voice, val) 
+  if val == nil then return supercut_data[voice].rate3 end
+  
+  supercut_data[voice].rate3 = val
+  
+  for i,v in ipairs(supercut_data[voice].subvoices) do
+    softcut.rate(v, supercut.rate * supercut.rate2 * supercut.rate3 * supercut.rate4)
+  end
+end
+supercut.rate4 = function(voice, val) 
+  if val == nil then return supercut_data[voice].rate4 end
+  
+  supercut_data[voice].rate4 = val
+  
+  for i,v in ipairs(supercut_data[voice].subvoices) do
+    softcut.rate(v, supercut.rate * supercut.rate2 * supercut.rate3 * supercut.rate4)
+  end
+end
+  
+supercut.pan = function(voice, val)
+  if val == nil then return supercut_data[voice].pan end
+  
+  supercut_data[voice].pan = val
+  
+  if supercut_data[voice].io == "mono" then
+    if supercut_data[i].subvoices[1] ~= nil then 
+      softcut.pan(supercut_data[i].subvoices[1], val)
+    end
+  else
+    softcut.pan(supercut_data[i].subvoices[1], -1)
+    softcut.pan(supercut_data[i].subvoices[2], 1)
+    
+    softcut.level(supercut_data[i].subvoices[1], supercut_data[i].level * (val > 0) and 1 - val or 1)
+    softcut.level(supercut_data[i].subvoices[2], supercut_data[i].level * (val < 0) and 1 - math.abs(val) or 1)
+  end
+end
+
+supercut.level = function(voice, val)
+  if val == nil then return supercut_data[voice].level end
+  
+  supercut_data[voice].level = val
+  
+  if supercut_data[voice].io == "mono" then
+    if supercut_data[i].subvoices[1] ~= nil then 
+      softcut.level(supercut_data[i].subvoices[1], val)
+    end
+  else
+    local p = supercut_data[voice].pan
+    
+    softcut.level(supercut_data[i].subvoices[1], val * (p > 0) and 1 - p or 1)
+    softcut.level(supercut_data[i].subvoices[2], val * (p < 0) and 1 - math.abs(p) or 1)
+  end
+end
+
+local update_loop_points = function(voice)
+  for i,v in ipairs(supercut_data[voice].subvoices) do
+    softcut.loop_start(v, util.clamp(supercut_data[voice].region_start, supercut_data[voice].region_end, supercut_data[voice].region_start + supercut_data[voice].loop_start))
+    softcut.loop_end(v, util.clamp(supercut_data[voice].region_start, supercut_data[voice].region_end, supercut_data[voice].region_start + supercut_data[voice].loop_end))
+  end
+end
+
+supercut.home_region_start = function(voice, val)
+  if val == nil then return supercut_data[voice].home_region_start end
+  
+  supercut_data[voice].home_region_start = val 
+end
+supercut.home_region_end = function(voice, val)
+  if val == nil then return supercut_data[voice].home_region_end end
+  
+  supercut_data[voice].home_region_end = val 
+  supercut_data[voice].home_region_length = supercut_data[voice].home_region_end - supercut_data[voice].home_region_start
+end
+supercut.home_region_length = function(voice, val)
+  if val == nil then return supercut_data[voice].home_region_length end
+  
+  supercut_data[voice].home_region_length = v
+  supercut_data[voice].home_region_end = supercut_data[voice].home_region_start + val 
+end
+supercut.home_buffer = function(voice, val)
+  if val == nil then return supercut_data[voice].home_buffer end
+  
+  supercut_data[voice].home_buffer = val 
+end
+supercut.region_start = function(voice, val)
+  if val == nil then return supercut_data[voice].region_start end
+  
+  supercut_data[voice].region_start = val
+  update_loop_points(voice)
+end
+supercut.region_end = function(voice, val)
+  if val == nil then return supercut_data[voice].region_end end
+  
+  supercut_data[voice].region_end = val
+  supercut_data[voice].region_length = supercut_data[voice].region_end - supercut_data[voice].region_start
+  update_loop_points(voice)
+end
+supercut.region_length = function(voice, val)
+  if val == nil then return supercut_data[voice].region_length end
+  
+  supercut_data[voice].region_length = val
+  supercut_data[voice].region_end = supercut_data[voice].region_start + val
+  update_loop_points(voice)
+end
+supercut.loop_start = function(voice, val)
+  if val == nil then return supercut_data[voice].loop_start end
+  
+  supercut_data[voice].loop_start = val 
+  update_loop_points(voice)
+end
+supercut.loop_end = function(voice, val)
+  if val == nil then return supercut_data[voice].loop_end end
+  
+  supercut_data[voice].loop_end = val
+  supercut_data[voice].loop_length = supercut_data[voice].loop_end - supercut_data[voice].loop_start
+  update_loop_points(voice)
+end
+supercut.loop_length = function(voice, val)
+  if val == nil then return supercut_data[voice].loop_length end
+  
+  supercut_data[voice].loop_length = val
+  supercut_data[voice].loop_end = supercut_data[voice].loop_start + val
+  
+  update_loop_points(voice)
+end
+
+supercut.use_voice_home_region = function(voice, val)
+  supercut.region_start(voice, supercut_data[voice].home_region_start)
+  supercut.region_end(voice, supercut_data[voice].home_region_end)
+  
+  update_loop_points(voice)
+end
+
+supercut.use_voice_region = function(voice, val)
+  supercut.region_start(voice, supercut_data[voice].region_start)
+  supercut.region_end(voice, supercut_data[voice].region_end)
+  
+  update_loop_points(voice)
+end
+
+supercut.home_region_position = function(voice, val)
+  if val == nil then return supercut_data[voice].home_region_position end
+  
+  supercut_data[voice].home_region_position = val
+  
+  for i,v in ipairs(supercut_data[voice].subvoices) do
+    softcut.position(v, supercut_data[voice].home_region_start + util.clamp(0, supercut_data[voice].home_region_length, val))
+  end
+end
+supercut.region_position = function(voice, val)
+  if val == nil then return supercut_data[voice].region_position end
+  
+  supercut_data[voice].region_position = val
+  
+  for i,v in ipairs(supercut_data[voice].subvoices) do
+    softcut.position(v, supercut_data[voice].region_start + util.clamp(0, supercut_data[voice].region_length, val))
+  end
+end
+supercut.loop_position = function(voice, val)
+  if val == nil then return supercut_data[voice].loop_position end
+  
+  supercut_data[voice].loop_position = val
+  
+  for i,v in ipairs(supercut_data[voice].subvoices) do
+    softcut.position(v, supercut_data[voice].loop_start + util.clamp(0, supercut_data[voice].loop_length, val))
+  end
+end
+
+supercut.level_input_cut = function(ch, voice, amp, subvoice)
+  if subvoice == nil and amp == nil then return supercut_data[voice].level_input_cut[ch] end
+  if amp == nil then return supercut_data[voice].level_input_cut[ch][subvoice] end
+  
+  if subvoice == nil then
+    for i,v in ipairs(supercut_data[voice].subvoices) do
+      supercut_data[voice].level_input_cut[ch][i] = amp
+      softcut.level_input_cut(ch, v, amp)
+    end
+  else
+    supercut_data[voice].level_input_cut[ch][subvoice] = amp
+    softcut.level_input_cut(ch, supercut_data[voice].subvoices[subvoice], amp)
+  end
+end
+
+supercut.level_cut_cut = function(voice, dst, amp, subvoice)
+  if subvoice == nil and amp == nil then return supercut_data[voice].level_cut_cut[dst] end
+  if amp == nil then return supercut_data[voice].level_input_cut[dst][subvoice] end
+  
+  if subvoice == nil then
+    for i,v in ipairs(supercut_data[voice].subvoices) do
+      supercut_data[voice].level_cut_cut[dst][i] = amp
+      softcut.level_cut_cut(v, dst, amp)
+    end
+  else
+    supercut_data[voice].level_input_cut[dst][subvoice] = amp
+    softcut.level_input_cut(supercut_data[voice].subvoices[subvoice], dst, amp)
+  end
+end
+
+supercut.buffer = function(...) print("supercut doesn't use this function!") end
+
+supercut.buffer_clear_region = function(...)
+  if #arg == 1 then
+    local voice = arg[1]
+    for i,v in ipairs(supercut_data[voice].subvoices) do
+      softcut.buffer_clear_region_channel(supercut_data[voice].buffer[i], supercut_data[voice].region_start, supercut_data[voice].region_end)
+    end
+  else
+    softcut.buffer_clear_region(unpack(arg))
+  end
+end
+
+supercut.buffer_clear_region_channel = function(...)
+  if #arg == 1 then
+    local voice = arg[1]
+    for i,v in ipairs(supercut_data[voice].subvoices) do
+      softcut.buffer_clear_region_channel(supercut_data[voice].buffer[i], supercut_data[voice].region_start, supercut_data[voice].region_end)
+    end
+  else
+    softcut.buffer_clear_region_channel(unpack(arg))
+  end
+end
+
+supercut.buffer_read = function(file, voice, start_src, ch_src)
+  local voice = arg[2]
+  local file = arg[1]
+  local start_src = 0
+  local ch_src = 1
+  if arg[3] ~= nil then start_src = arg[3] end
+  if arg[4] ~= nil then ch_src = arg[4] end
+  
+  if supercut_data[voice].io == "mono" then
+    softcut.buffer_read_mono(file, start_src, supercut_data[voice].region_start, supercut_data[voice].region_length, ch_src, supercut_data[voice].buffer[1])
+  else
+    buffer_read_stereo(file, start_src, supercut_data[voice].region_start, supercut_data[voice].region_length)
+  end
+end
+
+supercut.buffer_write = function(file, voice)
+  if supercut_data[voice].io == "mono" then
+    buffer_write_mono(file, supercut_data[voice].region_start, supercut_data[voice].region_length, supercut_data[voice].buffer[1])
+  else
+    buffer_write_stereo(file, supercut_data[voice].region_start, supercut_data[voice].region_length)
+  end
+end
+
+-- phase stuff - auto-update positions
+
+local supercut_event_phase = function(voice, p) end
+local softcut_event_phase = function(voice, p) 
+  supercut_data[voice].home_region_position = val - supercut_data[voice].home_region_start
+  supercut_data[voice].region_position = val - supercut_data[voice].region_start
+  supercut_data[voice].loop_position = val - supercut_data[voice].loop_start
+  
+  supercut_event_phase(voice, p)
+end
+
+supercut.event_phase = function(f) supercut_event_phase = f end
+softcut.event_phase(softcut_event_phase)
+
+setmetatable(supercut, { __index = softcut })
+
+return supercut
