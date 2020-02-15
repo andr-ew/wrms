@@ -1,3 +1,5 @@
+tabutil = require "tabutil"
+
 -- temporary override
 local SC = softcut
 
@@ -141,6 +143,8 @@ for i = 1, softcut.VOICE_COUNT do
   supercut.loop_end(i, home[i].region_end)
 end
 
+local subvoice_voice_lookup = {}
+
 -- delagate subvoices
 local delegate = function()
   local i = 1
@@ -157,6 +161,8 @@ local delegate = function()
         supercut_data[voice].level_cut_cut[j] = { 0 }
       end
       
+      subvoice_voice_lookup[i] = voice
+      
       i = i + 1
     else
       supercut_data[voice].subvoices = { i, i + 1 }
@@ -167,6 +173,9 @@ local delegate = function()
       for j,v in ipairs(supercut_data[i].level_cut_cut) do
         supercut_data[voice].level_cut_cut[j] = { 0, 0 }
       end
+      
+      subvoice_voice_lookup[i] = voice
+      subvoice_voice_lookup[i + 1] = voice
       
       i = i + 2
     end
@@ -506,7 +515,11 @@ supercut.add_data = function(name, default, callback)
   if callback == nil then callback = function(...) end end
   
   for i,v in ipairs(supercut_data) do
-    v[name] = default
+    if type(default) == "function" then
+      v[name] = default()
+    else
+      v[name] = default
+    end
   end
   
   local closure = function(name)
@@ -532,11 +545,11 @@ end
 
 local supercut_event_phase = function(voice, val) end
 
-local softcut_event_phase = function(voice, val) 
-  supercut_data[voice].home_region_position = val - supercut_data[voice].home_region_start
-  supercut_data[voice].region_position = val - supercut_data[voice].region_start
-  supercut_data[voice].loop_position = val - supercut_data[voice].loop_start
-  supercut_data[voice].position = val
+local softcut_event_phase = function(subvoice, val) --------------------- !
+  supercut_data[subvoice_voice_lookup[subvoice]].home_region_position = val - supercut_data[subvoice_voice_lookup[subvoice]].home_region_start
+  supercut_data[subvoice_voice_lookup[subvoice]].region_position = val - supercut_data[subvoice_voice_lookup[subvoice]].region_start
+  supercut_data[subvoice_voice_lookup[subvoice]].loop_position = val - supercut_data[subvoice_voice_lookup[subvoice]].loop_start
+  supercut_data[subvoice_voice_lookup[subvoice]].position = val
   
   supercut_event_phase(voice, val)
 end
@@ -545,6 +558,54 @@ supercut.event_phase = function(f) supercut_event_phase = f end
 softcut.event_phase(softcut_event_phase)
 
 softcut.poll_start_phase()
+
+supercut.status = function(voice)
+  if voice == nil then
+    for i,v in ipairs(supercut_data) do
+      if #v.subvoices > 0 then
+        print("voice " .. i .. " {")
+        
+        for k,w in pairs(v) do
+          if type(w) == "table" then
+            print("  " .. k .. " = { ")
+            for l,x in ipairs(w) do
+              print(x)
+            end
+            print("}")
+          else
+            print("  " .. k .. " = " .. tostring(w))
+          end
+        end
+        
+        print("}")
+      end
+    end
+  else
+    print("voice " .. voice .. " {")
+    
+    for k,w in pairs(supercut_data[voice]) do
+      if type(w) == "table" then
+        local stuff = ""
+        for l,x in ipairs(w) do
+          if type(x) == "table" then
+            local stuff2 = "{ "
+            for m,y in ipairs(x) do
+              stuff2 = stuff2 .. tostring(y) .. ", "
+            end
+            stuff = stuff .. stuff2 .. "}, "
+          else
+            stuff = stuff .. tostring(x) .. ", "
+          end
+        end
+        print("  " .. k .. " = { " .. stuff .. "}")
+      else
+        print("  " .. k .. " = " .. tostring(w))
+      end
+    end
+    
+    print("}")
+  end
+end
 
 setmetatable(supercut, { __index = softcut })
 

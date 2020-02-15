@@ -21,56 +21,6 @@
 
 wrms = include 'lib/wrms_ui'
 
-function init()
-  --wigl lfo setup
-  wrms.lfo.init()
-  wrms.lfo[1].freq = 0.5 -- keep the lfos out of phase
-  wrms.lfo[2].freq = 0.4
-  wrms.lfo.process = function() -- called on each lfo update
-    local rate = supercut.rate(1) + wrms.lfo[1].delta -- set wrm 1 rate = change in lfo1 each time it updates
-    supercut.rate(1, rate)
-    
-    local rate = supercut.rate(2) + wrms.lfo[2].delta -- set wrm 2 rate = change in lfo2 each time it updates
-    supercut.rate(2, rate)
-  end
-  
-  -- supercut (softcut) initial settings
-  supercut.buffer_clear()
-  
-  audio.level_adc_cut(1)
-  audio.level_eng_cut(1)
-  
-  supercut.init(1, "stereo")
-  supercut.init(2, "stereo")
-  
-  supercut.play(1, 1)
-  supercut.pre_level(1, 0.0)
-  supercut.rate_slew_time(1, 0.2)
-  supercut.home_region_length(1, 5)
-  
-  supercut.rec_level(2, 1.0)
-  supercut.rate(2, 1)
-  
-  for i = 1,2 do
-    supercut.enable(i, 1)
-    supercut.loop(i, 1)
-    supercut.fade_time(i, 0.1)
-    supercut.position(i, 0)
-    
-    supercut.level_input_cut(1, i, 1.0, 1)
-    supercut.level_input_cut(2, i, 1.0, 2)
-    
-    supercut.pan(i, 0)
-    
-    supercut.level_slew_time(i, 0.1)
-    supercut.recpre_slew_time(i, 0.01)
-  end
-  
-  wrms.init()
-  
-  redraw()
-end
-
 ---------------- pages - ordered pages of visual controls and actions (event callback functions) stored in a lua table --------------------------------------------------------
 
 wrms.pages = {
@@ -127,7 +77,7 @@ wrms.pages = {
             
           elseif supercut.is_punch_in(2) then -- else if inital loop is being punched in, punch out
             supercut.region_end(2, supercut.position(2) - 0.1) -- set loop & region end to loop time
-            supercut.loop_end(2, supercut.region_end(2))
+            supercut.loop_end(2, supercut.position(2) - 0.1)
             
             supercut.rec(2, 0) -- stop recording but keep playing
             
@@ -156,8 +106,8 @@ wrms.pages = {
           supercut.loop_end(2, supercut.home_region_end(2))
           supercut.loop_position(2, 0)
           
-          supercut.is_punch_in(2, true)
-          supercut.has_initial(2, true)
+          supercut.is_punch_in(2, false)
+          supercut.has_initial(2, false)
           
           supercut.buffer_clear_region(2) -- clear loop region
           
@@ -423,10 +373,60 @@ wrms.pages[2].k3 = wrms.pages[1].k3
 
 -------------------------------------------- global callbacks - feel free to redefine  ------------------------------------------------------------
 
-re = metro.init()
-re.time = 1.0 / 15
-re.event = function() redraw() end
-re:start()
+function init()
+  --wigl lfo setup
+  wrms.lfo.init()
+  wrms.lfo[1].freq = 0.5 -- keep the lfos out of phase
+  wrms.lfo[2].freq = 0.4
+  wrms.lfo.process = function() -- called on each lfo update
+    local rate = supercut.rate(1) + wrms.lfo[1].delta -- set wrm 1 rate = change in lfo1 each time it updates
+    supercut.rate(1, rate)
+    
+    local rate = supercut.rate(2) + wrms.lfo[2].delta -- set wrm 2 rate = change in lfo2 each time it updates
+    supercut.rate(2, rate)
+  end
+  
+  -- supercut (softcut) initial settings
+  supercut.buffer_clear()
+  
+  audio.level_adc_cut(1)
+  audio.level_eng_cut(1)
+  
+  supercut.init(1, "stereo")
+  supercut.init(2, "stereo")
+  
+  supercut.play(1, 1)
+  supercut.pre_level(1, 0.0)
+  supercut.rate_slew_time(1, 0.2)
+  supercut.home_region_length(1, 5)
+  
+  supercut.rec_level(2, 1.0)
+  supercut.rate(2, 1)
+  
+  supercut.phase_quant(1, wrms.phase_quant)
+  supercut.phase_quant(2, wrms.phase_quant)
+  
+  supercut.has_initial(1, true)
+  
+  for i = 1,2 do
+    supercut.enable(i, 1)
+    supercut.loop(i, 1)
+    supercut.fade_time(i, 0.1)
+    supercut.position(i, 0)
+    
+    supercut.level_input_cut(1, i, 1.0, 1)
+    supercut.level_input_cut(2, i, 1.0, 2)
+    
+    supercut.pan(i, 0)
+    
+    supercut.level_slew_time(i, 0.1)
+    supercut.recpre_slew_time(i, 0.01)
+  end
+  
+  wrms.init()
+  
+  redraw()
+end
 
 function enc(n, delta)
   wrms.enc(n, delta)
@@ -441,9 +441,7 @@ function key(n,z)
 end
 
 function redraw()
-  screen.clear()
-  
   wrms.redraw()
-  
-  screen.update()
 end
+
+metro.init(function() redraw() end,  1/30/3):start()

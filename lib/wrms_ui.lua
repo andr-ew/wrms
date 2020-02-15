@@ -73,16 +73,16 @@ local function awake_seg()
   return ret
 end
 
-supercut.add_data("segment_is_awake", awake_seg())
+supercut.add_data("segment_is_awake", awake_seg)
 supercut.add_data("sleep_index", 24)
 
 function wrms.wake(voice)
   supercut.sleep_index(voice, 24)
 end
 
-function wrms.sleep(voice)
-  supercut.sleep_index(voice, 1)
-end
+wrms.sleep = wrms.wake
+
+
 
 -- function wrm_phase_event(voice, p)
 --   if voice == 1 or voice == 3 then
@@ -218,6 +218,8 @@ wrms.draw.animations = function()
   screen.fill()
   
   for i = 1,2 do
+    
+    
     local left = 2 + (i-1) * 58
     local top = 34
     local width = 44
@@ -253,7 +255,7 @@ wrms.draw.animations = function()
     
     if supercut.sleep_index(i) > 0 and supercut.sleep_index(i) <= 24 then
       supercut.segment_is_awake(i)[math.floor(supercut.sleep_index(i))] = supercut.has_initial(i)
-      supercut.sleep_index(i, supercut.sleep_index(i) + (1 * (supercut.has_initial(i) and -1 or -4)))
+      supercut.sleep_index(i, supercut.sleep_index(i) + (0.5 * (supercut.has_initial(i) and -1 or -2)))
     end
     
     screen.level(math.floor(supercut.level(i) * 10))
@@ -261,19 +263,24 @@ wrms.draw.animations = function()
     for j = 1, width do
       local amp = supercut.segment_is_awake(i)[j] and math.sin(((supercut.position(i) - supercut.loop_start(i)) * (i == 1 and 1 or 2) / (supercut.loop_end(i) - supercut.loop_start(i)) + j / width) * (i == 1 and 2 or 4) * math.pi) * util.linlin(1, width / 2, lowamp, highamp + supercut.wiggle(i), j < (width / 2) and j or width - j) - 0.75 * util.linlin(1, width / 2, lowamp, highamp + supercut.wiggle(i), j < (width / 2) and j or width - j) - (util.linexp(0, 1, 0.5, 6, j/width) * (supercut.rate2(i) - 1)) or 0
       local left = left - (supercut.loop_start(i) - supercut.region_start(i)) / (supercut.region_end(i) - supercut.region_start(i)) * (width - 44)
-      
+    
       screen.pixel(left - 1 + j, top + amp)
     end
     screen.fill()
+    
   end
 end
 
 
 function wrms.redraw()
+  screen.clear()
+  
   wrms.draw.pager()
   wrms.draw.enc()
   wrms.draw.key()
   wrms.draw.animations()
+  
+  screen.update()
 end
 
 
