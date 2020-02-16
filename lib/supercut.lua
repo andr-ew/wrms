@@ -113,28 +113,52 @@ for i = 1, softcut.VOICE_COUNT do
   }
 end
 
+local function update_regions()
+  for i,v in ipairs(supercut_data) do
+    local sv = v.subvoices[1]
+    
+    if sv ~= nil then
+      v.home_region_start = home[sv].region_start
+      v.home_region_end = home[sv].region_end
+      v.home_region_length = home[sv].region_end - home[sv].region_start
+      
+      v.region_start = v.home_region_start
+      v.region_end = v.home_region_end
+      v.region_length = v.region_end - v.region_start
+      v.loop_length = v.region_length
+      
+      for j,w in ipairs(v.subvoices) do
+        v.home_buffer[j] = home[w].buffer
+        v.buffer[j] = home[w].buffer
+      end
+    end
+  end
+end
+
 -- additional data to store
 for i,v in ipairs(supercut_data) do
   v.level_input_cut = { { 0 }, { 0 } }
   
   v.io = "mono"
   v.subvoices = { i }
-  v.home_region_start = home[i].region_start
-  v.home_region_end = home[i].region_end
-  v.home_region_length = home[i].region_end - home[i].region_start
-  v.home_buffer = { home[i].buffer }
-  v.region_start = v.home_region_start
-  v.region_end = v.home_region_end
-  v.region_length = v.region_end - v.region_start
-  v.loop_length = v.region_length
+  v.home_region_start = 0
+  v.home_region_end = 0
+  v.home_region_length = 0
+  v.home_buffer = {}
+  v.region_start = 0
+  v.region_end = 0
+  v.region_length = 0
+  v.loop_length = 0
   v.rate2 = 1
   v.rate3 = 1
   v.rate4 = 1
   v.home_region_position = 0
   v.region_position = 0
   v.loop_position = 0
-  v.buffer = { home[i].buffer }
+  v.buffer = { }
 end
+
+update_regions()
 
 -- set defaults to match regions
 for i = 1, softcut.VOICE_COUNT do
@@ -146,7 +170,7 @@ end
 local subvoice_voice_lookup = {}
 
 -- delagate subvoices
-local delegate = function()
+local function delegate()
   local i = 1
   local voice = 1
   
@@ -212,6 +236,7 @@ supercut.io = function(voice, val)
   
   supercut_data[voice].io = val
   delegate()
+  update_regions()
 end
 
 supercut.init = function(vce, iio)
@@ -291,7 +316,7 @@ supercut.level = function(voice, val)
   end
 end
 
-local update_loop_points = function(voice)
+local function update_loop_points(voice)
   for i,v in ipairs(supercut_data[voice].subvoices) do
     softcut.loop_start(v, util.clamp(supercut_data[voice].region_start, supercut_data[voice].region_end, supercut_data[voice].region_start + supercut_data[voice].loop_start))
     softcut.loop_end(v, util.clamp(supercut_data[voice].region_start, supercut_data[voice].region_end, supercut_data[voice].region_start + supercut_data[voice].loop_end))
@@ -470,7 +495,9 @@ supercut.buffer = function(...) print("supercut doesn't steal this function!") e
 supercut.buffer_clear_region = function(voice, ...)
   if arg == nil then
     for i,v in ipairs(supercut_data[voice].subvoices) do
-      softcut.buffer_clear_region_channel(supercut_data[voice].buffer[i], supercut_data[voice].region_start, supercut_data[voice].region_end)
+      -- print(supercut_data[voice].buffer[i], supercut_data[voice].region_start, supercut_data[voice].region_end)
+      -- softcut.buffer_clear_region_channel(supercut_data[voice].buffer[i], supercut_data[voice].region_start, supercut_data[voice].region_end)
+      softcut.buffer_clear_region(supercut_data[voice].region_start, supercut_data[voice].region_end)
     end
   else
     softcut.buffer_clear_region(voice, unpack(arg))
@@ -565,7 +592,11 @@ supercut.status = function(voice)
       if #v.subvoices > 0 then
         print("voice " .. i .. " {")
         
-        for k,w in pairs(v) do
+        for k,w in pairs(tabutil.sort(v)) do
+          
+          k = w
+          w = supercut_data[voice][k]
+          
           if type(w) == "table" then
             print("  " .. k .. " = { ")
             for l,x in ipairs(w) do
@@ -583,7 +614,11 @@ supercut.status = function(voice)
   else
     print("voice " .. voice .. " {")
     
-    for k,w in pairs(supercut_data[voice]) do
+    for k,w in pairs(tabutil.sort(supercut_data[voice])) do
+      
+      k = w
+      w = supercut_data[voice][k]
+      
       if type(w) == "table" then
         local stuff = ""
         for l,x in ipairs(w) do

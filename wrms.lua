@@ -92,7 +92,7 @@ wrms.pages = {
             
             supercut.region_end(2, supercut.home_region_end(2)) -- set loop & region end to max (stored in home_region_length)
             supercut.loop_end(2, supercut.home_region_end(2))
-            supercut.loop_position(2, 0)
+            -- supercut.loop_position(2, 0)
             
             supercut.is_punch_in(2, true) -- this is how we know we've started the punch in on next key press
           end
@@ -444,4 +444,4 @@ function redraw()
   wrms.redraw()
 end
 
-metro.init(function() redraw() end,  1/30/3):start()
+metro.init(function() redraw() end,  1/100):start()
