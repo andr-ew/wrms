@@ -17,9 +17,6 @@ supercut.add_data("feed", 0)
 supercut.has_initial(1, true)
 supercut.feed(1, 1)
 
-supercut.add_data("segment_is_awake", awake_seg)
-supercut.add_data("sleep_index", 24)
-
 -- for putting wrms to sleep zZzz :)
 local function awake_seg()
   ret = {}
@@ -31,6 +28,9 @@ local function awake_seg()
   return ret
 end
 
+supercut.add_data("segment_is_awake", awake_seg)
+supercut.add_data("sleep_index", 24)
+
 function wrms.wake(voice)
   supercut.sleep_index(voice, 24)
 end
@@ -38,13 +38,15 @@ end
 wrms.sleep = wrms.wake
 
 local function sleep_iter()
-  if supercut.sleep_index ~= nil and supercut.sleep_index(i) > 0 and supercut.sleep_index(i) <= 24 then
-    supercut.segment_is_awake(i)[math.floor(supercut.sleep_index(i))] = supercut.has_initial(i)
-    supercut.sleep_index(i, supercut.sleep_index(i) + (0.5 * (supercut.has_initial(i) and -1 or -2)))
+  for i = 1,2 do
+    if supercut.sleep_index(i) > 0 and supercut.sleep_index(i) <= 24 then
+      supercut.segment_is_awake(i)[math.floor(supercut.sleep_index(i))] = supercut.has_initial(i)
+      supercut.sleep_index(i, supercut.sleep_index(i) + (0.5 * (supercut.has_initial(i) and -1 or -2)))
+    end
   end
 end
 
-local sleep_metro = metro.init(sleep_iter, 1/100)
+local sleep_metro = metro.init(sleep_iter, 1/150)
 
 function wrms.init()
   for i,v in ipairs(wrms.pages) do

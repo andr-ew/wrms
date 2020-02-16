@@ -445,4 +445,4 @@ function redraw()
   wrms.redraw()
 end
 
-metro.init(function() redraw() end,  1/100):start()
+metro.init(function() redraw() end,  1/50):start()
