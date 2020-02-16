@@ -76,8 +76,8 @@ wrms.pages = {
             supercut.rec(2, v) -- toggle recording
             
           elseif supercut.is_punch_in(2) then -- else if inital loop is being punched in, punch out
-            supercut.region_end(2, supercut.position(2) - 0.1) -- set loop & region end to loop time
-            supercut.loop_end(2, supercut.position(2) - 0.1)
+            supercut.region_length(2, supercut.region_position(2) - 0.1) -- set loop & region length to loop's position in the region
+            supercut.loop_length(2, supercut.region_position(2) - 0.1)
             
             supercut.rec(2, 0) -- stop recording but keep playing
             
@@ -90,8 +90,8 @@ wrms.pages = {
             supercut.rec(2, 1) -- start recording & playing
             supercut.play(2, 1)
             
-            supercut.region_end(2, supercut.home_region_end(2)) -- set loop & region end to max (stored in home_region_length)
-            supercut.loop_end(2, supercut.home_region_end(2))
+            supercut.region_length(2, supercut.home_region_length(2)) -- set loop & region length to max (stored in home_region_length)
+            supercut.loop_length(2, supercut.home_region_length(2))
             -- supercut.loop_position(2, 0)
             
             supercut.is_punch_in(2, true) -- this is how we know we've started the punch in on next key press
@@ -102,11 +102,11 @@ wrms.pages = {
           
           self.value = 0
           
-          supercut.region_end(2, supercut.home_region_end(2)) -- set loop & region end to max (stored in home_region_length)
-          supercut.loop_end(2, supercut.home_region_end(2))
+          supercut.region_length(2, supercut.home_region_length(2)) -- set loop & region length to max (stored in home_region_length)
+          supercut.loop_length(2, supercut.home_region_length(2))
           supercut.loop_position(2, 0)
           
-          supercut.is_punch_in(2, false)
+          supercut.is_punch_in(2, false) -- reset
           supercut.has_initial(2, false)
           
           supercut.buffer_clear_region(2) -- clear loop region
@@ -197,7 +197,7 @@ wrms.pages = {
       event = function(self, v) 
         self.range[2] = supercut.region_length(1) -- update control range
         
-        supercut.loop_start(1,  v + supercut.region_start(1)) -- set start point
+        supercut.loop_start(1,  v) -- set start point
         
         wrms.update_control(wrms.page_from_label("s").e3)
       end
@@ -374,6 +374,7 @@ wrms.pages[2].k3 = wrms.pages[1].k3
 -------------------------------------------- global callbacks - feel free to redefine  ------------------------------------------------------------
 
 function init()
+  
   --wigl lfo setup
   wrms.lfo.init()
   wrms.lfo[1].freq = 0.5 -- keep the lfos out of phase
@@ -403,8 +404,8 @@ function init()
   supercut.rec_level(2, 1.0)
   supercut.rate(2, 1)
   
-  supercut.phase_quant(1, wrms.phase_quant)
-  supercut.phase_quant(2, wrms.phase_quant)
+  supercut.phase_quant(1, 0.05)
+  supercut.phase_quant(2, 0.05)
   
   supercut.has_initial(1, true)
   

@@ -4,7 +4,6 @@ wrms.lfo = include 'lib/hnds_wrms'
 supercut = include 'lib/supercut'
 
 wrms.sens = 0.01
-wrms.phase_quant = 0.05
 
 wrms.pages = {}
 
@@ -18,49 +17,8 @@ supercut.add_data("feed", 0)
 supercut.has_initial(1, true)
 supercut.feed(1, 1)
 
--- wrms.loop = {
---   {
---     is_punch_in = false,
---     has_initial = true,
---     phase = 0,
---     default_region_start = 295,
---     default_region_end = 300,
---     region_start = 0,
---     region_end = 0,
---     loop_start = 0,
---     loop_end = 0,
---     rate = 1,
---     bend = 1,
---     vol = 1,
---     wgl = 0,
---     feed = 1,
---     rec = 1
---   },
---   {
---     is_punch_in = false,
---     has_initial = false,
---     phase = 0,
---     default_region_start = 1,
---     default_region_end = 60,
---     region_start = 0,
---     region_end = 0,
---     loop_start = 0,
---     loop_end = 0,
---     rate = 1,
---     bend = 1,
---     vol = 1,
---     wgl = 0,
---     feed = 0,
---     rec = 0
---   }
--- }
-
--- for i,v in ipairs(wrms.loop) do
---   v.region_start = v.default_region_start
---   v.region_end = v.default_region_end
---   v.loop_start = v.default_region_start
---   v.loop_end = v.default_region_end
--- end
+supercut.add_data("segment_is_awake", awake_seg)
+supercut.add_data("sleep_index", 24)
 
 -- for putting wrms to sleep zZzz :)
 local function awake_seg()
@@ -73,30 +31,20 @@ local function awake_seg()
   return ret
 end
 
-supercut.add_data("segment_is_awake", awake_seg)
-supercut.add_data("sleep_index", 24)
-
 function wrms.wake(voice)
   supercut.sleep_index(voice, 24)
 end
 
 wrms.sleep = wrms.wake
 
+local function sleep_iter()
+  if supercut.sleep_index ~= nil and supercut.sleep_index(i) > 0 and supercut.sleep_index(i) <= 24 then
+    supercut.segment_is_awake(i)[math.floor(supercut.sleep_index(i))] = supercut.has_initial(i)
+    supercut.sleep_index(i, supercut.sleep_index(i) + (0.5 * (supercut.has_initial(i) and -1 or -2)))
+  end
+end
 
-
--- function wrm_phase_event(voice, p)
---   if voice == 1 or voice == 3 then
---     local l = voice == 1 and 1 or 2
---     wrms.loop[l].phase = p
-    
---     redraw()
---   end
--- end
-
-------------
-
-supercut.phase_quant(1, wrms.phase_quant)
-supercut.phase_quant(2, wrms.phase_quant)
+local sleep_metro = metro.init(sleep_iter, 1/100)
 
 function wrms.init()
   for i,v in ipairs(wrms.pages) do
@@ -107,6 +55,8 @@ function wrms.init()
       if w ~= nil then if w.behavior ~= "momentary" then w:event(w.value, 0) end end
     end
   end
+  
+  sleep_metro:start()
 end
 
 function wrms.enc(n, delta)
@@ -227,23 +177,23 @@ wrms.draw.animations = function()
     --phase
     screen.level(2)
     if supercut.is_punch_in(i) == false then
-      screen.pixel(left + width * (supercut.loop_start(i) - supercut.region_start(i)) / (supercut.region_end(i) - supercut.region_start(i)), top)
+      screen.pixel(left + width * supercut.loop_start(i) / supercut.region_length(i), top) --loop start
       screen.fill()
     end
     if supercut.has_initial(i) then
-      screen.pixel(left + width * (supercut.loop_end(i) - supercut.region_start(i)) / (supercut.region_end(i) - supercut.region_start(i)), top)
+      screen.pixel(left + width * supercut.loop_end(i) / supercut.region_length(i), top) --loop end
       screen.fill()
     end
     
     screen.level(6 + 10 * supercut.rec(i))
-    if supercut.has_initial(i) == false then
+    if supercut.has_initial(i) == false then -- rec line
       if supercut.is_punch_in(i) then
-        screen.move(left + width * (supercut.loop_start(i) - supercut.region_start(i)) / (supercut.region_end(i) - supercut.region_start(i)), top + 1)
-        screen.line(1 + left + width * (supercut.position(i) - supercut.region_start(i)) / (supercut.region_end(i) - supercut.region_start(i)), top + 1)
+        screen.move(left + width * util.clamp(0, 1, supercut.loop_start(i) / supercut.region_length(i)), top + 1)
+        screen.line(1 + left + width * math.abs(util.clamp(0, 1, supercut.region_position(i) / supercut.region_length(i))), top + 1)
         screen.stroke()
       end
     else
-      screen.pixel(left + width * (supercut.position(i) - supercut.region_start(i)) / (supercut.region_end(i) - supercut.region_start(i)), top)
+      screen.pixel(left + width * supercut.region_position(i) / supercut.region_length(i), top) -- loop point
       screen.fill()
     end
     
@@ -253,16 +203,13 @@ wrms.draw.animations = function()
     local lowamp = 0.5
     local highamp = 1.75
     
-    if supercut.sleep_index(i) > 0 and supercut.sleep_index(i) <= 24 then
-      supercut.segment_is_awake(i)[math.floor(supercut.sleep_index(i))] = supercut.has_initial(i)
-      supercut.sleep_index(i, supercut.sleep_index(i) + (0.5 * (supercut.has_initial(i) and -1 or -2)))
-    end
+    
     
     screen.level(math.floor(supercut.level(i) * 10))
-    local width = util.linexp(0, (supercut.region_end(i) - supercut.region_start(i)), 0.01, width, (supercut.loop_end(i)  + 4.125 - supercut.loop_start(i)))
+    local width = util.linexp(0, (supercut.region_length(i)), 0.01, width, (supercut.loop_length(i)  + 4.125))
     for j = 1, width do
-      local amp = supercut.segment_is_awake(i)[j] and math.sin(((supercut.position(i) - supercut.loop_start(i)) * (i == 1 and 1 or 2) / (supercut.loop_end(i) - supercut.loop_start(i)) + j / width) * (i == 1 and 2 or 4) * math.pi) * util.linlin(1, width / 2, lowamp, highamp + supercut.wiggle(i), j < (width / 2) and j or width - j) - 0.75 * util.linlin(1, width / 2, lowamp, highamp + supercut.wiggle(i), j < (width / 2) and j or width - j) - (util.linexp(0, 1, 0.5, 6, j/width) * (supercut.rate2(i) - 1)) or 0
-      local left = left - (supercut.loop_start(i) - supercut.region_start(i)) / (supercut.region_end(i) - supercut.region_start(i)) * (width - 44)
+      local amp = supercut.segment_is_awake(i)[j] and math.sin(((supercut.position(i) - supercut.loop_start(i)) * (i == 1 and 1 or 2) / (supercut.loop_end(i) - supercut.loop_start(i)) + j / width) * (i == 1 and 2 or 4) * math.pi) * util.linlin(1, width / 2, lowamp, highamp + supercut.wiggle(i), j < (width / 2) and j or width - j) - 0.75 * util.linlin(1, width / 2, lowamp, highamp + supercut.wiggle(i), j < (width / 2) and j or width - j) - (util.linexp(0, 1, 0.5, 6, j/width) * (supercut.rate2(i) - 1)) or 0      
+      local left = left - (supercut.loop_start(i)) / (supercut.region_length(i)) * (width - 44)
     
       screen.pixel(left - 1 + j, top + amp)
     end
