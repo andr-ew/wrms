@@ -394,9 +394,9 @@ supercut.steal_voice_home_region = function(voice, dst)
   update_loop_points(voice)
 end
 
-supercut.steal_voice_region = function(voice, val)
-  supercut.region_start(voice, supercut_data[voice].region_start)
-  supercut.region_end(voice, supercut_data[voice].region_end)
+supercut.steal_voice_region = function(voice, dst)
+  supercut.region_start(voice, supercut_data[dst].region_start)
+  supercut.region_end(voice, supercut_data[dst].region_end)
   
   update_loop_points(voice)
 end

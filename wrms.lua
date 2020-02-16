@@ -285,8 +285,10 @@ wrms.pages = {
       event = function(self, v, t)
         if v == 1 then -- if sharing
           supercut.steal_voice_region(1, 2) -- set wrm 1 region points to wrm 2 region points
+          wrms.update_control(wrms.page_from_label("v").k2, 0)
         else -- else (not sharing)
           supercut.steal_voice_home_region(1, 1) -- set wrm 1 region points to wrm1 default
+          wrms.update_control(wrms.page_from_label("v").k2, 1)
         end
         
         wrms.update_control(wrms.page_from_label("s").e2) -- update loop point controls, just for kicks !

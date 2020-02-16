@@ -232,8 +232,6 @@ function wrms.redraw()
   screen.update()
 end
 
-
-
 -- utility functions
 
 function wrms.page_from_label(label)
@@ -242,9 +240,12 @@ function wrms.page_from_label(label)
   end
 end
 
-function wrms.update_control(control)
-  control:event(control.value)
+function wrms.update_control(control, val, t)
+  if val ~= nil then control.value = val end
+  if t == nil then t = 0 end
+  control:event(control.value, t)
 end
+
 
 
 return wrms
