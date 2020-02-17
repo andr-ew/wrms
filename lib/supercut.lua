@@ -250,7 +250,7 @@ supercut.rate = function(voice, val)
   supercut_data[voice].rate = val
   
   for i,v in ipairs(supercut_data[voice].subvoices) do
-    softcut.rate(v, supercut.rate(voice) * supercut.rate2(voice) * supercut.rate3(voice) * supercut.rate4(voice))
+    softcut.rate(v, util.clamp(-64, 64, supercut.rate(voice) * supercut.rate2(voice) * supercut.rate3(voice) * supercut.rate4(voice)))
   end
 end
 supercut.rate2 = function(voice, val) 
@@ -259,7 +259,7 @@ supercut.rate2 = function(voice, val)
   supercut_data[voice].rate2 = val
   
   for i,v in ipairs(supercut_data[voice].subvoices) do
-    softcut.rate(v, supercut.rate(voice) * supercut.rate2(voice) * supercut.rate3(voice) * supercut.rate4(voice))
+    softcut.rate(v, util.clamp(-64, 64, supercut.rate(voice) * supercut.rate2(voice) * supercut.rate3(voice) * supercut.rate4(voice)))
   end
 end
 supercut.rate3 = function(voice, val) 
@@ -268,7 +268,7 @@ supercut.rate3 = function(voice, val)
   supercut_data[voice].rate3 = val
   
   for i,v in ipairs(supercut_data[voice].subvoices) do
-    softcut.rate(v, supercut.rate(voice) * supercut.rate2(voice) * supercut.rate3(voice) * supercut.rate4(voice))
+    softcut.rate(v, util.clamp(-64, 64, supercut.rate(voice) * supercut.rate2(voice) * supercut.rate3(voice) * supercut.rate4(voice)))
   end
 end
 supercut.rate4 = function(voice, val) 
@@ -277,7 +277,7 @@ supercut.rate4 = function(voice, val)
   supercut_data[voice].rate4 = val
   
   for i,v in ipairs(supercut_data[voice].subvoices) do
-    softcut.rate(v, supercut.rate(voice) * supercut.rate2(voice) * supercut.rate3(voice) * supercut.rate4(voice))
+    softcut.rate(v, util.clamp(-64, 64, supercut.rate(voice) * supercut.rate2(voice) * supercut.rate3(voice) * supercut.rate4(voice)))
   end
 end
   

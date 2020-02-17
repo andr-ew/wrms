@@ -19,6 +19,11 @@
 -- dictates which wrm will be 
 -- affected. 
 
+-- TODO
+-- [] input mixer
+-- [] read/write
+-- [] clean-up, commenting
+
 wrms = include 'lib/wrms_ui'
 
 ---------------- pages - ordered pages of visual controls and actions (event callback functions) stored in a lua table --------------------------------------------------------

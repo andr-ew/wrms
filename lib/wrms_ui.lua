@@ -1,3 +1,8 @@
+-- TODO
+-- [] optional combo event
+-- [] value persistence
+-- [] param generation
+
 wrms = {}
 
 wrms.lfo = include 'lib/hnds_wrms'
@@ -170,7 +175,6 @@ wrms.draw.animations = function()
   screen.fill()
   
   for i = 1,2 do
-    
     
     local left = 2 + (i-1) * 58
     local top = 34
