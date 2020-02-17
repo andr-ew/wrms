@@ -384,7 +384,7 @@ function init()
   
   --wigl lfo setup
   wrms.lfo.init()
-  wrms.lfo[1].freq = 0.5 -- keep the lfos out of phase
+  wrms.lfo[1].freq = 0.5 
   wrms.lfo[2].freq = 0.4
   wrms.lfo.process = function() -- called on each lfo update
     local rate = supercut.rate(1) + wrms.lfo[1].delta -- set wrm 1 rate = change in lfo1 each time it updates
@@ -409,24 +409,13 @@ function init()
   supercut.home_region_length(1, 5)
   
   supercut.rec_level(2, 1.0)
-  supercut.rate(2, 1)
-  
-  supercut.phase_quant(1, 0.05)
-  supercut.phase_quant(2, 0.05)
-  
+
   supercut.has_initial(1, true)
   
   for i = 1,2 do
-    supercut.enable(i, 1)
-    supercut.loop(i, 1)
-    supercut.fade_time(i, 0.1)
-    supercut.position(i, 0)
-    
+    supercut.phase_quant(i, 0.05)
     supercut.level_input_cut(1, i, 1.0, 1)
     supercut.level_input_cut(2, i, 1.0, 2)
-    
-    supercut.pan(i, 0)
-    
     supercut.level_slew_time(i, 0.1)
     supercut.recpre_slew_time(i, 0.01)
   end
