@@ -300,9 +300,8 @@ wrms.pages = {
       end
     }
   }
-}
--- ,
--- {
+  -- ,
+  -- {
   --   label = "f",
   --   e2 = { -- wrm 1 filter cutoff
   --     worm = 1,
@@ -374,6 +373,7 @@ wrms.pages = {
   --     end
   --   }
   -- },
+  
 wrms.pages[2].k2 = wrms.pages[1].k2
 wrms.pages[2].k3 = wrms.pages[1].k3
 
