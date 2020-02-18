@@ -1,12 +1,39 @@
 -- TODO
+-- [x] value persistence
+-- [x] param generation
 -- [] optional combo event
--- [] value persistence
--- [] param generation
 
 wrms = {}
 
 wrms.lfo = include 'lib/hnds_wrms'
 supercut = include 'lib/supercut'
+controlspec = require 'controlspec'
+
+---------------------------------------------- utility functions --------------------------------------------------------------------
+
+function wrms.page_from_label(label)
+  for i,v in ipairs(wrms.pages) do
+    if(v.label == label) then return v end
+  end
+end
+
+function wrms.update_control(control, val, t, from_param) -- you probably only need to worry about sending 1st 2 args, control and value. if value is absent it will just update the control
+  if val ~= nil then control.value = val end
+  if t == nil then t = 0 end
+  if control.event == nil then
+    print("update_control: invalid control")
+    return
+  end
+  
+  control:event(control.value, t)
+  
+  if (from_param == nil or from_param == false) and control.behavior ~= "toggle" and control.behavior ~= "momentary" then
+    local id = control.label .. " " .. tostring(control.worm)
+    params:set(id, control.value, true)
+  end
+end
+
+--------------------------------------------------------------------------------------------------------------------------------------
 
 wrms.sens = 0.01
 
@@ -54,12 +81,71 @@ end
 local sleep_metro = metro.init(sleep_iter, 1/150)
 
 function wrms.init()
+  
+  -- generate params
+  
+  local actions = { 
+    number = function(control)
+      return function(v)
+        wrms.update_control(control, v, 0, true)
+      end
+    end,
+    momentary = function(control)
+      return function(v)
+        wrms.update_control(control, 0, 0, true) 
+      end
+    end,
+    toggle = function(control)
+      return function(v)
+        wrms.update_control(control, control.value == 0 and 1 or 0, 0, true)
+      end
+    end,
+    enum = function(control)
+      return function(v)
+        wrms.update_control(control, v, 0, true)
+      end
+    end
+  }
+  
   for i,v in ipairs(wrms.pages) do
     for j,w in ipairs({ v.e2, v.e3 }) do
-      if w ~= nil then w:event(w.value) end
+      if w ~= nil then 
+        local id = w.label .. " " .. tostring(w.worm)
+        
+        params:add_control(id, id, controlspec.new(w.range[1], w.range[2], 'lin', w.sens or wrms.sens, w.value, ''))
+        params:set_action(id, actions.number(w))
+      end
     end
     for j,w in ipairs({ v.k2, v.k3 }) do
-      if w ~= nil then if w.behavior ~= "momentary" then w:event(w.value, 0) end end
+      if w ~= nil then 
+        
+        local id = ((w.behavior == "enum") and w.label[0] or w.label) .. " " .. tostring(w.worm)
+        
+        local pp = {
+          type = (w.behavior == "enum") and "option" or "trigger",
+          id = id,
+          action = actions[w.behavior](w)
+        }
+        
+        if w.behavior == "enum" then
+          pp.default = w.value
+          pp.options = w.label
+        end
+        
+        params:add(pp)
+      end
+    end
+  end
+  
+  params:read()
+  
+  params:bang()
+  
+  for i,v in ipairs(wrms.pages) do
+    for k,w in pairs(v) do
+      if type(w) == "table" and w.behavior ~= "momentary" then 
+        wrms.update_control(w, w.value, 0, true)
+      end
     end
   end
   
@@ -73,8 +159,7 @@ function wrms.enc(n, delta)
     
     if e ~= nil then
       local sens = e.sens == nil and wrms.sens or e.sens
-      e.value = util.round(util.clamp(e.value + (delta * sens), e.range[1], e.range[2]), sens)
-      e:event(e.value)
+      wrms.update_control(e, util.round(util.clamp(e.value + (delta * sens), e.range[1], e.range[2]), sens))
     end
   end
 end
@@ -94,7 +179,7 @@ function wrms.key(n,z)
         elseif k.behavior == "toggle" then k.value = k.value == 0 and 1 or 0
         elseif k.behavior == "enum" then k.value = k.value == #k.label and 1 or k.value + 1 end
         
-        k:event(k.value, util.time() - k.time)
+        wrms.update_control(k, k.value, util.time() - k.time)
         k.time = nil
       end
     end
@@ -236,20 +321,29 @@ function wrms.redraw()
   screen.update()
 end
 
--- utility functions
-
-function wrms.page_from_label(label)
-  for i,v in ipairs(wrms.pages) do
-    if(v.label == label) then return v end
-  end
+wrms.cleanup = function()
+  params:write()
 end
 
-function wrms.update_control(control, val, t)
-  if val ~= nil then control.value = val end
-  if t == nil then t = 0 end
-  control:event(control.value, t)
-end
+-- wrms.save = function(name)
+--   tabutil.save(wrms.pages, _path.data .. "/wrms/" .. name .. ".data")
+-- end
 
+-- wrms.load = function(name)
+--   local p = tabutil.load(_path.data .. "/wrms/" .. name .. ".data")
+  
+--   for i,v in ipairs(p) do -- pages
+--     for k,w in pairs(v) do -- controls
+--       if type(w) == "table" then 
+--         for l,x in pairs(w) do  -- values
+--           wrms.pages[i][k][l] = x
+--         end
+--       else -- label
+--         wrms.pages[i][k] = w
+--       end
+--     end
+--   end
+-- end
 
 
 return wrms

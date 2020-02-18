@@ -442,3 +442,7 @@ function redraw()
 end
 
 metro.init(function() redraw() end,  1/50):start()
+
+function cleanup()
+  wrms.cleanup()
+end

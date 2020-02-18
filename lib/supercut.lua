@@ -243,6 +243,7 @@ supercut.init = function(vce, iio)
   supercut.io(vce, iio)
   supercut.enable(vce, 1)
   supercut.rate(vce, 1)
+  supercut.loop(vce, 1)
   -- supercut.fade_time(i, 0.1)
   supercut.loop_position(vce, 0)
 end
