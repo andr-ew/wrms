@@ -325,25 +325,4 @@ wrms.cleanup = function()
   params:write()
 end
 
--- wrms.save = function(name)
---   tabutil.save(wrms.pages, _path.data .. "/wrms/" .. name .. ".data")
--- end
-
--- wrms.load = function(name)
---   local p = tabutil.load(_path.data .. "/wrms/" .. name .. ".data")
-  
---   for i,v in ipairs(p) do -- pages
---     for k,w in pairs(v) do -- controls
---       if type(w) == "table" then 
---         for l,x in pairs(w) do  -- values
---           wrms.pages[i][k][l] = x
---         end
---       else -- label
---         wrms.pages[i][k] = w
---       end
---     end
---   end
--- end
-
-
 return wrms

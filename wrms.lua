@@ -97,7 +97,6 @@ wrms.pages = {
             
             supercut.region_length(2, supercut.home_region_length(2)) -- set loop & region length to max (stored in home_region_length)
             supercut.loop_length(2, supercut.home_region_length(2))
-            -- supercut.loop_position(2, 0)
             
             supercut.is_punch_in(2, true) -- this is how we know we've started the punch in on next key press
           end
