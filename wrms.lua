@@ -3,7 +3,7 @@
 -- dual asyncronous 
 -- time-wigglers / echo loopers
 --
--- version 1.1.0 @andrew
+-- version 1.0.1 @andrew
 -- https://llllllll.co/t/wrms
 --
 -- two wrms (stereo loops), 
