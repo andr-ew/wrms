@@ -3,7 +3,7 @@
 -- dual asyncronous 
 -- time-wigglers / echo loopers
 --
--- version 1.1.0 @andrew
+-- version 1.0.1 @andrew
 -- https://llllllll.co/t/wrms
 --
 -- two wrms (stereo loops), 
@@ -22,7 +22,8 @@
 -- TODO
 -- [] input mixer
 -- [] read/write
--- [] clean-up, commenting
+-- [] enums for pp & share so they get stored in params
+-- [x] clean-up, commenting
 
 wrms = include 'lib/wrms_ui'
 
@@ -30,19 +31,19 @@ wrms = include 'lib/wrms_ui'
 
 wrms.pages = {
   {
-    label = "v",
+    label = "v", -- page label as it appears on the right
     e2 = { -- wrm 1 volume
-      worm = 1,
-      label = "vol",
-      value = 1.0,
-      range = { 0.0, 2.0 },
-      event = function(self, v)
-        supercut.level(1, v)
+      worm = 1, -- accepts 1, 2 or "both", essentially just detirmines where the control appears on-screen
+      label = "vol", -- label for the control
+      value = 1.0, -- initally the default value, but it also stores the live value for retrieval
+      range = { 0.0, 2.0 }, -- the range of the value
+      event = function(self, v) -- event() is called every time the value is changed, its job is to communicate with supercut and keep other values up-to-date
+        supercut.level(1, v) -- here, we're just setting voice 1 level to the latest value v from function args
         
-        wrms.update_control(wrms.page_from_label(">").e2)
+        wrms.update_control(wrms.page_from_label(">").e2) -- and we're updating e2 on page ">"" since it references vol
       end
     },
-    e3 = { -- wrm 2 volume
+    e3 = { -- wrm 2 volume (everyhting is the same as vol 1)
       worm = 2,
       label = "vol",
       value = 1.0,
@@ -57,7 +58,7 @@ wrms.pages = {
       worm = 1,
       label = "rec",
       value = 1,
-      behavior = "toggle",
+      behavior = "toggle", -- keys can have 3 behaviors, "toggle", "momentary", and "enum". rec is a on/off toggle control.
       event = function(self, v, t)
         if t < 0.5 then -- if short press toggle record
           supercut.rec(1, v)
@@ -70,7 +71,7 @@ wrms.pages = {
         end
       end
     },
-    k3 = { -- wrm 2 record toggle + loop punch-in
+    k3 = { -- wrm 2 record toggle (loop pedal style) + loop punch-in
       worm = 2,
       label = "rec",
       value = 0,
@@ -122,7 +123,7 @@ wrms.pages = {
   },
   {
     label = "o",
-    e2 = { -- wrm 1 old volume (using rec_level)
+    e2 = { -- wrm 1 old volume (using rec_level) (wrm 1 is fed back into itself)
       worm = 1,
       label = "old",
       value = 0.5,
@@ -131,7 +132,7 @@ wrms.pages = {
         supercut.rec_level(1, v)
       end
     },
-    e3 = { -- wrm 2 old volume (using pre_level)
+    e3 = { -- wrm 2 old volume (using pre_level (/overdub))
       worm = 2,
       label = "old",
       value = 1.0,
@@ -140,21 +141,21 @@ wrms.pages = {
         supercut.pre_level(2,  v)
       end
     },
-    k2 = {},
+    k2 = {}, -- way at the bottom we're duplicating the rec controls from pg 1 and putting them here
     k3 = {}
   },
   {
-    label = "b",
-    e2 = {
+    label = "b", 
+    e2 = { -- continutious control btw rate = 1x and rate = 2x for wrm 1
       worm = 1,
       label = "bnd",
       value = 1.0,
       range = { 1, 2.0 },
       event = function(self, v)
-        supercut.rate2(1, 2^(v-1))
+        supercut.rate2(1, 2^(v-1)) -- uses a handy small feature in supercut - there are 4 independent rate controls which are multiplied together
       end
     },
-    e3 = {
+    e3 = { -- wigl controls the depth of modulation for 2 lfo instances routed to each wrm rate. it also updates a supercut param referenced by the animation system
       worm = "both",
       label = "wgl",
       value = 0.0,
@@ -168,14 +169,14 @@ wrms.pages = {
         supercut.wiggle(2, v + 0.5)
       end
     },
-    k2 = {
+    k2 = { -- << and >> halve and double rate for wrm 2
       worm = 2,
       label = "<<",
       value = 0,
-      behavior = "momentary",
+      behavior = "momentary", -- momentary, so the value doesn't change - something just happens once on every press
       event = function(self, v, t)
-        local st = (1 + (math.random() * 0.5)) * t
-        supercut.rate_slew_time(2, st)
+        local st = (1 + (math.random() * 0.5)) * t -- t = time a key is held before release. it goes thru some random scaling
+        supercut.rate_slew_time(2, st) -- then modifies the slew time to create a glide effect
         supercut.rate(2, supercut.rate(2) / 2)
       end
     },
@@ -188,6 +189,14 @@ wrms.pages = {
         local st = (1 + (math.random() * 0.5)) * t
         supercut.rate_slew_time(2, st)
         supercut.rate(2, supercut.rate(2) * 2)
+      end
+    },
+    k2_k3 = { -- when k2_k3 is provided after a pair of momentary holding both keys and releasing triggers an additional momentary event
+      behavior = "momentary",
+      event = function(self, v, t) 
+        local st = (1 + (math.random() * 0.5)) * t
+        supercut.rate_slew_time(2, st)
+        supercut.rate(2, supercut.rate(2) * -1) -- in this case we're reversing playback
       end
     }
   },
@@ -203,7 +212,7 @@ wrms.pages = {
         
         supercut.loop_start(1,  v) -- set start point
         
-        wrms.update_control(wrms.page_from_label("s").e3)
+        wrms.update_control(wrms.page_from_label("s").e3) -- update loop length when start changes
       end
     },
     e3 = { -- wrm 1 loop length
@@ -217,7 +226,7 @@ wrms.pages = {
         supercut.loop_length(1,  v + 0.001) -- set length
       end
     },
-    k2 = {
+    k2 = { -- rate controls for for wrm 1, same deal really
       worm = 1,
       label = "<<",
       value = 0,
@@ -238,18 +247,26 @@ wrms.pages = {
         supercut.rate_slew_time(1, st)
         supercut.rate(1, supercut.rate(1) * 2)
       end
+    },
+    k2_k3 = {
+      behavior = "momentary",
+      event = function(self, v, t) 
+        local st = (1 + (math.random() * 0.5)) * t
+        supercut.rate_slew_time(1, st)
+        supercut.rate(1, supercut.rate(1) * -1)
+      end
     }
   },
   {
-    label = ">",
+    label = ">", -- > and < use the level_cut_cut function to send audio between wrms
     e2 = { -- feed wrm 1 to wrm 2
       worm = 1,
       label = ">",
       value = 1.0,
       range = { 0.0, 1.0 },
       event = function(self, v)
-        supercut.level_cut_cut(1, 2, v * supercut.level(1))
-        supercut.feed(1, v)
+        supercut.level_cut_cut(1, 2, v * supercut.level(1)) -- we're setting the level = feed val * level val
+        supercut.feed(1, v) -- this is a seprate control just for the animation
       end
     },
     e3 = { -- feed wrm 2 to wrm 1
@@ -300,8 +317,9 @@ wrms.pages = {
       end
     }
   }
-  -- ,
-  -- {
+}
+-- ,
+-- {
   --   label = "f",
   --   e2 = { -- wrm 1 filter cutoff
   --     worm = 1,
@@ -374,6 +392,7 @@ wrms.pages = {
   --   }
   -- },
   
+
 wrms.pages[2].k2 = wrms.pages[1].k2
 wrms.pages[2].k3 = wrms.pages[1].k3
 
@@ -440,7 +459,8 @@ function redraw()
   wrms.redraw()
 end
 
-metro.init(function() redraw() end,  1/50):start()
+wrms.re = metro.init(function() redraw() end,  1/50)
+wrms.re:start()
 
 function cleanup()
   wrms.cleanup()

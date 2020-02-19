@@ -1,8 +1,3 @@
--- TODO
--- [x] value persistence
--- [x] param generation
--- [] optional combo event
-
 wrms = {}
 
 wrms.lfo = include 'lib/hnds_wrms'
@@ -164,6 +159,8 @@ function wrms.enc(n, delta)
   end
 end
 
+local combo_down = false
+
 function wrms.key(n,z)
   if n == 1 then
     rec = z
@@ -171,16 +168,33 @@ function wrms.key(n,z)
     local k = wrms.pages[get_page_n()]["k" .. n]
     
     if k ~= nil then
+      local other = wrms.pages[get_page_n()]["k" .. ((n == 2) and 3 or 2)]
+      local k2_k3 = wrms.pages[get_page_n()]["k2_k3"]
+      
       if z == 1 then
         k.time = util.time()
-        if k.behavior == "momentary" then k.value = 1 end
+        if k.behavior == "momentary" then 
+          k.value = 1
+          
+          if k2_k3 ~= nil and other.value == 1 then
+            combo_down = true
+          end
+        end
       else
         if k.behavior == "momentary" then k.value = 0
         elseif k.behavior == "toggle" then k.value = k.value == 0 and 1 or 0
         elseif k.behavior == "enum" then k.value = k.value == #k.label and 1 or k.value + 1 end
         
-        wrms.update_control(k, k.value, util.time() - k.time)
-        k.time = nil
+        if k2_k3 ~= nil and combo_down then
+          if k.value == 0 and other.value == 0 then
+            combo_down = false
+            
+            k2_k3:event(nil, util.time() - k.time)
+          end
+        else
+          wrms.update_control(k, k.value, util.time() - k.time)
+          k.time = nil
+        end
       end
     end
   end
