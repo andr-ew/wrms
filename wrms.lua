@@ -19,12 +19,6 @@
 -- dictates which wrm will be 
 -- affected. 
 
--- TODO
--- [] input mixer
--- [] read/write
--- [] enums for pp & share so they get stored in params
--- [x] clean-up, commenting
-
 wrms = include 'lib/wrms_ui'
 
 ---------------- pages - ordered pages of visual controls and actions (event callback functions) stored in a lua table --------------------------------------------------------
@@ -191,7 +185,7 @@ wrms.pages = {
         supercut.rate(2, supercut.rate(2) * 2)
       end
     },
-    k2_k3 = { -- when k2_k3 is provided after a pair of momentary holding both keys and releasing triggers an additional momentary event
+    k2_k3 = { -- when k2_k3 is provided after a pair of momentary, holding both keys and releasing triggers an additional momentary event
       behavior = "momentary",
       event = function(self, v, t) 
         local st = (1 + (math.random() * 0.5)) * t
@@ -279,18 +273,18 @@ wrms.pages = {
         supercut.feed(2, v)
       end
     },
-    k2 = {
+    k2 = { -- optional wrm 1 ping-pong routing
       worm = 1,
-      label = "pp",
-      value = 0,
-      behavior = "toggle",
+      label = { "stereo", "pp" },
+      value = 1,
+      behavior = "enum",
       event = function(self, v, t) 
-        if v == 1 then -- if ping-pong is enabled, route across voices
+        if v == 2 then -- if ping-pong, route across voices
           supercut.level_cut_cut(1, 1, 1, 1, 2)
           supercut.level_cut_cut(1, 1, 1, 2, 1)
           supercut.level_cut_cut(1, 1, 0, 1, 1)
           supercut.level_cut_cut(1, 1, 0, 2, 2)
-        else -- else (ping-pong is not enabled) route voice to voice
+        elseif v == 1 then -- if stereo, route voice to voice
           supercut.level_cut_cut(1, 1, 0, 1, 2)
           supercut.level_cut_cut(1, 1, 0, 2, 1)
           supercut.level_cut_cut(1, 1, 1, 1, 1)
@@ -298,18 +292,18 @@ wrms.pages = {
         end
       end
     },
-    k3 = { -- toggle share buffer region
+    k3 = { -- toggle shared buffer region
       worm = "both",
-      label = "share",
-      value = 0,
-      behavior = "toggle",
+      label = { "normal", "share" },
+      value = 1,
+      behavior = "enum",
       event = function(self, v, t)
-        if v == 1 then -- if sharing
+        if v == 2 then -- if sharing
           supercut.steal_voice_region(1, 2) -- set wrm 1 region points to wrm 2 region points
-          wrms.update_control(wrms.page_from_label("v").k2, 0)
-        else -- else (not sharing)
+          wrms.update_control(wrms.page_from_label("v").k2, 0) -- set wrm 1 rec = 0
+        elseif v == 1 then -- if normal
           supercut.steal_voice_home_region(1, 1) -- set wrm 1 region points to wrm1 default
-          wrms.update_control(wrms.page_from_label("v").k2, 1)
+          wrms.update_control(wrms.page_from_label("v").k2, 1) -- set wrm 1 rec = 1
         end
         
         wrms.update_control(wrms.page_from_label("s").e2) -- update loop point controls, just for kicks !
@@ -393,27 +387,25 @@ wrms.pages = {
   -- },
   
 
-wrms.pages[2].k2 = wrms.pages[1].k2
+wrms.pages[2].k2 = wrms.pages[1].k2 -- copied controls for page "o"
 wrms.pages[2].k3 = wrms.pages[1].k3
 
--------------------------------------------- global callbacks - feel free to redefine  ------------------------------------------------------------
 
-function init()
+-- wgl lfo setup
+
+wrms.lfo[1].freq = 0.5 
+wrms.lfo[2].freq = 0.4
+wrms.lfo.process = function() -- called on each lfo update
+  local rate = supercut.rate(1) + wrms.lfo[1].delta -- set wrm 1 rate = change in lfo1 each time it updates
+  supercut.rate(1, rate)
   
-  --wigl lfo setup
-  wrms.lfo.init()
-  wrms.lfo[1].freq = 0.5 
-  wrms.lfo[2].freq = 0.4
-  wrms.lfo.process = function() -- called on each lfo update
-    local rate = supercut.rate(1) + wrms.lfo[1].delta -- set wrm 1 rate = change in lfo1 each time it updates
-    supercut.rate(1, rate)
-    
-    local rate = supercut.rate(2) + wrms.lfo[2].delta -- set wrm 2 rate = change in lfo2 each time it updates
-    supercut.rate(2, rate)
-  end
+  local rate = supercut.rate(2) + wrms.lfo[2].delta -- set wrm 2 rate = change in lfo2 each time it updates
+  supercut.rate(2, rate)
+end
+
+function wrms.sc_init()
   
   -- supercut (softcut) initial settings
-  supercut.buffer_clear()
   
   audio.level_adc_cut(1)
   audio.level_eng_cut(1)
@@ -437,9 +429,12 @@ function init()
     supercut.level_slew_time(i, 0.1)
     supercut.recpre_slew_time(i, 0.01)
   end
-  
+end
+-------------------------------------------- global callbacks - feel free to redefine  ------------------------------------------------------------
+
+function init()
   wrms.init()
-  
+
   redraw()
 end
 

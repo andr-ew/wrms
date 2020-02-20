@@ -23,7 +23,7 @@ function wrms.update_control(control, val, t, from_param) -- you probably only n
   control:event(control.value, t)
   
   if (from_param == nil or from_param == false) and control.behavior ~= "toggle" and control.behavior ~= "momentary" then
-    local id = control.label .. " " .. tostring(control.worm)
+    local id = ((control.behavior == "enum") and control.label[1] or control.label) .. " " .. tostring(control.worm)
     params:set(id, control.value, true)
   end
 end
@@ -75,7 +75,7 @@ end
 
 local sleep_metro = metro.init(sleep_iter, 1/150)
 
-function wrms.init()
+function wrms.page_params()
   
   -- generate params
   
@@ -114,7 +114,7 @@ function wrms.init()
     for j,w in ipairs({ v.k2, v.k3 }) do
       if w ~= nil then 
         
-        local id = ((w.behavior == "enum") and w.label[0] or w.label) .. " " .. tostring(w.worm)
+        local id = ((w.behavior == "enum") and w.label[1] or w.label) .. " " .. tostring(w.worm)
         
         local pp = {
           type = (w.behavior == "enum") and "option" or "trigger",
@@ -131,11 +131,9 @@ function wrms.init()
       end
     end
   end
-  
-  params:read()
-  
-  params:bang()
-  
+end
+
+function wrms.pages_init()
   for i,v in ipairs(wrms.pages) do
     for k,w in pairs(v) do
       if type(w) == "table" and w.behavior ~= "momentary" then 
@@ -337,6 +335,56 @@ end
 
 wrms.cleanup = function()
   params:write()
+end
+
+function wrms.params()
+  local function in_closure(vc, inn, chan) return function(v) supercut.level_input_cut(inn, vc, v, chan) end end
+  local function pan_closure(vc) return function(v) supercut.pan(vc, v) end end
+  
+  for i = 1,2 do
+    params:add_control("in L > wrm " .. i .. "  L", "in L > wrm " .. i .. "  L", controlspec.new(0,1,'lin',0,1,''))
+    params:set_action("in L > wrm " .. i .. "  L", in_closure(i, 1, 1))
+    params:add_control("in L > wrm " .. i .. "  R", "in L > wrm " .. i .. "  R", controlspec.new(0,1,'lin',0,0,''))
+    params:set_action("in L > wrm " .. i .. "  R", in_closure(i, 1, 2))
+    params:add_control("in R > wrm " .. i .. "  R", "in R > wrm " .. i .. "  R", controlspec.new(0,1,'lin',0,1,''))
+    params:set_action("in R > wrm " .. i .. "  R", in_closure(i, 2, 2))
+    params:add_control("in R > wrm " .. i .. "  L", "in R > wrm " .. i .. "  L", controlspec.new(0,1,'lin',0,0,''))
+    params:set_action("in R > wrm " .. i .. "  L", in_closure(i, 2, 1))
+    
+    params:add_control("wrm " .. i .. " pan", "wrm " .. i .. " pan", controlspec.PAN)
+    params:set_action("wrm " .. i .. " pan", pan_closure(i))
+  end
+  
+  params:add_separator()
+  
+  params:add_file("wrm 1 load", "wrm 1 load")
+  params:set_action("wrm 1 load", function(file)
+    supercut.buffer_read(file, 1)
+    wrms.update_control(wrms.page_from_label("v").k2, 0)
+  end)
+  -- params:add{ type = "trigger", id = "wrm 1 save", name = "wrm 1 save", action = function() supercut.buffer_write(_path.dust.."/audio/wrms_"..os.date("%y%m%d_%X") ..".wav", 1) end }
+  
+  params:add_file("wrm 2 load", "wrm 2 load")
+  params:set_action("wrm 2 load", function(file)
+    supercut.buffer_read(file, 2)
+    wrms.update_control(wrms.page_from_label("v").k3, 0)
+  end)
+  -- params:add{ type = "trigger", id = "wrm 2 save", name = "wrm 2 save", action = function() supercut.buffer_write(_path.dust.."/audio/wrms_"..os.date("%y%m%d_%X") ..".wav", 2) end }
+end
+
+wrms.init = function()
+  wrms.sc_init()
+  wrms.lfo.init()
+  wrms.params()
+  params:add_separator()
+  wrms.page_params()
+  params:read()
+  for i = 1,2 do
+    params:set("wrm "..i.." load", "-")
+  end
+  supercut.buffer_clear()
+  params:bang()
+  wrms.pages_init()
 end
 
 return wrms
