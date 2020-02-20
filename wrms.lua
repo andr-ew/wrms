@@ -1,4 +1,7 @@
--- ~ wrms ~~
+--  _       ___________ ___  _____ 
+-- | | /| / / ___/ __ `__ \/ ___/
+-- | |/ |/ / /  / / / / / (__  )  
+-- |__/|__/_/  /_/ /_/ /_/____/ 
 --
 -- dual asyncronous 
 -- time-wigglers / echo loopers
@@ -19,15 +22,112 @@
 -- dictates which wrm will be 
 -- affected. 
 
-wrms = include 'lib/wrms_ui'
+wrms = include 'wrms/lib/wrms_ui'
 
----------------- pages - ordered pages of visual controls and actions (event callback functions) stored in a lua table --------------------------------------------------------
+--[[
+                                           
+                                                                        :                           :                                       
+                                                                                                                                            
+                                                                  :               ==::==+:+?:+                                              
+                                                               :            ~,+.?,.~,:~.?I?I+?I+?=+~        ~=                              
+                                                         =  :           ~+.~:.~.,~.,:.:.,..~.:=,I+I++=~,       ~                            
+                                                         :         = .=,..=.,~,~?,=+.=+~=+=+~.:.~.~?+:++==                                  
+                                                                ~  .~,.::.+=+I,?:+,:=+?+?,~+???=:...,~=.++                                  
+                                                  :             :..=.,=~?+~~+?++=++++++~==?++=~=,??,.:~=:+~                                 
+                                              :              ++.,:.,+?+~~++?~+~:==,=,=:==+=.++++?+==~....+  ,                               
+                                                          ?,,.,::,I+=.+?:+~+,=:~,~.:.,,::::~,==+=:~~~====                                   
+                                          =            ??+.~.,~~??+?+++~+=:=,:.....          .:..,.,,~~~:                                   
+                                         :         ????+,~.,~??++?+=+:==~~,,..                    .....=                                    
+                                         .      I???++::..~???+++++:=,~...:                                                                 
+                                             =:+++?~,..+~+??=++:+~=::..=                                                                    
+                                          .~I?=I+.,.,:~=?=~++:=:=~~..                                                                       
+                                         II?+,?::.,,,?==~+=:=:~:,.                                                                          
+                                      I~~+?+~?+?=..+=,==,==:~:,.                                                                            
+                                     ?+I?:?+==:=,~..~:.=:.~.,.                                  _       ___________ ___  _____                                             
+                                     I==:.=??+~I:??=~,.:,...             .....:.,.             | | /| / / ___/ __ `__ \/ ___/                                           
+                                    ?~?~I~=+~:++=:7,~,?=,,                    ,                | |/ |/ / /  / / / / / (__  )                                              
+                                    ==I+?:+?~~I,:+==~77I?~++++.               .                |__/|__/_/  /_/ /_/ /_/____/                                                 
+                                    :,=?+I=?~I=~I~?~+~:~???~??+:+             .                                                             
+                                     ,~:?~++?=?I~I+I++::::~~==,,:             .                                                             
+                                     ::~~~:I=+I=??I=I?=::~,~=~.~                                                                            
+                                      :~~~?=+++~?=+II=~~=:=??+:                                                                             
+                                      ? .:=~~,=.~,,=+?===?=+??~~=                                                                           
+                                      =  ,+,~=++==..+:=~===???~7=                                                                           
+                                       +,= ?~+:~==+=~~:=~=~???=~,=~                                                                         
+                                       ?,  I ?.~I:~=++,==~?++=???===                                                                        
+                                         ?,=.=.~,,:~=?.+++=~=~==+??+=:~ =                                                                   
+                                           +?.+ =::,=+?,~,I=~===+:=+??++.== :    ~  ~                                                       
+                                             :=~~~??+I+?II++?=+~++==~~=+=  =:~      :  :  =                                                 
+                                                 =+=II:=?I.I.~+.I~===+=====+= ++~+, =                                                       
+                                                      ,.~+?I+.?.??+++=+=~+~======+?=~=:?,~  =    =~. ,                                      
+                                                       .:=?+??III.:?==I~?++++~:=:=~~=+= +::?+ ~   ~   .   ~                                 
+                                                        ~,:~?++??II.?I+=??II+++?=?~+~:~~===+=,. =?          ~                               
+                                                          .,:.?:??????I+I7,:~I++I~=++==+=,~=++~=. ==~ ~      ,                              
+                                                            =:::~++++????II?II~?~=.~I~?~?:+::,,= ==.  ~        ~                            
+                                                              =..::..+?++?????I=?~I~+=,?=+~?=+::,~=~,=.=~.~   = ~                           
+                                                                 =,.:~,,=?:~++?+??????.~=.=?~=?:+:::++.~~==~I ~                             
+                                                                    =.,:~.:=+I==+++?+?==+==.==+=?+=:~:~+=??=~?,:                            
+                                                                        ~...,:,=??I==+++++?,====:+=:::,++,:=,II=                            
+                                                                            ~=.~.:,=+++==++?++:=++~:++=~~=+:~=+,                            
+                                                                      =:,,,,,,,,,=..:,~?=~~++,~=,~=:+~=~:,=+,:~~.                           
+                                                             =:::~:+ ?+====,.,,,,,,,~...~+=~~+=+,.~==~,==~~:==~.++?                         
+                                                         =::+=?++==~=~==~+=+=~~:,,,,,,,.~.~+,~~~++++:=?~:+::+=,:~~:                         
+                                                   =:=:=+?=?==~::~=~=~?:??+==?,.+=:...,,,.:,:++~~~=:=.=~~+::::,=:  ~?                       
+                                                :~ +?==?===+:~+?+I+?~.~,:+++~+==?+++++,,....:.=??:===::=:+~:~,:~=:,=:                       
+                                              == ==+=:=:~=+?=?:?:+~::?++++======~~~~~~~:+,.:,:,,::::~:~:==:~=~,,+~=                         
+                                           =   ?:+?~=++II=.==:?:+,+++=====~:::::::.??+=:~=..,,,:==?=~~~=+~:=~:~~:~~                         
+                                         :   =.==~~??+++.~::+?+=+~~~~=+I~?.~::..,:......,,,,,...~.+?,::~:~:~~~=,,==:                        
+                                         :  ~~+:~=?+?+?:==+===~~~===~:,........,,,,,:~,..,..,:,,,:.=:~~~~~.:~,~~:::,                        
+                                           .=:,~~~~,.~?+~=+~~:+~:.....,,::~==,.,.,...,,,,,,.,:=?++:,=~,::,:~:=~:~:~~                        
+                                     =    ,+=,~+=+~~~=++~~~,~....,::=       ,,,.,,....::,.,~+??++=~,:,=~~~~:~:~=~~===                       
+                                         =+=:~?++.:?=+==::~:.,,~           :,,...:+==:..::??++::,,,,:~+?,:=,:~,::~=,                        
+                                          +?:+II=.:++=~=:.~,               ,=???+~~,,.:.++==,,,,,.,,,,~+::~:.::::=~.                        
+                                        .+~?:+=+=~:?+=~~:,:?,              ~~+?~:=?~,~===~,.,,.,,:    ~++,,::~~:~.                          
+                                        =?+:~+==?=??+~?~~?:, :+            :::~,.?=::~~:,,.,,,~        .~  =,,:                             
+                                          ~~?:~+~+==:~~:.:., :  .  I~,   I=,.=::+?=?:,:,,,,  ==        ,~,~?~                               
+                                         ++,:~II~::+==~+=?.~I,   .=   , ~~::~,,:?+:,~::,:    ~         ~.  ::                               
+                                   ,, ,    .+.:===+~,?++=?+=.:~~I., ,,I.,:+:++~:I?~::,:::    :          ,+,.+                               
+                                           =I,~I?:=+:++=+~:+=:+ :=:?~+?=~:,???=~::=~:::,,   ~                                               
+                                    =       +~:.:=~+~:::?+~~+ ?+=,=:+??+:=~,? +~~:,:~:~,    =                                               
+                                      =      .~::~I,.=+?+~+==+====~=~??===~~~+==~~:,.:+  =                                                  
+                                              +I+:::::=~++,~:+===~+:+~==+~:==~~=:=~:.+                                                      
+                                              , ,:?=~:=?7,,~~=~?==,?,:==+=~+:.,:::?.~  +  ~                                                 
+                                                  ?+~:+::.=:,:?=?I,,~~:~?=+,.,,:=?,   ~                                                     
+                                         ,=         :=,:III=:~?I:::=:,::=I,.,+++     =  ~                                                   
+                                                       = =,?=+,,,?~I~+:,~....~                                                              
+                                                             ,    ::.:=                                                                     
+                                                                                 +                                                          
+                                                 =                                                                                          
+
+
+! ! ! welcome ! ! !
+
+i'm glad u decided to visit the guts :)
+
+i put lots here 4 u to read here & 
+more importantly: help you to make your own wrms mods
+
+a looper is very personal, and i've structured wrms so it can be modified + extended to suit your own needs
+
+it turns out that wrms is both a SCRIPT and a LIBRARY, so modifying wrms, or including it in a project of your choosing is as easy as:
+wrms = include "wrms/wrms"
+
+the first step to creating a mod will be familiarizing yourself with the code contained here. it is very redefinable !
+then, you can check out some of the mods andrew shared @ https://llllllll.co/t/wrms to get an idea how the modding process works
+"filt" is particularly simple !
+
+wrms uses the supercut lib to interact with softcut.
+before reading on, i'd recommend reading up on that over here -> https://llllllll.co/t/supercut-lib
+
+]]--
+
+-- under here are pages: ordered sections of visual controls and functions (https://www.lua.org/pil/5.html) stored in a lua table (https://www.lua.org/pil/11.html)
 
 wrms.pages = {
   {
     label = "v", -- page label as it appears on the right
     e2 = { -- wrm 1 volume
-      worm = 1, -- accepts 1, 2 or "both", essentially just detirmines where the control appears on-screen
+      worm = 1, -- accepts 1, 2 or "both", essentially it just detirmines where the control appears on-screen
       label = "vol", -- label for the control
       value = 1.0, -- initally the default value, but it also stores the live value for retrieval
       range = { 0.0, 2.0 }, -- the range of the value
@@ -37,7 +137,7 @@ wrms.pages = {
         wrms.update_control(wrms.page_from_label(">").e2) -- and we're updating e2 on page ">"" since it references vol
       end
     },
-    e3 = { -- wrm 2 volume (everyhting is the same as vol 1)
+    e3 = { -- wrm 2 volume (same deal as vol 1)
       worm = 2,
       label = "vol",
       value = 1.0,
@@ -59,9 +159,9 @@ wrms.pages = {
         else -- else long press clears loop region
           supercut.rec(1, 0)
           
-          self.value = 0
+          self.value = 0 -- self is US, the control ! here we turn our value off
           
-          supercut.buffer_clear_region(1)
+          supercut.buffer_clear_region(1) -- just send our voice # to clear ourself
         end
       end
     },
@@ -72,21 +172,7 @@ wrms.pages = {
       behavior = "toggle",
       event = function(self, v, t)
         if t < 0.5 then -- if short press
-          if supercut.has_initial(2) then -- if inital loop has been recorded then toggle recording 
-            supercut.rec(2, v) -- toggle recording
-            
-          elseif supercut.is_punch_in(2) then -- else if inital loop is being punched in, punch out
-            supercut.region_length(2, supercut.region_position(2) - 0.1) -- set loop & region length to loop's position in the region
-            supercut.loop_length(2, supercut.region_position(2) - 0.1)
-            
-            supercut.rec(2, 0) -- stop recording but keep playing
-            
-            supercut.has_initial(2, true) -- this is how we know we're done with the punch-in
-            supercut.is_punch_in(2, false)
-            
-            wrms.wake(2) -- this is purely an animation setting - changes whether the worm is flat (asleep) or moving (awake)
-            
-          elseif v == 1 then -- else if no inital loop or punch-in start loop punch-in
+          if v == 1 then -- else if no inital loop or punch-in has happened yet, start loop punch-in
             supercut.rec(2, 1) -- start recording & playing
             supercut.play(2, 1)
             
@@ -94,8 +180,23 @@ wrms.pages = {
             supercut.loop_length(2, supercut.home_region_length(2))
             
             supercut.is_punch_in(2, true) -- this is how we know we've started the punch in on next key press
+            
+          elseif supercut.is_punch_in(2) then -- else if inital loop is being punched in, it's time to punch out
+            supercut.region_length(2, supercut.region_position(2) - 0.1) -- set loop & region length to loop's position in the region
+            supercut.loop_length(2, supercut.region_position(2) - 0.1)
+            
+            supercut.rec(2, 0) -- stop recording but keep playing
+            
+            supercut.has_initial(2, true) -- this is how we know we're done with the whole punch-in process
+            supercut.is_punch_in(2, false)
+            
+            wrms.wake(2) -- this is purely an animation setting - changes whether the worm is flat (asleep) or moving (awake)
+            
+          elseif supercut.has_initial(2) then -- if inital loop has been recorded then toggle recording 
+            supercut.rec(2, v)
+            
           end
-        else -- else (long press)
+        else -- else (long press) we're gonna clear the buffer region
           supercut.rec(2, 0) -- stop recording & playing
           supercut.play(2, 0)
           
@@ -105,7 +206,7 @@ wrms.pages = {
           supercut.loop_length(2, supercut.home_region_length(2))
           supercut.loop_position(2, 0)
           
-          supercut.is_punch_in(2, false) -- reset
+          supercut.is_punch_in(2, false) -- reset those vals from above
           supercut.has_initial(2, false)
           
           supercut.buffer_clear_region(2) -- clear loop region
@@ -155,7 +256,7 @@ wrms.pages = {
       value = 0.0,
       range = { 0.0, 100.0 },
       event = function(self, v) 
-        local d = (util.linexp(0, 1, 0.01, 1, v) - 0.01) * 100
+        local d = (util.linexp(0, 1, 0.01, 1, v) - 0.01) * 100 -- little bit of exponential scaling fun
         wrms.lfo[1].depth = d
         wrms.lfo[2].depth = d
         
@@ -169,12 +270,12 @@ wrms.pages = {
       value = 0,
       behavior = "momentary", -- momentary, so the value doesn't change - something just happens once on every press
       event = function(self, v, t)
-        local st = (1 + (math.random() * 0.5)) * t -- t = time a key is held before release. it goes thru some random scaling
+        local st = (1 + (math.random() * 0.5)) * t -- t == time a key is held before release (it comes from our function args). it goes thru some random scaling here
         supercut.rate_slew_time(2, st) -- then modifies the slew time to create a glide effect
         supercut.rate(2, supercut.rate(2) / 2)
       end
     },
-    k3 = {
+    k3 = { -- same stuff
       worm = 2,
       label = ">>",
       value = 0,
@@ -312,79 +413,6 @@ wrms.pages = {
     }
   }
 }
--- ,
--- {
-  --   label = "f",
-  --   e2 = { -- wrm 1 filter cutoff
-  --     worm = 1,
-  --     label = "f",
-  --     value = 1.0,
-  --     range = { 0.0, 1.0 },
-  --     event = function(self, v) 
-  --       softcut.post_filter_fc(1, util.linexp(0, 1, 1, 12000, v))
-  --       softcut.post_filter_fc(2, util.linexp(0, 1, 1, 12000, v))
-  --     end
-  --   },
-  --   e3 = { -- wrm 1 filter resonance
-  --     worm = 1,
-  --     label = "q",
-  --     value = 0.3,
-  --     range = { 0.0, 1.0 },
-  --     event = function(self, v) 
-  --       softcut.post_filter_rq(1,1 - v)
-  --       softcut.post_filter_rq(2,1 - v)
-  --     end
-  --   },
-  --   k2 = { -- wrm 1 filter on/off
-  --     worm = 1,
-  --     label = "filt",
-  --     value = 0,
-  --     behavior = "toggle",
-  --     event = function(self, v, t) 
-  --       if v == 0 then
-  --         softcut.post_filter_dry(1, 1)
-  --         softcut.post_filter_dry(2, 1)
-  --         softcut.post_filter_lp(1, 0)
-  --         softcut.post_filter_lp(2, 0)
-  --         softcut.post_filter_bp(1, 0)
-  --         softcut.post_filter_bp(2, 0)
-  --         softcut.post_filter_hp(1, 0)
-  --         softcut.post_filter_hp(2, 0)
-  --       else
-  --         wrms.pages[5].k3:event(wrms.pages[5].k3.value)
-  --       end
-  --     end
-  --   },
-  --   k3 = { -- wrm 1 filter type
-  --     worm = 1,
-  --     label = { "lp", "bp", "hp"  },
-  --     value = 1,
-  --     behavior = "enum",
-  --     event = function(self, v, t)
-  --       if wrms.pages[5].k2.value == 1 then
-  --         softcut.post_filter_dry(1, 0)
-  --         softcut.post_filter_dry(2, 0)
-  --         softcut.post_filter_lp(1, 0)
-  --         softcut.post_filter_lp(2, 0)
-  --         softcut.post_filter_bp(1, 0)
-  --         softcut.post_filter_bp(2, 0)
-  --         softcut.post_filter_hp(1, 0)
-  --         softcut.post_filter_hp(2, 0)
-          
-  --         if v == 1 then -- v is lowpass
-  --           softcut.post_filter_lp(1, 1)
-  --           softcut.post_filter_lp(2, 1)
-  --         elseif v == 2 then -- v is bandpass
-  --           softcut.post_filter_bp(1, 1)
-  --           softcut.post_filter_bp(2, 1)
-  --         elseif v == 3 then -- v is hightpass
-  --           softcut.post_filter_hp(1, 1)
-  --           softcut.post_filter_hp(2, 1)
-  --         end
-  --       end
-  --     end
-  --   }
-  -- },
   
 
 wrms.pages[2].k2 = wrms.pages[1].k2 -- copied controls for page "o"
@@ -403,7 +431,7 @@ wrms.lfo.process = function() -- called on each lfo update
   supercut.rate(2, rate)
 end
 
-function wrms.sc_init()
+function wrms.sc_init() -- this gets called first within the larger wrms.init() function. redefine to customize initialization routine
   
   -- supercut (softcut) initial settings
   
@@ -430,7 +458,7 @@ function wrms.sc_init()
     supercut.recpre_slew_time(i, 0.01)
   end
 end
--------------------------------------------- global callbacks - feel free to redefine  ------------------------------------------------------------
+-------------------------------------------- global callbacks - feel free to redefine when including wrms ! ------------------------------------------------------------
 
 function init()
   wrms.init()
@@ -460,3 +488,5 @@ wrms.re:start()
 function cleanup()
   wrms.cleanup()
 end
+
+return wrms

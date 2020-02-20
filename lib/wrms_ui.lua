@@ -1,8 +1,18 @@
 wrms = {}
 
-wrms.lfo = include 'lib/hnds_wrms'
-supercut = include 'lib/supercut'
+wrms.lfo = include 'wrms/lib/hnds_wrms'
+supercut = include 'wrms/lib/supercut'
 controlspec = require 'controlspec'
+
+
+--[[
+
+i must say things aren't quite too tidy over here :/
+
+fotunately - most of this shouldn't need to be modified. many things can happen within the existing architecture for pages 
+without any additional modification to the user interface code here !
+
+]]---
 
 ---------------------------------------------- utility functions --------------------------------------------------------------------
 

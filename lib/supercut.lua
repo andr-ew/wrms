@@ -57,6 +57,13 @@ tabutil = require "tabutil"
 --   return state
 -- end
 
+
+--[[
+
+these are the guts for the supercut lib documented over this a way -> https://llllllll.co/t/supercut-lib/29526
+
+]]--
+
 supercut = {}
 
 local supercut_data = softcut.defaults()
