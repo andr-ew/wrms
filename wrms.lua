@@ -172,7 +172,9 @@ wrms.pages = {
       behavior = "toggle",
       event = function(self, v, t)
         if t < 0.5 then -- if short press
-          if v == 1 then -- else if no inital loop or punch-in has happened yet, start loop punch-in
+          if supercut.has_initial(2) then -- if inital loop has been recorded then toggle recording 
+            supercut.rec(2, v)
+          elseif v == 1 then -- else if no inital loop or punch-in has happened yet, start loop punch-in
             supercut.rec(2, 1) -- start recording & playing
             supercut.play(2, 1)
             
@@ -191,11 +193,9 @@ wrms.pages = {
             supercut.is_punch_in(2, false)
             
             wrms.wake(2) -- this is purely an animation setting - changes whether the worm is flat (asleep) or moving (awake)
-            
-          elseif supercut.has_initial(2) then -- if inital loop has been recorded then toggle recording 
-            supercut.rec(2, v)
-            
           end
+          
+          -- print(supercut.has_initial(2))
         else -- else (long press) we're gonna clear the buffer region
           supercut.rec(2, 0) -- stop recording & playing
           supercut.play(2, 0)
