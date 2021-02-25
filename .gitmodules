@@ -1,3 +1,6 @@
 [submodule "lib/nest"]
 	path = lib/nest
 	url = https://github.com/andr-ew/nest
+[submodule "lib/warden"]
+	path = lib/warden
+	url = https://github.com/andr-ew/warden
