@@ -28,7 +28,8 @@ include 'wrms/lib/nest/txt'
 
 wrdn = include 'wrms/lib/warden/warden'
 
--- voice stereo pair setter helper
+
+-- utility functions & tables
 stereo = function(command, pair, ...)
     local off = (pair - 1) * 2
     for i = 1, 2 do
@@ -36,7 +37,6 @@ stereo = function(command, pair, ...)
     end
 end
 
--- helper function tables
 lvlmx = {
     {
         vol = 1, send = 1,
@@ -100,6 +100,8 @@ rec = nest_(2):each(function(i)
         label = 'rec',
         action = function(s, v)
             stereo('rec_level', i, v)
+
+            --todo: loop points
         end
     }
 end)
