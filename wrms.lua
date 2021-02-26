@@ -91,6 +91,7 @@ slew = function(n, t)
     return st
 end
 
+--params
 
 --screen interface
 --todo: x, y, n
