@@ -9,7 +9,7 @@
 -- version 2.0.0 @andrew
 -- https://llllllll.co/t/wrms
 --
--- two wrms (stereo loops), 
+-- two wrms (sc2 loops), 
 -- similar in function but each 
 -- with thier own quirks + 
 -- abilities
@@ -26,28 +26,42 @@ include 'wrms/lib/nest/core'
 include 'wrms/lib/nest/norns'
 include 'wrms/lib/nest/txt'
 
-local wrdn = include 'wrms/lib/warden/warden'
+local warden = include 'wrms/lib/warden/warden'
 local cs = require 'controlspec'
+local reg = {}
 
 --setup
 local setup = function()
     for i = 1, 2 do
         softcut.pan(i*2 - 1, -1)
         softcut.pan(i*2, 1)
+        softcut.play(i, 1)
     end
     for i = 1, 4 do
         softcut.rec(i, 1)
     end
+
+    reg.blank = warden.divide(warden.buffer[1], 2)
+    reg.rec = warden.subloop(reg.blank)
+    reg.play = warden.subloop(reg.rec, 2)
 end
 
 -- utility functions & tables
 local u = {
-    stereo = function(command, pair, ...)
+    sc2 = function(command, pair, ...)
         local off = (pair - 1) * 2
         for i = 1, 2 do
             softcut[command](off + i, ...)
         end
     end,
+    --[[
+    reg2 = function(sub, pair, command, ...)
+        local off = (pair - 1) * 2
+        local l,r = reg[sub][off + 1], reg[sub][off + 2]
+        if command = '
+        return l[command](l, ...), r[command](r, ...)
+    end,
+    --]]
     lvlmx = {
         {
             vol = 1, send = 1, pan = 0,
@@ -76,11 +90,11 @@ local u = {
         update = function(s, n)
             local off = n == 1 and 0 or 2
             if mode == 'pre' then
-                u.stereo('pre_level', n, s.old)
+                u.sc2('pre_level', n, s.old)
                 softcut.level_cut_cut(1 + off, 2 + off, 0)
                 softcut.level_cut_cut(2 + off, 1 + off, 0)
             else
-                u.stereo('pre_level', n, 0)
+                u.sc2('pre_level', n, 0)
                 softcut.level_cut_cut(1 + off, 2 + off, s.old)
                 softcut.level_cut_cut(2 + off, 1 + off, s.old)
             end
@@ -92,34 +106,97 @@ local u = {
         { oct = 1, bnd = 1, mod = 0, dir = 1 },
         { oct = 1, bnd = 1, mod = 0, dir = -1 },
         update = function(s, n)
-            u.stereo('rate', n, s.oct * 2^(s.bnd - 1) * 2^mod * dir)
+            u.sc2('rate', n, s.oct * 2^(s.bnd - 1) * 2^mod * dir)
         end
+    },
+    wrm = {
+        phase = { 0, 0 },
+        reg = { 
+            1, 2,
+            update = function(s, pair)
+                local off = (pair-1) * 2
+                local sub = (s[pair] == pair) and 1 or 2
+
+                reg.play[pair][sub]:update_voice(off + 1, off + 2)
+            end,
+            update_all = function(s)
+                for i = 1,2 do s:update(i) end
+            end
+        }
     },
     slew = function(n, t)
         local st = (2 + (math.random() * 0.5)) * t 
-        u.stereo('rate_slew_time', n, st)
+        u.sc2('rate_slew_time', n, st)
         return st
     end,
     input = function(pair, inn, chan) return function(v) 
         local off = (pair - 1) * 2
         local vc = (chan - 1) + off
         softcut.level_input_cut(inn, vc, v)
-    end end
+    end end,
+    punch_in = {
+        { recording = false, recorded = false },
+        { recording = false, recorded = false },
+        toggle = function(s, pair, v)
+            local i = u.wrm.reg[pair]
+
+            if s[i].recorded then
+                u.sc2('rec_level', pair, v)
+            elseif v == 1 then
+                u.sc2('rec_level', pair, 1)
+                u.sc2('play', pair, 1)
+
+                reg.rec[i]:set_length(1, 'fraction')
+                reg.play[i][1]:set_length(1, 'fraction')
+                reg.play[i][2]:set_length(1, 'fraction')
+
+                u.wrm.reg:update_all()
+
+                s[i].recording = true
+            elseif s[i].recording then
+                u.sc2('rec_level', i, 0)
+
+                reg.rec[i]:set_length(u.phase[i] - 0.1)
+                --reg.play[i][1]:set_length(1, 'fraction')
+                --reg.play[i][2]:set_length(1, 'fraction')
+
+                u.wrm.reg:update_all()
+
+                s[i].recorded = true
+                s[i].recording = false
+
+                --wrms.wake(2)
+            end
+        end
+    }
 }
 
 --screen interface
 --todo: x, y, n
-local rec = nest_(2):each(function(i)
-    return _txt.key.toggle {
-        label = 'rec',
-        action = function(s, v)
-            u.stereo('rec_level', i, v)
+local rec = nest_ {
+    _txt.key.toggle {
+        label = 'rec', v = 1,
+        action = function(s, v, t)
+            if t < 0.5 then
+                u.sc2('rec_level', 1, v)
+            else
+                u.sc2('rec_level', 1, 0)
+                u.reg2('rec', 1, 'clear')
 
-            --todo: loop points
+                return 0
+            end
+        end
+    },
+    _txt.key.toggle {
+        label = 'rec', v = 0,
+        action = function(s, v, t)
+            if t < 0.5 then
+            else
+                return 0
+            end
         end
     }
-end)
-rec[1].v = 1
+}
 
 wrms_ = nest_ {
     pages = nest_ {
@@ -255,4 +332,4 @@ local params = {
     end
 }
 
-return { u = u, setup = setup, params = params, wrms_ = wrms_ }
+return { u = u, setup = setup, params = params, wrms_ = wrms_, reg = reg }
