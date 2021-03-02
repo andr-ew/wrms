@@ -9,7 +9,7 @@
 -- version 2.0.0 @andrew
 -- https://llllllll.co/t/wrms
 --
--- two wrms (sc2 loops), 
+-- two wrms (stereo loops), 
 -- similar in function but each 
 -- with thier own quirks + 
 -- abilities
@@ -36,6 +36,8 @@ local setup = function()
         softcut.pan(i*2 - 1, -1)
         softcut.pan(i*2, 1)
         softcut.play(i, 1)
+
+        --phase event -> update wrm.phase
     end
     for i = 1, 4 do
         softcut.rec(i, 1)
@@ -48,20 +50,12 @@ end
 
 -- utility functions & tables
 local u = {
-    sc2 = function(command, pair, ...)
+    stereo = function(command, pair, ...)
         local off = (pair - 1) * 2
         for i = 1, 2 do
             softcut[command](off + i, ...)
         end
     end,
-    --[[
-    reg2 = function(sub, pair, command, ...)
-        local off = (pair - 1) * 2
-        local l,r = reg[sub][off + 1], reg[sub][off + 2]
-        if command = '
-        return l[command](l, ...), r[command](r, ...)
-    end,
-    --]]
     lvlmx = {
         {
             vol = 1, send = 1, pan = 0,
@@ -90,11 +84,11 @@ local u = {
         update = function(s, n)
             local off = n == 1 and 0 or 2
             if mode == 'pre' then
-                u.sc2('pre_level', n, s.old)
+                u.stereo('pre_level', n, s.old)
                 softcut.level_cut_cut(1 + off, 2 + off, 0)
                 softcut.level_cut_cut(2 + off, 1 + off, 0)
             else
-                u.sc2('pre_level', n, 0)
+                u.stereo('pre_level', n, 0)
                 softcut.level_cut_cut(1 + off, 2 + off, s.old)
                 softcut.level_cut_cut(2 + off, 1 + off, s.old)
             end
@@ -106,7 +100,7 @@ local u = {
         { oct = 1, bnd = 1, mod = 0, dir = 1 },
         { oct = 1, bnd = 1, mod = 0, dir = -1 },
         update = function(s, n)
-            u.sc2('rate', n, s.oct * 2^(s.bnd - 1) * 2^mod * dir)
+            u.stereo('rate', n, s.oct * 2^(s.bnd - 1) * 2^mod * dir)
         end
     },
     wrm = {
@@ -126,7 +120,7 @@ local u = {
     },
     slew = function(n, t)
         local st = (2 + (math.random() * 0.5)) * t 
-        u.sc2('rate_slew_time', n, st)
+        u.stereo('rate_slew_time', n, st)
         return st
     end,
     input = function(pair, inn, chan) return function(v) 
@@ -141,10 +135,10 @@ local u = {
             local i = u.wrm.reg[pair]
 
             if s[i].recorded then
-                u.sc2('rec_level', pair, v)
+                u.stereo('rec_level', pair, v)
             elseif v == 1 then
-                u.sc2('rec_level', pair, 1)
-                u.sc2('play', pair, 1)
+                u.stereo('rec_level', pair, 1)
+                u.stereo('play', pair, 1)
 
                 reg.rec[i]:set_length(1, 'fraction')
                 reg.play[i][1]:set_length(1, 'fraction')
@@ -154,7 +148,7 @@ local u = {
 
                 s[i].recording = true
             elseif s[i].recording then
-                u.sc2('rec_level', i, 0)
+                u.stereo('rec_level', i, 0)
 
                 reg.rec[i]:set_length(u.phase[i] - 0.1)
                 --reg.play[i][1]:set_length(1, 'fraction')
@@ -178,9 +172,9 @@ local rec = nest_ {
         label = 'rec', v = 1,
         action = function(s, v, t)
             if t < 0.5 then
-                u.sc2('rec_level', 1, v)
+                u.stereo('rec_level', 1, v)
             else
-                u.sc2('rec_level', 1, 0)
+                u.stereo('rec_level', 1, 0)
                 u.reg2('rec', 1, 'clear')
 
                 return 0
