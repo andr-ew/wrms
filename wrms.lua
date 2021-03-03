@@ -32,20 +32,25 @@ local reg = {}
 
 --setup
 local setup = function()
+    for i = 1, 4 do
+        softcut.enabled(i, 1)
+        softcut.rec(i, 1)
+    end
     for i = 1, 2 do
         softcut.pan(i*2 - 1, -1)
         softcut.pan(i*2, 1)
-        softcut.play(i, 1)
-
-        --phase event -> update wrm.phase
+        
+        softcut.phase_quant(i*2, 0.1)
     end
-    for i = 1, 4 do
-        softcut.rec(i, 1)
-    end
+    softcut.event_phase(function(i, ph)
+        if i == 2 then u.phase[1] = ph 
+        elseif i == 4 then w.phase[2] = ph end
+    end)
+    softcut.poll_start_phase()
 
-    reg.blank = warden.divide(warden.buffer[1], 2)
+    reg.blank = warden.divide(warden.buffer_stereo, 2)
     reg.rec = warden.subloop(reg.blank)
-    reg.play = warden.subloop(reg.rec, 2)
+    reg.play = warden.subloop(reg.rec)
 end
 
 -- utility functions & tables
@@ -79,8 +84,8 @@ local u = {
         end
     },
     oldmx = {
-        { old = 0.5, mode = 'fb' },
-        { old = 1, mode = 'pre' },
+        { old = 0.5, mode = 'fb', pong = true },
+        { old = 1, mode = 'pre', pong = false },
         update = function(s, n)
             local off = n == 1 and 0 or 2
             if mode == 'pre' then
@@ -94,29 +99,38 @@ local u = {
             end
         end
     },
-    mod = {
-    },
-    ratemx = {
-        { oct = 1, bnd = 1, mod = 0, dir = 1 },
-        { oct = 1, bnd = 1, mod = 0, dir = -1 },
-        update = function(s, n)
-            u.stereo('rate', n, s.oct * 2^(s.bnd - 1) * 2^mod * dir)
+    mod = {  
+        { rate = 0, mul = 0, phase = 0,
+            shape = function(p) return math.sin(2 * math.pi * p) end
+            action = function(v) for i = 1,2 do
+                u.ratemx[i].mod = v; u.ratemx:update(i)
+            end end
+        },
+        { rate = 0, mul = 0, phase = 0,
+            shape = function(p) return math.sin(2 * math.pi * p) end
+            action = function(v) end
+        },
+        quant = 0.01, 
+        init = function(s, n)
+            s[n].clock = clock.run(function()
+                clock.sleep(s.quant)
+
+                local T = 1/s[n].rate
+                local d = s.quant / T
+                s[n].phase = s[n].phase + d
+                while s[n].phase > 1 do s[n].phase = s[n].phase - 1 end
+
+                s[n].action(s[n].shape(s[n].phase) * s[n].mul)
+            end)
         end
     },
-    wrm = {
-        phase = { 0, 0 },
-        reg = { 
-            1, 2,
-            update = function(s, pair)
-                local off = (pair-1) * 2
-                local sub = (s[pair] == pair) and 1 or 2
-
-                reg.play[pair][sub]:update_voice(off + 1, off + 2)
-            end,
-            update_all = function(s)
-                for i = 1,2 do s:update(i) end
-            end
-        }
+    ratemx = {
+        { oct = 1, bnd = 1, mod = 0, dir = 1, rate = 0 },
+        { oct = 1, bnd = 1, mod = 0, dir = -1, rate = 0 },
+        update = function(s, n)
+            s[n].rate = s[n].oct * 2^(s[n].bnd - 1) * 2^s[n].mod * s[n].dir
+            u.stereo('rate', n, s[n].rate)
+        end
     },
     slew = function(n, t)
         local st = (2 + (math.random() * 0.5)) * t 
@@ -128,11 +142,18 @@ local u = {
         local vc = (chan - 1) + off
         softcut.level_input_cut(inn, vc, v)
     end end,
+    phase = { 0, 0 },
+    voice = {
+        { reg = 1 },
+        { reg = 2 },
+        reg = function(s, name, pair) return reg[name][s[pair].reg] end
+    },
     punch_in = {
-        { recording = false, recorded = false },
-        { recording = false, recorded = false },
+        quant = 0.01,
+        { recording = false, recorded = false, t = 0, clock = nil },
+        { recording = false, recorded = false, t = 0, clock = nil },
         toggle = function(s, pair, v)
-            local i = u.wrm.reg[pair]
+            local i = u.voice[pair].reg
 
             if s[i].recorded then
                 u.stereo('rec_level', pair, v)
@@ -141,126 +162,56 @@ local u = {
                 u.stereo('play', pair, 1)
 
                 reg.rec[i]:set_length(1, 'fraction')
-                reg.play[i][1]:set_length(1, 'fraction')
-                reg.play[i][2]:set_length(1, 'fraction')
+                reg.play[i]:set_length(1, 'fraction')
 
-                u.wrm.reg:update_all()
+                s[i].clock = clock.run(function()
+                    clock.sleep(s.quant)
+                    s[i].t = s[i].t + (s.quant * u.ratemx[pair])
+                end)
 
                 s[i].recording = true
             elseif s[i].recording then
                 u.stereo('rec_level', i, 0)
 
-                reg.rec[i]:set_length(u.phase[i] - 0.1)
-                --reg.play[i][1]:set_length(1, 'fraction')
-                --reg.play[i][2]:set_length(1, 'fraction')
+                reg.rec[i]:set_length(s[i].t)
+                reg.play[i]:set_length(1, 'fraction')
 
-                u.wrm.reg:update_all()
-
+                clock.cancel(s[i].clock)
                 s[i].recorded = true
                 s[i].recording = false
+                s[i].t = 0
 
                 --wrms.wake(2)
             end
-        end
-    }
-}
+        end,
+        clear = function(s, pair)
+            u.stereo('rec_level', pair, 0)
 
---screen interface
---todo: x, y, n
-local rec = nest_ {
-    _txt.key.toggle {
-        label = 'rec', v = 1,
-        action = function(s, v, t)
-            if t < 0.5 then
-                u.stereo('rec_level', 1, v)
-            else
-                u.stereo('rec_level', 1, 0)
-                u.reg2('rec', 1, 'clear')
+            local i = u.voice[pair].reg
+            reg.rec[i]:clear()
 
-                return 0
-            end
+            clock.cancel(s[i].clock)
+            s[i].recorded = false
+            s[i].recording = false
+            s[i].t = 0
         end
     },
-    _txt.key.toggle {
-        label = 'rec', v = 0,
-        action = function(s, v, t)
-            if t < 0.5 then
-            else
-                return 0
-            end
-        end
-    }
-}
-
-wrms_ = nest_ {
-    pages = nest_ {
-        -- todo: link these to params using v functions
-        v = nest_ {
-            vol = nest_(2):each(function(i)
-                return _txt.enc.control {
-                    label = 'vol',
-                    v = 1, max = 2,
-                    action = function(s, v)
-                        u.lvlmx[i].vol = v
-                        u.lvlmx:update(i)
-                    end
-                }
-            end),
-            rec = rec
-        },
-        o = nest_ {
-            old = nest_(2):each(function(i)
-                return _txt.enc.control {
-                    label = 'old',
-                    action = function(s, v)
-                        u.oldmx[i].old = v
-                        u.oldmx:update(i)
-                    end
-                }
-            end),
-
-            -- since rec is in the structure twice, p & k are ambiguous,
-            -- but i think that's totally ok on paper - make sure it works!
-            rec = rec
-        },
-        b = nest_ {
-            bnd = _txt.enc.control {
-                min = 1, max = 2, v = 1,
-                action = function(s, v)
-                    u.ratemx[1].bnd = v
-                    u.ratemx:update(1)
-                end
-            },
-            wgl = _txt.enc.control {
-                min = 1, max = 100, quantum = 0.01/100,
-                action = function(s, v) u.mod.amount = v end
-            },
-            oct = 1,
-            dir = 1,
-            slew = 0,
-            trans = _txt.key.trigger {
-                label = { '<<', '>>' },
-                edge = 0,
-                --set blink time to slew time
-                action = function(s, v, t, d, add, rem, l)
-                    u.slew(1, t)
-
-                    if #l == 2 then
-                        s.p.dir = s.p.dir * -1
-                        u.ratemx[1].dir = s.p.dir
-                        u.ratemx:update()
-                    else
-                        s.p.oct = (add == 2) and (s.p.oct * 2) or (s.p.oct / 2)
-                        u.ratemx[2].oct = s.p.oct
-                        u.ratemx:update(2)
-                    end
-                end
-            }
-        },
-        s = nest_ {
-            -- improved number for start & length. v is a function bound to wrdn
-        }
-    }
+    _param_ctl = function(id, o)
+        return _txt.enc.control {
+            label = id,
+            controlspec = params:lookup_param(id).controlspec,
+            value = function() return params:get(id) end,
+            action = function(s, v) params:set(id, v) end
+        } :merge(o)
+    end,
+    _iparam_ctl = function(label, i, o)
+        return _txt.enc.control {
+            label = label,
+            controlspec = params:lookup_param(label ..' '..i).controlspec,
+            value = function() return params:get(label ..' '..i) end,
+            action = function(s, v) params:set(label ..' '..i, v) end
+        } :merge(o)
+    end
 }
 
 --params
@@ -286,44 +237,259 @@ local params = {
                 u.lvlmx:update(i)
             end)
         end
+        params:add_seperator('wrms')
     end,
     core = function() 
-        params:add_seperator('wrms')
         for i = 1,2 do 
             params:add {
                 type = 'control',
                 id = 'vol ' .. i,
-                controlspec = cs.def { default = 1, max = 2 }
+                controlspec = cs.def { default = 1, max = 2 },
+                action = function(v)
+                    u.lvlmx[i].vol = v
+                    u.lvlmx:update(i)
+                    redraw()
+                end
             }
             params:add {
                 type = 'control',
                 id = 'old ' .. i,
                 default = 1,
-            }
-            params:add {
-                type = 'binary',
-                behavior = 'toggle',
-                id = 'rec ' .. i,
                 action = function(v)
-                    wrms_.pages.v.rec[i].v = v
-                    wrms_.pages.v.rec[i]:update()
-                end
-            }
-            params:add {
-                type = 'binary',
-                behavior = 'trigger',
-                id = 'clear ' .. i,
-                action = function()
-                    u.clear(i)
+                    u.oldmx[i].old = v
+                    u.oldmx:update(i)
+                    redraw()
                 end
             }
         end
 
         params:set('old 1', 0.5)
         params:set('old 2', 1)
+
+        params:add {
+            type = 'binary',
+            behavior = 'toggle',
+            id = 'rec 1'
+            action = function(v)
+                u.stereo('rec_level', 1, v)
+                redraw()
+            end
+        }
+        params:add {
+            type = 'binary',
+            behavior = 'trigger',
+            id = 'clear 1',
+            action = function()
+                params:set('rec 1', 0)
+                u.voice:reg('rec', 1):clear()
+            end
+        }
+        params:add {
+            type = 'binary',
+            behavior = 'toggle',
+            id = 'rec 2',
+            action = function(v)
+                u.punch_in:toggle(2, v)
+
+                u.voice:reg('play', 1):update_voice(1, 2)
+                u.voice:reg('rec', 2):update_voice(3, 4)
+
+                redraw()
+            end
+        }
+        params:add {
+            type = 'binary',
+            behavior = 'trigger',
+            id = 'clear 2',
+            action = function()
+                params:set('rec 2', 0)
+                u.punch_in:clear(2)
+            end
+        }
     end,
     default = function()
+        params:add {
+            type = 'control', id = 'bnd',
+            controlspec = cs.def { default = 1, min = 1, max = 2 },
+            action = function(v)
+                u.ratemx[1].bnd = v
+                u.ratemx:update(1)
+            end
+        }
+        params:add {
+            type = 'control', id = 'wgl',
+            controlspec = cs.def { min = 1, max = 100, quantum = 0.01/100 },
+            action = function(v) u.mod.mul = v end
+        }
+        params:add {
+            type = 'control', id = '>',
+            controlspec = cs.def { default = 1 },
+            action = function(v) u.lvlmx[1].send = v; u.lvlmx:update(1) end
+        }
+        params:add {
+            type = 'control', id = '<',
+            controlspec = cs.def { default = 0 },
+            action = function(v) u.lvlmx[2].send = v; u.lvlmx:update(2) end
+        }
+        params:add {
+            type = 'binary', behavior = 'toggle', default = 1, id = 'pong',
+            action = function(v) u.oldmx[1].pong = v==1; u.oldmx:update(1) end
+        }
+        params:add {
+            type = 'binary', behavior = 'toggle', default = 0, id = 'share',
+            action = function(v) 
+                u.voice[1].reg = v + 1
+                u.voice:reg('play', 1):update_voice(1, 2)
+            end
+        }
+    end,
+    filter = function(i)
+        params:add {
+            type = 'control', id = 'f', 
+            controlspec = cs.new(50,5000,'exp',0,5000,'hz'),
+            action = function(v) u.stereo('post_filter_fc', i, v) end
+        }
+        params:add {
+            type = 'control', id = 'q',
+            controlspec = cs.RQ,
+            action = function(v) u.stereo('post_filter_rq', i, v) end
+        }
+        local options = { 'lp', 'bp', 'hp' } 
+        params:add {
+            type = 'option', id = 'filter type',
+            options = options,
+            action = function(v)
+                for _,k in ipairs(options) do stereo('post_filter_'..k, i, 0) end
+                stereo('post_filter_'..options[v], i, 1)
+            end
+        }
     end
 }
+
+u._rec = function(i)
+    return _txt.key.toggle {
+        label = 'rec',
+        v = function() return params:get('rec '..i) end,
+        action = function(s, v, t)
+            if t < 0.5 then params:set('rec '..i, v)
+            else params:delta('clear '..i, 1) end
+        end
+    }
+end
+
+u._trans = function(i, o)
+    return _txt.key.trigger {
+        label = { '<<', '>>' },
+        edge = 0,
+        blinktime = 0.2,
+        n = { 2, 3 },
+        action = function(s, v, t, d, add, rem, l)
+            s.blinktime = u.slew(i, t)
+
+            if #l == 2 then
+                u.ratemx[i].dir = u.ratemx[i].dir * -1
+                u.ratemx:update(i)
+            else
+                local o = u.ratemx[i].oct
+                u.ratemx[i].oct = add==2 and o*2 or o/2
+                u.ratemx:update(i)
+            end
+        end
+    } :merge(o)
+end
+
+--screen interface
+--todo: x, y, n
+local wrms_ = nest_ {
+    pages = nest_ {
+        v = nest_ {
+            vol = nest_(2):each(function(i)
+                return u._iparam_ctl('vol', i, {
+                    n = i + 1
+                })
+            end),
+            rec = nest_(2):each(function(i)
+                return u._rec(i)
+            end)
+        },
+        o = nest_ {
+            old = nest_(2):each(function(i)
+                return u._iparam_ctl('old', i, {
+                    n = i + 1
+                })
+            end),
+            rec = nest_(2):each(function(i)
+                return u._rec(i)
+            end)
+        },
+        b = nest_ {
+            bnd = u._param_ctl('bnd', {
+                n = 2
+            }),
+            wgl = u._param_ctl('wgl', {
+                n = 3
+            }),
+            trans = u._trans(i, {})
+        },
+        s = nest_ {
+            s = _txt.enc.number {
+                min = 0, max = math.huge,
+                n = 2,
+                value = function() return u.voice:reg('play', 1):get_start() end
+                action = function(s, v)
+                    u.voice:reg('play', 1):set_start(v)
+                    u.voice:reg('play', 1):update_voice(1, 2)
+                end
+            },
+            l = _txt.enc.number {
+                min = 0, max = math.huge,
+                n = 3,
+                value = function() return u.voice:reg('play', 1):get_length() end
+                action = function(s, v)
+                    u.voice:reg('play', 1):set_length(v)
+                    u.voice:reg('play', 1):update_voice(1, 2)
+                end
+            },
+            trans = u._trans(i, {})
+        },
+        gt = nest_ {
+            gt = u._param_ctl('>', {
+                n = 2
+            }),
+            lt = u._param_ctl('<', {
+                n = 3
+            }),
+            pong = _txt.key.toggle {
+                n = 2,
+                value = function() return params:get('pong') end,
+                action = function(s, v) params:set('pong', v) end
+            },
+            share = _txt.key.toggle {
+                n = 3,
+                value = function() return params:get('share') end,
+                action = function(s, v) params:set('share', v) end
+            }
+        },
+        f = nest_ {
+            f = u._param_ctl('f', {
+                n = 2,
+            }),
+            q = u._param_ctl('f', {
+                n = 3,
+            }),
+            type = _txt.key.option {
+                n = { 2, 3 },
+                value = function() return params:get('filter type') end,
+                action = function(s, v) params:set('filter type', v) end
+            }
+        }
+    }
+}
+
+function init()
+    setup()
+    u.stereo('play', 1, 1)
+    u.mod:init(1)
+end
 
 return { u = u, setup = setup, params = params, wrms_ = wrms_, reg = reg }
