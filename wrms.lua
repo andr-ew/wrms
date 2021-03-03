@@ -50,7 +50,7 @@ local setup = function()
 
     reg.blank = warden.divide(warden.buffer_stereo, 2)
     reg.rec = warden.subloop(reg.blank)
-    reg.play = warden.subloop(reg.rec, 2)
+    reg.play = warden.subloop(reg.rec)
 end
 
 -- utility functions & tables
@@ -84,8 +84,8 @@ local u = {
         end
     },
     oldmx = {
-        { old = 0.5, mode = 'fb' },
-        { old = 1, mode = 'pre' },
+        { old = 0.5, mode = 'fb', pong = true },
+        { old = 1, mode = 'pre', pong = false },
         update = function(s, n)
             local off = n == 1 and 0 or 2
             if mode == 'pre' then
@@ -146,17 +146,7 @@ local u = {
     voice = {
         { reg = 1 },
         { reg = 2 },
-        slice = function(s, pair)
-            local sub = (s[pair].reg == pair) and 1 or 2
-            return reg.play[s[pair].reg][sub]
-        end,
-        update = function(s, pair)
-            local off = (pair-1) * 2
-            s:slice(pair):update_voice(off + 1, off + 2)
-        end,
-        update_all = function(s)
-            for i = 1,2 do s:update(i) end
-        end
+        reg = function(s, name, pair) return reg[name][s[pair].reg] end
     },
     punch_in = {
         quant = 0.01,
@@ -172,10 +162,7 @@ local u = {
                 u.stereo('play', pair, 1)
 
                 reg.rec[i]:set_length(1, 'fraction')
-                reg.play[i][1]:set_length(1, 'fraction')
-                reg.play[i][2]:set_length(1, 'fraction')
-
-                u.voice:update(pair)
+                reg.play[i]:set_length(1, 'fraction')
 
                 s[i].clock = clock.run(function()
                     clock.sleep(s.quant)
@@ -187,10 +174,7 @@ local u = {
                 u.stereo('rec_level', i, 0)
 
                 reg.rec[i]:set_length(s[i].t)
-                --reg.play[i][1]:set_length(1, 'fraction')
-                --reg.play[i][2]:set_length(1, 'fraction')
-
-                u.voice:update(pair)
+                reg.play[i]:set_length(1, 'fraction')
 
                 clock.cancel(s[i].clock)
                 s[i].recorded = true
@@ -201,8 +185,9 @@ local u = {
             end
         end,
         clear = function(s, pair)
-            local i = u.voice[pair].reg
             u.stereo('rec_level', pair, 0)
+
+            local i = u.voice[pair].reg
             reg.rec[i]:clear()
 
             clock.cancel(s[i].clock)
@@ -263,6 +248,7 @@ local params = {
                 action = function(v)
                     u.lvlmx[i].vol = v
                     u.lvlmx:update(i)
+                    redraw()
                 end
             }
             params:add {
@@ -272,6 +258,7 @@ local params = {
                 action = function(v)
                     u.oldmx[i].old = v
                     u.oldmx:update(i)
+                    redraw()
                 end
             }
         end
@@ -294,7 +281,7 @@ local params = {
             id = 'clear 1',
             action = function()
                 params:set('rec 1', 0)
-                reg.rec[u.voice.reg[1]]:clear()
+                u.voice:reg('rec', 1):clear()
             end
         }
         params:add {
@@ -303,6 +290,10 @@ local params = {
             id = 'rec 2',
             action = function(v)
                 u.punch_in:toggle(2, v)
+
+                u.voice:reg('play', 1):update_voice(1, 2)
+                u.voice:reg('rec', 2):update_voice(3, 4)
+
                 redraw()
             end
         }
@@ -330,10 +321,52 @@ local params = {
             controlspec = cs.def { min = 1, max = 100, quantum = 0.01/100 },
             action = function(v) u.mod.mul = v end
         }
+        params:add {
+            type = 'control', id = '>',
+            controlspec = cs.def { default = 1 },
+            action = function(v) u.lvlmx[1].send = v; u.lvlmx:update(1) end
+        }
+        params:add {
+            type = 'control', id = '<',
+            controlspec = cs.def { default = 0 },
+            action = function(v) u.lvlmx[2].send = v; u.lvlmx:update(2) end
+        }
+        params:add {
+            type = 'binary', behavior = 'toggle', default = 1, id = 'pong',
+            action = function(v) u.oldmx[1].pong = v==1; u.oldmx:update(1) end
+        }
+        params:add {
+            type = 'binary', behavior = 'toggle', default = 0, id = 'share',
+            action = function(v) 
+                u.voice[1].reg = v + 1
+                u.voice:reg('play', 1):update_voice(1, 2)
+            end
+        }
+    end,
+    filter = function(i)
+        params:add {
+            type = 'control', id = 'f', 
+            controlspec = cs.new(50,5000,'exp',0,5000,'hz'),
+            action = function(v) u.stereo('post_filter_fc', i, v) end
+        }
+        params:add {
+            type = 'control', id = 'q',
+            controlspec = cs.RQ,
+            action = function(v) u.stereo('post_filter_rq', i, v) end
+        }
+        local options = { 'lp', 'bp', 'hp' } 
+        params:add {
+            type = 'option', id = 'filter type',
+            options = options,
+            action = function(v)
+                for _,k in ipairs(options) do stereo('post_filter_'..k, i, 0) end
+                stereo('post_filter_'..options[v], i, 1)
+            end
+        }
     end
 }
 
-local _rec = function(i)
+u._rec = function(i)
     return _txt.key.toggle {
         label = 'rec',
         v = function() return params:get('rec '..i) end,
@@ -342,6 +375,27 @@ local _rec = function(i)
             else params:delta('clear '..i, 1) end
         end
     }
+end
+
+u._trans = function(i, o)
+    return _txt.key.trigger {
+        label = { '<<', '>>' },
+        edge = 0,
+        blinktime = 0.2,
+        n = { 2, 3 },
+        action = function(s, v, t, d, add, rem, l)
+            s.blinktime = u.slew(i, t)
+
+            if #l == 2 then
+                u.ratemx[i].dir = u.ratemx[i].dir * -1
+                u.ratemx:update(i)
+            else
+                local o = u.ratemx[i].oct
+                u.ratemx[i].oct = add==2 and o*2 or o/2
+                u.ratemx:update(i)
+            end
+        end
+    } :merge(o)
 end
 
 --screen interface
@@ -355,7 +409,7 @@ local wrms_ = nest_ {
                 })
             end),
             rec = nest_(2):each(function(i)
-                return _rec(i)
+                return u._rec(i)
             end)
         },
         o = nest_ {
@@ -365,47 +419,68 @@ local wrms_ = nest_ {
                 })
             end),
             rec = nest_(2):each(function(i)
-                return _rec(i)
+                return u._rec(i)
             end)
         },
         b = nest_ {
-            bnd = u._param_ctl('bnd', 2, {
+            bnd = u._param_ctl('bnd', {
                 n = 2
             }),
-            wgl = u._param_ctl('wgl', 3, {
+            wgl = u._param_ctl('wgl', {
                 n = 3
             }),
-            trans = _txt.key.trigger {
-                label = { '<<', '>>' },
-                edge = 0,
-                blinktime = 0.2,
-                n = { 2, 3 },
-                action = function(s, v, t, d, add, rem, l)
-                    s.blinktime = u.slew(1, t)
-
-                    if #l == 2 then
-                        u.ratemx[1].dir = u.ratemx[1].dir * -1
-                        u.ratemx:update()
-                    else
-                        local o = u.ratemx[1].oct
-                        u.ratemx[1].oct = add==2 and o*2 or o/2
-                        u.ratemx:update(1)
-                    end
-                end
-            }
+            trans = u._trans(i, {})
         },
         s = nest_ {
             s = _txt.enc.number {
-                min = -math.huge, max = math.huge,
+                min = 0, max = math.huge,
                 n = 2,
-                value = function() return voice:slice(1):get_start() end
-                action = function(s, v) voice:slice(1):set_start(v) end
+                value = function() return u.voice:reg('play', 1):get_start() end
+                action = function(s, v)
+                    u.voice:reg('play', 1):set_start(v)
+                    u.voice:reg('play', 1):update_voice(1, 2)
+                end
             },
             l = _txt.enc.number {
-                min = -math.huge, max = math.huge,
+                min = 0, max = math.huge,
                 n = 3,
-                value = function() return voice:slice(1):get_length() end
-                action = function(s, v) voice:slice(1):set_length(v) end
+                value = function() return u.voice:reg('play', 1):get_length() end
+                action = function(s, v)
+                    u.voice:reg('play', 1):set_length(v)
+                    u.voice:reg('play', 1):update_voice(1, 2)
+                end
+            },
+            trans = u._trans(i, {})
+        },
+        gt = nest_ {
+            gt = u._param_ctl('>', {
+                n = 2
+            }),
+            lt = u._param_ctl('<', {
+                n = 3
+            }),
+            pong = _txt.key.toggle {
+                n = 2,
+                value = function() return params:get('pong') end,
+                action = function(s, v) params:set('pong', v) end
+            },
+            share = _txt.key.toggle {
+                n = 3,
+                value = function() return params:get('share') end,
+                action = function(s, v) params:set('share', v) end
+            }
+        },
+        f = nest_ {
+            f = u._param_ctl('f', {
+                n = 2,
+            }),
+            q = u._param_ctl('f', {
+                n = 3,
+            }),
+            type = _txt.key.option {
+                n = { 2, 3 },
+                value = function() return params:get('filter type') end,
+                action = function(s, v) params:set('filter type', v) end
             }
         }
     }
