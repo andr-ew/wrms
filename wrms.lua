@@ -247,7 +247,7 @@ local gfx = {
     }   
 }
 
---params
+--params (for now just abstract the mix stuff)
 local params = {
     mix = function()
         params:add_seperator('mix')
@@ -552,10 +552,7 @@ local wrms_ = nest_ {
                 value = function() return params:get('filter type') end,
                 action = function(s, v) params:set('filter type', v) end
             }
-        },
-        s2 = nest_ {
-            --wrm2 start/end
-        }
+        }    
     }: each(function(k, v)
         v.enabled = function(s) return wrms_.tab.options[wrms_.tab.v//1] == k end
     end)
