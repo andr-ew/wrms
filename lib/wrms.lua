@@ -1,10 +1,10 @@
--- utility functions & tables
-
+--softcut buffer regions
 local reg = {}
 reg.blank = warden.divide(warden.buffer_stereo, 2)
 reg.rec = warden.subloop(reg.blank)
 reg.play = warden.subloop(reg.rec)
 
+-- utility functions & tables
 local u = {
     stereo = function(command, pair, ...)
         local off = (pair - 1) * 2
@@ -172,4 +172,141 @@ local u = {
     end
 }
 
-return u, reg
+--screen graphics
+local mar, mul = 2, 29
+local gfx = {
+    pos = { 
+        x = {
+            [1] = { mar, mar + mul },
+            [1.5] = mar + mul*1.5,
+            [2] = { mar + mul*2, mar + mul*3 }
+        }, 
+        y = {
+            enc = 46,
+            key = 46 + 10
+        }
+    },
+    wrms = {
+        phase = { 0, 0 },
+        draw = function()
+            --feed indicators
+            screen.level(math.floor(supercut.feed(1) * 4))
+            screen.pixel(42, 23)
+            screen.pixel(43, 24)
+            screen.pixel(42, 25)
+            screen.fill()
+          
+            screen.level(math.floor(supercut.feed(2) * 4))
+            screen.pixel(54, 23)
+            screen.pixel(53, 24)
+            screen.pixel(54, 25)
+            screen.fill()
+          
+            for i = 1,2 do
+                local left = 2 + (i-1) * 58
+                local top = 34
+                local width = 44
+                
+                --phase
+                screen.level(2)
+                if supercut.is_punch_in(i) == false then
+                    screen.pixel(left + width * supercut.loop_start(i) / supercut.region_length(i), top) --loop start
+                    screen.fill()
+                end
+                if supercut.has_initial(i) then
+                    screen.pixel(left + width * supercut.loop_end(i) / supercut.region_length(i), top) --loop end
+                    screen.fill()
+                end
+        
+                screen.level(6 + 10 * supercut.rec(i))
+                if supercut.has_initial(i) == false then -- rec line
+                    if supercut.is_punch_in(i) then
+                        screen.move(left + width * util.clamp(0, 1, supercut.loop_start(i) / supercut.region_length(i)), top + 1)
+                        screen.line(1 + left + width * math.abs(util.clamp(0, 1, supercut.region_position(i) / supercut.region_length(i))), top + 1)
+                        screen.stroke()
+                    end
+                else
+                    screen.pixel(left + width * supercut.region_position(i) / supercut.region_length(i), top) -- loop point
+                    screen.fill()
+                end
+        
+                --fun wrm animaions
+                local top = 18
+                local width = 24
+                local lowamp = 0.5
+                local highamp = 1.75
+        
+                screen.level(math.floor(supercut.level(i) * 10))
+                local width = util.linexp(0, (supercut.region_length(i)), 0.01, width, (supercut.loop_length(i)  + 4.125))
+                for j = 1, width do
+                    local amp = supercut.segment_is_awake(i)[j] and math.sin(((supercut.position(i) - supercut.loop_start(i)) * (i == 1 and 1 or 2) / (supercut.loop_end(i) - supercut.loop_start(i)) + j / width) * (i == 1 and 2 or 4) * math.pi) * util.linlin(1, width / 2, lowamp, highamp + supercut.wiggle(i), j < (width / 2) and j or width - j) - 0.75 * util.linlin(1, width / 2, lowamp, highamp + supercut.wiggle(i), j < (width / 2) and j or width - j) - (util.linexp(0, 1, 0.5, 6, j/width) * (supercut.rate2(i) - 1)) or 0      
+                    local left = left - (supercut.loop_start(i)) / (supercut.region_length(i)) * (width - 44)
+                
+                    screen.pixel(left - 1 + j, top + amp)
+                end
+                screen.fill()
+        
+            end
+        end,
+        update = function()
+            wrms_.gfx:update()
+        end
+    }   
+}
+
+--param utilities
+local param = {
+    mix = function()
+        params:add_seperator('mix')
+        for i = 1,2 do
+            params:add_control("in L > wrm " .. i .. "  L", "in L > wrm " .. i .. "  L", controlspec.new(0,1,'lin',0,1,''))
+            params:set_action("in L > wrm " .. i .. "  L", u.input(i, 1, 1))
+
+            params:add_control("in L > wrm " .. i .. "  R", "in L > wrm " .. i .. "  R", controlspec.new(0,1,'lin',0,0,''))
+            params:set_action("in L > wrm " .. i .. "  R", u.input(i, 1, 2))
+            
+            params:add_control("in R > wrm " .. i .. "  R", "in R > wrm " .. i .. "  R", controlspec.new(0,1,'lin',0,1,''))
+            params:set_action("in R > wrm " .. i .. "  R", u.input(i, 2, 2))
+
+            params:add_control("in R > wrm " .. i .. "  L", "in R > wrm " .. i .. "  L", controlspec.new(0,1,'lin',0,0,''))
+            params:set_action("in R > wrm " .. i .. "  L", u.input(i, 2, 1))
+
+            params:add_control("wrm " .. i .. " pan", "wrm " .. i .. " pan", controlspec.PAN)
+            params:set_action("wrm " .. i .. " pan", function(v) 
+                u.lvlmx[i].pan = v 
+                u.lvlmx:update(i)
+            end)
+        end
+        params:add_seperator('wrms')
+    end,
+    filter = function(i)
+        params:add {
+            type = 'control', id = 'f', 
+            controlspec = cs.new(50,5000,'exp',0,5000,'hz'),
+            action = function(v) 
+                u.stereo('post_filter_fc', i, v) 
+                redraw()
+            end
+        }
+        params:add {
+            type = 'control', id = 'q',
+            controlspec = cs.RQ,
+            action = function(v) 
+                u.stereo('post_filter_rq', i, v) 
+                redraw()
+            end
+        }
+        local options = { 'lp', 'bp', 'hp' } 
+        params:add {
+            type = 'option', id = 'filter type',
+            options = options,
+            action = function(v)
+                for _,k in ipairs(options) do stereo('post_filter_'..k, i, 0) end
+                stereo('post_filter_'..options[v], i, 1)
+                redraw()
+            end
+        }
+    end
+}
+
+return u, reg, gfx, param

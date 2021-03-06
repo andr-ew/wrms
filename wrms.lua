@@ -25,13 +25,11 @@
 
 include 'wrms/lib/nest/core'
 include 'wrms/lib/nest/norns'
-include 'wrms/lib/nest/txt'                     --ui lib (nest)
-warden = include 'wrms/lib/warden/warden'       --softcut buffer management lib
+include 'wrms/lib/nest/txt'
+warden = include 'wrms/lib/warden/warden'
 cs = require 'controlspec'
 
-local u, reg = include 'wrms/lib/u'             --utility functions & data tables
-local param = include 'wrms/lib/param'          --shared param generators
-local gfx = include 'wrms/lib/gfx'              --screen graphics
+local u, reg, gfx, param = include 'wrms/lib/wrms'
 
 --setup
 setup = function()
