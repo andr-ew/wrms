@@ -34,6 +34,13 @@ local u = {
             s[n]:update()
         end
     },
+    recmx = {
+        { rec = 1 },
+        { rec = 0 },
+        update = function(s, n)
+            u.stereo('rec_level', n, s[n].rec)
+        end
+    },
     oldmx = {
         { old = 0.5, mode = 'ping-pong' },
         { old = 1, mode = 'overdub' },
@@ -108,15 +115,15 @@ local u = {
     },
     punch_in = {
         quant = 0.01,
-        { recording = false, recorded = false, t = 0, clock = nil },
+        { recording = false, recorded = true, t = 0, clock = nil },
         { recording = false, recorded = false, t = 0, clock = nil },
         toggle = function(s, pair, v)
             local i = u.voice[pair].reg
 
             if s[i].recorded then
-                u.stereo('rec_level', pair, v)
+                u.recmx[pair].rec = v; u.recmx:update(pair)
             elseif v == 1 then
-                u.stereo('rec_level', pair, 1)
+                u.recmx[pair].rec = 1; u.recmx:update(pair)
                 u.stereo('play', pair, 1)
 
                 reg.rec[i]:set_length(1, 'fraction')
@@ -129,7 +136,7 @@ local u = {
 
                 s[i].recording = true
             elseif s[i].recording then
-                u.stereo('rec_level', i, 0)
+                u.recmx[pair].rec = 0; u.recmx:update(pair)
 
                 reg.rec[i]:set_length(s[i].t)
                 reg.play[i]:set_length(1, 'fraction')
@@ -139,11 +146,11 @@ local u = {
                 s[i].recording = false
                 s[i].t = 0
 
-                --wrms.wake(2)
+                gfx.wrms:wake(i)
             end
         end,
         clear = function(s, pair)
-            u.stereo('rec_level', pair, 0)
+            u.recmx[pair].rec = 0; u.recmx:update(pair)
 
             local i = u.voice[pair].reg
             reg.rec[i]:clear()
@@ -172,6 +179,16 @@ local u = {
     end
 }
 
+local segs = function()
+  ret = {}
+  
+  for i = 1, 24 do
+    ret[i] = false
+  end
+  
+  return ret
+end
+
 --screen graphics
 local mar, mul = 2, 29
 local gfx = {
@@ -188,15 +205,24 @@ local gfx = {
     },
     wrms = {
         phase = { 0, 0 },
+        set_phase = function(s, n, v)
+            --[[
+            s.phase[n] = (
+                (v - u.voice:reg(n):get_start('seconds', 'absolute')) 
+                / u.voice:reg(n):get_length('seconds')
+            )
+            ]]
+            s.phase[n] = u.voice:reg(n):phase_relative(v, 'fraction')
+        end,
         draw = function()
             --feed indicators
-            screen.level(math.floor(supercut.feed(1) * 4))
+            screen.level(math.floor(u.lvlmx[1].send * 4))
             screen.pixel(42, 23)
             screen.pixel(43, 24)
             screen.pixel(42, 25)
             screen.fill()
           
-            screen.level(math.floor(supercut.feed(2) * 4))
+            screen.level(math.floor(u.lvlmx[2].send * 4))
             screen.pixel(54, 23)
             screen.pixel(53, 24)
             screen.pixel(54, 25)
@@ -209,24 +235,25 @@ local gfx = {
                 
                 --phase
                 screen.level(2)
-                if supercut.is_punch_in(i) == false then
-                    screen.pixel(left + width * supercut.loop_start(i) / supercut.region_length(i), top) --loop start
+                if not punch_in.recording then
+                    screen.pixel(left + width * u.voice:reg(i):get_start('fraction'), top) --loop start
                     screen.fill()
                 end
-                if supercut.has_initial(i) then
-                    screen.pixel(left + width * supercut.loop_end(i) / supercut.region_length(i), top) --loop end
+                if punch_in.recorded then
+                    screen.pixel(left + width * u.voice:reg(i):get_end('fraction'), top) --loop end
                     screen.fill()
                 end
         
-                screen.level(6 + 10 * supercut.rec(i))
-                if supercut.has_initial(i) == false then -- rec line
-                    if supercut.is_punch_in(i) then
-                        screen.move(left + width * util.clamp(0, 1, supercut.loop_start(i) / supercut.region_length(i)), top + 1)
-                        screen.line(1 + left + width * math.abs(util.clamp(0, 1, supercut.region_position(i) / supercut.region_length(i))), top + 1)
+                screen.level(6 + 10 * u.recmx[i].rec)
+                if not punch_in.recorded then 
+                    -- rec line
+                    if punch_in.recording then
+                        screen.move(left + width*u.voice:reg(i):get_start('fraction'), top + 1)
+                        screen.line(1 + left + width*gfx.phase[i], top + 1)
                         screen.stroke()
                     end
                 else
-                    screen.pixel(left + width * supercut.region_position(i) / supercut.region_length(i), top) -- loop point
+                    screen.pixel(left + width*gfx.phase[i], top) -- loop point
                     screen.fill()
                 end
         
@@ -236,7 +263,8 @@ local gfx = {
                 local lowamp = 0.5
                 local highamp = 1.75
         
-                screen.level(math.floor(supercut.level(i) * 10))
+                screen.level(math.floor(u.lvlmx[i].vol * 10))
+                ---------------------------------------------------------------------<>
                 local width = util.linexp(0, (supercut.region_length(i)), 0.01, width, (supercut.loop_length(i)  + 4.125))
                 for j = 1, width do
                     local amp = supercut.segment_is_awake(i)[j] and math.sin(((supercut.position(i) - supercut.loop_start(i)) * (i == 1 and 1 or 2) / (supercut.loop_end(i) - supercut.loop_start(i)) + j / width) * (i == 1 and 2 or 4) * math.pi) * util.linlin(1, width / 2, lowamp, highamp + supercut.wiggle(i), j < (width / 2) and j or width - j) - 0.75 * util.linlin(1, width / 2, lowamp, highamp + supercut.wiggle(i), j < (width / 2) and j or width - j) - (util.linexp(0, 1, 0.5, 6, j/width) * (supercut.rate2(i) - 1)) or 0      
@@ -248,11 +276,26 @@ local gfx = {
         
             end
         end,
-        update = function()
-            wrms_.gfx:update()
-        end
+        sleep = function(s, n) s.sleep_index[n] = 24 end,
+        wake = function(s, n) s.sleep_index[n] = 24 end,
+        segment_awake = { segs(), segs() },
+        sleep_index = { 24, 24 },
     }   
 }
+
+gfx.wrms.sleep_clock = clock.run(function()
+    local s = gfx.wrms
+    while true do
+        clock.sleep(1/150)
+        for i = 1,2 do
+            local si = s.sleep_index[i]
+            if si > 0 and si <= 24 then
+                s.segment_awake[i][math.floor(si)] = u.punch_in[i].recorded
+                s.sleep_index[i] = si + (0.5 * u.punch_in[i].recorded and -1 or -2)
+            end
+        end
+    end
+end)
 
 --param utilities
 local param = {

@@ -44,9 +44,9 @@ setup = function()
         softcut.phase_quant(i*2, 1/25)
     end
     softcut.event_phase(function(i, ph)
-        if i == 2 then gfx.wrms.phase[1] = ph 
+        if i == 2 then gfx.wrms:set_phase(1, ph) 
         elseif i == 4 then 
-            gfx.wrms.phase[2] = ph 
+            gfx.wrms:set_phase(2, ph)
             wrms_.gfx:update()
         end
     end)
@@ -97,7 +97,7 @@ params:add {
     behavior = 'toggle',
     id = 'rec 1'
     action = function(v)
-        u.stereo('rec_level', 1, v)
+        u.recmx[1].rec = v; u.recmx:update(1)
         redraw()
     end
 }
