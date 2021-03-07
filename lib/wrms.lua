@@ -5,7 +5,7 @@ reg.rec = warden.subloop(reg.blank)
 reg.play = warden.subloop(reg.rec)
 
 -- utility functions & tables
-local u = {
+local u = { --> lp or tp ?
     stereo = function(command, pair, ...)
         local off = (pair - 1) * 2
         for i = 1, 2 do
@@ -131,7 +131,7 @@ local u = {
 
                 s[i].clock = clock.run(function()
                     clock.sleep(s.quant)
-                    s[i].t = s[i].t + (s.quant * u.ratemx[pair])
+                    s[i].t = s[i].t + (s.quant * u.ratemx[pair].rate)
                 end)
 
                 s[i].recording = true
@@ -205,6 +205,7 @@ local gfx = {
     },
     wrms = {
         phase = { 0, 0 },
+        phase_abs = { 0, 0 },
         set_phase = function(s, n, v)
             --[[
             s.phase[n] = (
@@ -212,9 +213,12 @@ local gfx = {
                 / u.voice:reg(n):get_length('seconds')
             )
             ]]
+            s.phase_abs[n] = v
             s.phase[n] = u.voice:reg(n):phase_relative(v, 'fraction')
         end,
         draw = function()
+            local s = gfx.wrms
+
             --feed indicators
             screen.level(math.floor(u.lvlmx[1].send * 4))
             screen.pixel(42, 23)
@@ -232,15 +236,17 @@ local gfx = {
                 local left = 2 + (i-1) * 58
                 local top = 34
                 local width = 44
+                local r = u.voice:reg(i)
+                local rrec = u.voice:reg(i, 'rec')
                 
                 --phase
                 screen.level(2)
                 if not punch_in.recording then
-                    screen.pixel(left + width * u.voice:reg(i):get_start('fraction'), top) --loop start
+                    screen.pixel(left + width * r:get_start('fraction'), top) --loop start
                     screen.fill()
                 end
                 if punch_in.recorded then
-                    screen.pixel(left + width * u.voice:reg(i):get_end('fraction'), top) --loop end
+                    screen.pixel(left + width * r:get_end('fraction'), top) --loop end
                     screen.fill()
                 end
         
@@ -248,12 +254,12 @@ local gfx = {
                 if not punch_in.recorded then 
                     -- rec line
                     if punch_in.recording then
-                        screen.move(left + width*u.voice:reg(i):get_start('fraction'), top + 1)
-                        screen.line(1 + left + width*gfx.phase[i], top + 1)
+                        screen.move(left + width*r:get_start('fraction'), top + 1)
+                        screen.line(1 + left + width*s.phase[i], top + 1)
                         screen.stroke()
                     end
                 else
-                    screen.pixel(left + width*gfx.phase[i], top) -- loop point
+                    screen.pixel(left + width*s.phase[i], top) -- loop point
                     screen.fill()
                 end
         
@@ -264,16 +270,36 @@ local gfx = {
                 local highamp = 1.75
         
                 screen.level(math.floor(u.lvlmx[i].vol * 10))
-                ---------------------------------------------------------------------<>
-                local width = util.linexp(0, (supercut.region_length(i)), 0.01, width, (supercut.loop_length(i)  + 4.125))
+
+                local width = util.linexp(0, rrec:get_length(), 0.01, width, r:get_length() + 4.125)
                 for j = 1, width do
-                    local amp = supercut.segment_is_awake(i)[j] and math.sin(((supercut.position(i) - supercut.loop_start(i)) * (i == 1 and 1 or 2) / (supercut.loop_end(i) - supercut.loop_start(i)) + j / width) * (i == 1 and 2 or 4) * math.pi) * util.linlin(1, width / 2, lowamp, highamp + supercut.wiggle(i), j < (width / 2) and j or width - j) - 0.75 * util.linlin(1, width / 2, lowamp, highamp + supercut.wiggle(i), j < (width / 2) and j or width - j) - (util.linexp(0, 1, 0.5, 6, j/width) * (supercut.rate2(i) - 1)) or 0      
-                    local left = left - (supercut.loop_start(i)) / (supercut.region_length(i)) * (width - 44)
+                    local amp = 
+                        s.segment_awake[i][j] 
+                        and 
+                            math.sin(
+                                (
+                                    (s.phase_abs[i] - r:get_start())*(i==1 and 1 or 2) 
+                                    / (r:get_end() - r:get_start(i)) + j/width
+                                )
+                                * (i == 1 and 2 or 4) * math.pi
+                            ) * util.linlin(
+                                1, width / 2, lowamp, highamp + mod[i].mul, 
+                                j < (width / 2) and j or width - j
+                            ) 
+                            - 0.75*util.linlin(
+                                1, width / 2, lowamp, highamp + mod[i].mul, 
+                                j < (width / 2) and j or width - j
+                            ) - (
+                                util.linexp(0, 1, 0.5, 6, j/width) 
+                                * (ratemx[i].bnd - 1)
+                            ) 
+                        or 0      
+                   
+                    local x = left - (r:get_start()) / (r:get_length()) * (width - 44)
                 
-                    screen.pixel(left - 1 + j, top + amp)
+                    screen.pixel(x - 1 + j, top + amp)
                 end
                 screen.fill()
-        
             end
         end,
         sleep = function(s, n) s.sleep_index[n] = 24 end,
