@@ -29,7 +29,7 @@ include 'wrms/lib/nest/txt'
 warden = include 'wrms/lib/warden/warden'
 cs = require 'controlspec'
 
-local sc, reg, gfx, param = include 'wrms/lib/wrms'
+local sc, gfx, param = include 'wrms/lib/wrms'
 
 --params
 param.mix()
@@ -282,7 +282,7 @@ wrms_ = nest_ {
     end)
 }
 
-function init()
+local function setup()
     sc.setup()
     sc.stereo('play', 1, 1)
     sc.mod:init(1)
@@ -291,8 +291,12 @@ function init()
     gfx.wrms.action = function() wrms_.gfx:update() end
 end
 
-function cleanup()
-    --todo: save state for wrm 1 regions
+function init()
+    setup()
 end
 
-return u, reg, param, gfx
+function cleanup()
+    --todo: save state for wrm 1 regions & params
+end
+
+return sc, gfx, param, wrms_, setup

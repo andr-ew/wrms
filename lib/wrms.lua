@@ -414,4 +414,4 @@ local param = {
     end
 }
 
-return sc, reg, gfx, param
+return sc, gfx, param
