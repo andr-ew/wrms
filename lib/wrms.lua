@@ -4,15 +4,17 @@ reg.blank = warden.divide(warden.buffer_stereo, 2)
 reg.rec = warden.subloop(reg.blank)
 reg.play = warden.subloop(reg.rec)
 
+local sc, gfx, param
+
 -- softcut utilities
-local sc = {
+sc = {
     setup = function()
         audio.level_cut(1.0)
         audio.level_adc_cut(1)
         audio.level_eng_cut(1)
 
         for i = 1, 4 do
-            softcut.enabled(i, 1)
+            softcut.enable(i, 1)
             softcut.rec(i, 1)
             softcut.loop(i, 1)
             softcut.level_slew_time(i, 0.25)
@@ -99,13 +101,13 @@ local sc = {
     },
     mod = {  
         { rate = 0, mul = 0, phase = 0,
-            shape = function(p) return math.sin(2 * math.pi * p) end
+            shape = function(p) return math.sin(2 * math.pi * p) end,
             action = function(v) for i = 1,2 do
                 sc.ratemx[i].mod = v; sc.ratemx:update(i)
             end end
         },
         { rate = 0, mul = 0, phase = 0,
-            shape = function(p) return math.sin(2 * math.pi * p) end
+            shape = function(p) return math.sin(2 * math.pi * p) end,
             action = function(v) end
         },
         quant = 0.01, 
@@ -131,7 +133,7 @@ local sc = {
         end
     },
     slew = function(n, t)
-        local st = (2 + (math.random() * 0.5)) * t 
+        local st = (2 + (math.random() * 0.5)) * (t or 0)
         sc.stereo('rate_slew_time', n, st)
         return st
     end,
@@ -208,9 +210,10 @@ local segs = function()
   return ret
 end
 
---screen graphics
 local mar, mul = 2, 29
-local gfx = {
+
+--screen graphics
+gfx = {
     pos = { 
         x = {
             [1] = { mar, mar + mul },
@@ -337,16 +340,16 @@ gfx.wrms.sleep_clock = clock.run(function()
             local si = s.sleep_index[i]
             if si > 0 and si <= 24 then
                 s.segment_awake[i][math.floor(si)] = sc.punch_in[i].recorded
-                s.sleep_index[i] = si + (0.5 * sc.punch_in[i].recorded and -1 or -2)
+                s.sleep_index[i] = si + 0.5*(sc.punch_in[i].recorded and -1 or -2)
             end
         end
     end
 end)
 
 --param utilities
-local param = {
+param = {
     mix = function()
-        params:add_seperator('mix')
+        params:add_separator('mix')
         for i = 1,2 do
             params:add_control("in L > wrm " .. i .. "  L", "in L > wrm " .. i .. "  L", controlspec.new(0,1,'lin',0,1,''))
             params:set_action("in L > wrm " .. i .. "  L", sc.input(i, 1, 1))
@@ -366,7 +369,7 @@ local param = {
                 sc.lvlmx:update(i)
             end)
         end
-        params:add_seperator('wrms')
+        params:add_separator('wrms')
     end,
     filter = function(i)
         params:add {
@@ -390,7 +393,7 @@ local param = {
             type = 'option', id = 'filter type',
             options = options,
             action = function(v)
-                for _,k in ipairs(options) do stereo('post_filter_'..k, i, 0) end
+                for _,k in ipairs(options) do sc.stereo('post_filter_'..k, i, 0) end
                 stereo('post_filter_'..options[v], i, 1)
                 redraw()
             end
@@ -414,4 +417,4 @@ local param = {
     end
 }
 
-return sc, gfx, param
+return sc, gfx, param, reg

@@ -23,13 +23,15 @@
 -- shows which wrm will be 
 -- affected. 
 
+function r() norns.script.load(norns.script.state) end
+
 include 'wrms/lib/nest/core'
 include 'wrms/lib/nest/norns'
 include 'wrms/lib/nest/txt'
 warden = include 'wrms/lib/warden/warden'
 cs = require 'controlspec'
 
-local sc, gfx, param = include 'wrms/lib/wrms'
+sc, gfx, param, reg = include 'wrms/lib/wrms'
 
 --params
 param.mix()
@@ -68,7 +70,7 @@ end
 params:add {
     type = 'binary',
     behavior = 'toggle',
-    id = 'rec 1'
+    id = 'rec 1',
     action = function(v)
         sc.recmx[1].rec = v; sc.recmx:update(1)
         redraw()
@@ -172,7 +174,7 @@ local _trans = function(i, o)
         n = { 2, 3 },
         y = y.key, x = { { x[i][1] }, { x[i][2] } },
         action = function(s, v, t, d, add, rem, l)
-            s.blinktime = sc.slew(i, t)
+            s.blinktime = sc.slew(i, t[add])
 
             if #l == 2 then
                 sc.ratemx[i].dir = sc.ratemx[i].dir * -1
@@ -188,11 +190,13 @@ end
 
 --screen interface
 wrms_ = nest_ {
+    --[[
     gfx = _screen {
         redraw = gfx.wrms.draw
     },
+    --]]
     tab = _txt.enc.option {
-        n = 1, x = 128, y = 0, sens = 0.5, align = 'right',
+        n = 1, x = 128, y = 2, sens = 0.5, align = 'right', margin = 2,
         flow = 'y', options = { 'v', 'o', 'b', 's', '>', 'f' }
     },
     pages = nest_ {
@@ -223,13 +227,13 @@ wrms_ = nest_ {
             wgl = param._control('wgl', {
                 n = 3, x = x[1.5], y = y.enc
             }),
-            trans = _trans(i, {})
+            trans = _trans(2, {})
         },
         s = nest_ {
             s = _txt.enc.number {
                 min = 0, max = math.huge, inc = 0.01,
                 n = 2, x = x[1][1], y = y.enc,
-                value = function() return sc.voice:reg(1):get_start() end
+                value = function() return sc.voice:reg(1):get_start() end,
                 action = function(s, v)
                     sc.voice:reg(1):set_start(v)
                     sc.voice:reg(1):update_voice(1, 2)
@@ -239,14 +243,14 @@ wrms_ = nest_ {
             l = _txt.enc.number {
                 min = 0, max = math.huge, inc = 0.01,
                 n = 3, x = x[1][2], y = y.enc,
-                value = function() return sc.voice:reg(1):get_length() end
+                value = function() return sc.voice:reg(1):get_length() end,
                 action = function(s, v)
                     sc.voice:reg(1):set_length(v)
                     sc.voice:reg(1):update_voice(1, 2)
                     sc.voice:reg(2):update_voice(1, 2)
                 end
             },
-            trans = _trans(i, {})
+            trans = _trans(1, {})
         },
         ['>'] = nest_ {
             ['>'] = param._control('>', {
@@ -259,8 +263,8 @@ wrms_ = nest_ {
                 return _txt.key.number {
                     label = 'buf', n = i+1, x = x[i][1], y = y.key,
                     min = 1, max = 2, inc = 1, wrap = true, step = 1,
-                    value = function() params:get('buf '..i) end,
-                    action = function(s, v) params:set(l, v) end
+                    value = function() return params:get('buf '..i) end,
+                    action = function(s, v) params:set('buf '..i, v) end
                 }
             end)
         },
@@ -268,17 +272,20 @@ wrms_ = nest_ {
             f = param._control('f', {
                 n = 2, x = x[1][1], y = y.enc,
             }),
-            q = param._control('f', {
+            q = param._control('q', {
                 n = 3, x = x[1][2], y = y.enc,
             }),
-            type = _txt.key.option {
+            typ = _txt.key.option {
                 n = { 2, 3 }, x = x[1][1], y = y.key,
+                options = params:lookup_param('filter type').options,
                 value = function() return params:get('filter type') end,
                 action = function(s, v) params:set('filter type', v) end
             }
         }    
     }: each(function(k, v)
-        v.enabled = function(s) return wrms_.tab.options[wrms_.tab.v//1] == k end
+        v.enabled = function(s) 
+            return wrms_.tab.options[wrms_.tab.v//1] == k 
+        end
     end)
 }
 
@@ -288,7 +295,9 @@ local function setup()
     sc.mod:init(1)
     sc.mod:init(2)
 
-    gfx.wrms.action = function() wrms_.gfx:update() end
+    --gfx.wrms.action = function() wrms_.gfx:update() end
+
+    wrms_:connect { screen = screen, enc = enc, key = key } :init()
 end
 
 function init()
