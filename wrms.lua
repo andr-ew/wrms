@@ -198,7 +198,7 @@ wrms_ = nest_ {
     pages = nest_ {
         v = nest_ {
             vol = nest_(2):each(function(i)
-                return sc._iparam_ctl('vol', i, {
+                return param._icontrol('vol', i, {
                     n = i + 1, x = x[i][1], y = y.enc
                 })
             end),
@@ -208,7 +208,7 @@ wrms_ = nest_ {
         },
         o = nest_ {
             old = nest_(2):each(function(i)
-                return sc._iparam_ctl('old', i, {
+                return param._icontrol('old', i, {
                     n = i + 1, x = x[i][1], y = y.enc
                 })
             end),
@@ -217,10 +217,10 @@ wrms_ = nest_ {
             end)
         },
         b = nest_ {
-            bnd = sc._param_ctl('bnd', {
+            bnd = param._control('bnd', {
                 n = 2, x = x[1][1], y = y.enc
             }),
-            wgl = sc._param_ctl('wgl', {
+            wgl = param._control('wgl', {
                 n = 3, x = x[1.5], y = y.enc
             }),
             trans = _trans(i, {})
@@ -249,10 +249,10 @@ wrms_ = nest_ {
             trans = _trans(i, {})
         },
         ['>'] = nest_ {
-            ['>'] = sc._param_ctl('>', {
+            ['>'] = param._control('>', {
                 n = 2, x = x[1][1], y = y.enc,
             }),
-            ['<'] = sc._param_ctl('<', {
+            ['<'] = param._control('<', {
                 n = 3, x = x[2][1], y = y.enc,
             }),
             buf = nest_(2):each(function(i)
@@ -265,10 +265,10 @@ wrms_ = nest_ {
             end)
         },
         f = nest_ {
-            f = sc._param_ctl('f', {
+            f = param._control('f', {
                 n = 2, x = x[1][1], y = y.enc,
             }),
-            q = sc._param_ctl('f', {
+            q = param._control('f', {
                 n = 3, x = x[1][2], y = y.enc,
             }),
             type = _txt.key.option {

@@ -195,23 +195,7 @@ local sc = {
             s[i].recording = false
             s[i].t = 0
         end
-    },
-    _param_ctl = function(id, o)
-        return _txt.enc.control {
-            label = id,
-            controlspec = params:lookup_param(id).controlspec,
-            value = function() return params:get(id) end,
-            action = function(s, v) params:set(id, v) end
-        } :merge(o)
-    end,
-    _iparam_ctl = function(label, i, o)
-        return _txt.enc.control {
-            label = label,
-            controlspec = params:lookup_param(label ..' '..i).controlspec,
-            value = function() return params:get(label ..' '..i) end,
-            action = function(s, v) params:set(label ..' '..i, v) end
-        } :merge(o)
-    end
+    }
 }
 
 local segs = function()
@@ -411,6 +395,22 @@ local param = {
                 redraw()
             end
         }
+    end,
+    _control = function(id, o)
+        return _txt.enc.control {
+            label = id,
+            controlspec = params:lookup_param(id).controlspec,
+            value = function() return params:get(id) end,
+            action = function(s, v) params:set(id, v) end
+        } :merge(o)
+    end,
+    _icontrol = function(label, i, o)
+        return _txt.enc.control {
+            label = label,
+            controlspec = params:lookup_param(label ..' '..i).controlspec,
+            value = function() return params:get(label ..' '..i) end,
+            action = function(s, v) params:set(label ..' '..i, v) end
+        } :merge(o)
     end
 }
 
