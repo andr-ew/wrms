@@ -43,7 +43,7 @@ for i = 1,2 do
         action = function(v)
             sc.lvlmx[i].vol = v
             sc.lvlmx:update(i)
-            redraw()
+            --redraw()
         end
     }
     params:add {
@@ -53,7 +53,7 @@ for i = 1,2 do
         action = function(v)
             sc.oldmx[i].old = v
             sc.oldmx:update(i)
-            redraw()
+            --redraw()
         end
     }
     local options = { 'overdub', 'feedback', 'ping-pong' } 
@@ -73,7 +73,7 @@ params:add {
     id = 'rec 1',
     action = function(v)
         sc.recmx[1].rec = v; sc.recmx:update(1)
-        redraw()
+        --redraw()
     end
 }
 params:add {
@@ -95,7 +95,7 @@ params:add {
         sc.voice:reg(1):update_voice(1, 2)
         sc.voice:reg(2):update_voice(3, 4)
 
-        redraw()
+        --redraw()
     end
 }
 params:add {
@@ -113,23 +113,23 @@ params:add {
     action = function(v)
         sc.ratemx[1].bnd = v
         sc.ratemx:update(1)
-        redraw()
+        --redraw()
     end
 }
 params:add {
     type = 'control', id = 'wgl',
     controlspec = cs.def { min = 1, max = 100, quantum = 0.01/100 },
-    action = function(v) sc.mod.mul = v; redraw() end
+    action = function(v) sc.mod.mul = v end --; redraw() end
 }
 params:add {
     type = 'control', id = '>',
     controlspec = cs.def { default = 1 },
-    action = function(v) sc.lvlmx[1].send = v; sc.lvlmx:update(1); redraw() end
+    action = function(v) sc.lvlmx[1].send = v; sc.lvlmx:update(1) end --; redraw() end
 }
 params:add {
     type = 'control', id = '<',
     controlspec = cs.def { default = 0 },
-    action = function(v) sc.lvlmx[2].send = v; sc.lvlmx:update(2); redraw() end
+    action = function(v) sc.lvlmx[2].send = v; sc.lvlmx:update(2) end --; redraw() end
 }
 params:add {
     type = 'number', id = 'buf 1', default = 1,
@@ -190,8 +190,8 @@ end
 
 --screen interface
 wrms_ = nest_ {
-    --[[
-    gfx = _screen {
+    ---[[
+    gfx = _screen.affordance {
         redraw = gfx.wrms.draw
     },
     --]]
@@ -275,7 +275,7 @@ wrms_ = nest_ {
             q = param._control('q', {
                 n = 3, x = x[1][2], y = y.enc,
             }),
-            typ = _txt.key.option {
+            type = _txt.key.option {
                 n = { 2, 3 }, x = x[1][1], y = y.key,
                 options = params:lookup_param('filter type').options,
                 value = function() return params:get('filter type') end,

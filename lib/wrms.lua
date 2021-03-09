@@ -33,14 +33,20 @@ sc = {
             softcut.phase_quant(i*2, 1/25)
         end
 
-        softcut.event_phase(function(i, ph)
+        reg.play[1]:position(1, 0)
+        reg.play[1]:position(2, 0)
+        reg.rec[2]:position(3, 0)
+        reg.rec[2]:position(4, 0)
+
+        local function e(i, ph)
             if i == 2 then gfx.wrms:set_phase(1, ph) 
             elseif i == 4 then 
                 gfx.wrms:set_phase(2, ph)
                 gfx.wrms:action()
             end
-        end)
+        end
 
+        softcut.event_phase(e)
         softcut.poll_start_phase()
     end,
     stereo = function(command, pair, ...)
@@ -65,7 +71,7 @@ sc = {
         },
         update = function(s, n)
             local v, p = s[n].vol, s[n].pan
-            local off = (pair - 1) * 2
+            local off = (n - 1) * 2
             softcut.level(off + 1, v * ((p > 0) and 1 - p or 1))
             softcut.level(off + 2, v * ((p < 0) and 1 - p or 1))
             s[n]:update()
@@ -264,19 +270,19 @@ gfx = {
                 
                 --phase
                 screen.level(2)
-                if not punch_in.recording then
+                if not sc.punch_in.recording then
                     screen.pixel(left + width * r:get_start('fraction'), top) --loop start
                     screen.fill()
                 end
-                if punch_in.recorded then
+                if sc.punch_in.recorded then
                     screen.pixel(left + width * r:get_end('fraction'), top) --loop end
                     screen.fill()
                 end
         
                 screen.level(6 + 10 * sc.recmx[i].rec)
-                if not punch_in.recorded then 
+                if not sc.punch_in.recorded then 
                     -- rec line
-                    if punch_in.recording then
+                    if sc.punch_in.recording then
                         screen.move(left + width*r:get_start('fraction'), top + 1)
                         screen.line(1 + left + width*s.phase[i], top + 1)
                         screen.stroke()
@@ -306,15 +312,15 @@ gfx = {
                                 )
                                 * (i == 1 and 2 or 4) * math.pi
                             ) * util.linlin(
-                                1, width / 2, lowamp, highamp + mod[i].mul, 
+                                1, width / 2, lowamp, highamp + sc.mod[i].mul, 
                                 j < (width / 2) and j or width - j
                             ) 
                             - 0.75*util.linlin(
-                                1, width / 2, lowamp, highamp + mod[i].mul, 
+                                1, width / 2, lowamp, highamp + sc.mod[i].mul, 
                                 j < (width / 2) and j or width - j
                             ) - (
                                 util.linexp(0, 1, 0.5, 6, j/width) 
-                                * (ratemx[i].bnd - 1)
+                                * (sc.ratemx[i].bnd - 1)
                             ) 
                         or 0      
                    
@@ -377,7 +383,7 @@ param = {
             controlspec = cs.new(50,5000,'exp',0,5000,'hz'),
             action = function(v) 
                 sc.stereo('post_filter_fc', i, v) 
-                redraw()
+                --redraw()
             end
         }
         params:add {
@@ -385,7 +391,7 @@ param = {
             controlspec = cs.RQ,
             action = function(v) 
                 sc.stereo('post_filter_rq', i, v) 
-                redraw()
+                --redraw()
             end
         }
         local options = { 'lp', 'bp', 'hp' } 
@@ -395,7 +401,7 @@ param = {
             action = function(v)
                 for _,k in ipairs(options) do sc.stereo('post_filter_'..k, i, 0) end
                 stereo('post_filter_'..options[v], i, 1)
-                redraw()
+                --redraw()
             end
         }
     end,
