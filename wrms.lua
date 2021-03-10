@@ -49,7 +49,7 @@ for i = 1,2 do
     params:add {
         type = 'control',
         id = 'old ' .. i,
-        default = 1,
+        controlspec = cs.def { default = i==1 and 0.5 or 1 },
         action = function(v)
             sc.oldmx[i].old = v
             sc.oldmx:update(i)
@@ -118,7 +118,7 @@ params:add {
 }
 params:add {
     type = 'control', id = 'wgl',
-    controlspec = cs.def { min = 1, max = 100, quantum = 0.01/100 },
+    controlspec = cs.def { min = 0, max = 100, quantum = 0.01/100 },
     action = function(v) sc.mod.mul = v end --; redraw() end
 }
 params:add {
@@ -158,7 +158,7 @@ local x, y = gfx.pos.x, gfx.pos.y
 local _rec = function(i)
     return _txt.key.toggle {
         n = i+1, x = x[i][1], y = y.key,
-        label = 'rec',
+        label = 'rec', edge = 0,
         v = function() return params:get('rec '..i) end,
         action = function(s, v, t)
             if t < 0.5 then params:set('rec '..i, v)
@@ -179,10 +179,15 @@ local _trans = function(i, o)
             if #l == 2 then
                 sc.ratemx[i].dir = sc.ratemx[i].dir * -1
                 sc.ratemx:update(i)
+                
+                print('dir'..i, sc.ratemx[i].dir)
             else
                 local o = sc.ratemx[i].oct
                 sc.ratemx[i].oct = add==2 and o*2 or o/2
                 sc.ratemx:update(i)
+
+                print('add', add)
+                print('oct'..i, sc.ratemx[i].oct)
             end
         end
     } :merge(o)
@@ -190,7 +195,7 @@ end
 
 --screen interface
 wrms_ = nest_ {
-    ---[[
+    --[[
     gfx = _screen.affordance {
         redraw = gfx.wrms.draw
     },
@@ -200,7 +205,7 @@ wrms_ = nest_ {
         flow = 'y', options = { 'v', 'o', 'b', 's', '>', 'f' }
     },
     pages = nest_ {
-        v = nest_ {
+        ['v'] = nest_ {
             vol = nest_(2):each(function(i)
                 return param._icontrol('vol', i, {
                     n = i + 1, x = x[i][1], y = y.enc
@@ -235,7 +240,9 @@ wrms_ = nest_ {
                 n = 2, x = x[1][1], y = y.enc,
                 value = function() return sc.voice:reg(1):get_start() end,
                 action = function(s, v)
+                    local l = sc.voice:reg(1):get_length()
                     sc.voice:reg(1):set_start(v)
+                    sc.voice:reg(1):set_length(l)
                     sc.voice:reg(1):update_voice(1, 2)
                     sc.voice:reg(1):update_voice(3, 4)
                 end
@@ -283,21 +290,21 @@ wrms_ = nest_ {
             }
         }    
     }: each(function(k, v)
+        print(k)
         v.enabled = function(s) 
             return wrms_.tab.options[wrms_.tab.v//1] == k 
         end
     end)
-}
+} :connect { screen = screen, enc = enc, key = key } 
 
 local function setup()
     sc.setup()
     sc.stereo('play', 1, 1)
     sc.mod:init(1)
     sc.mod:init(2)
+    sc.voice:reg(1):set_length(0.3)
 
-    --gfx.wrms.action = function() wrms_.gfx:update() end
-
-    wrms_:connect { screen = screen, enc = enc, key = key } :init()
+    wrms_:init()
 end
 
 function init()

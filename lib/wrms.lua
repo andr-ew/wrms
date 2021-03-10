@@ -42,7 +42,7 @@ sc = {
             if i == 2 then gfx.wrms:set_phase(1, ph) 
             elseif i == 4 then 
                 gfx.wrms:set_phase(2, ph)
-                gfx.wrms:action()
+                redraw()
             end
         end
 
@@ -96,11 +96,11 @@ sc = {
             else
                 sc.stereo('pre_level', n, 0)
                 if mode == 'ping-pong' then
-                    softcut.level_cut_cut(1 + off, 2 + off, s.old)
-                    softcut.level_cut_cut(2 + off, 1 + off, s.old)
+                    softcut.level_cut_cut(1 + off, 2 + off, s[n].old)
+                    softcut.level_cut_cut(2 + off, 1 + off, s[n].old)
                 else
-                    softcut.level_cut_cut(1 + off, 1 + off, s.old)
-                    softcut.level_cut_cut(2 + off, 2 + off, s.old)
+                    softcut.level_cut_cut(1 + off, 1 + off, s[n].old)
+                    softcut.level_cut_cut(2 + off, 2 + off, s[n].old)
                 end
             end
         end
@@ -134,6 +134,7 @@ sc = {
         { oct = 1, bnd = 1, mod = 0, dir = 1, rate = 0 },
         { oct = 1, bnd = 1, mod = 0, dir = -1, rate = 0 },
         update = function(s, n)
+            s[n].oct = util.clamp(0, 16, s[n].oct)
             s[n].rate = s[n].oct * 2^(s[n].bnd - 1) * 2^s[n].mod * s[n].dir
             sc.stereo('rate', n, s[n].rate)
         end
@@ -198,7 +199,7 @@ sc = {
             local i = sc.voice[pair].reg
             reg.rec[i]:clear()
 
-            clock.cancel(s[i].clock)
+            if s[i].clock then clock.cancel(s[i].clock) end
             s[i].recorded = false
             s[i].recording = false
             s[i].t = 0
