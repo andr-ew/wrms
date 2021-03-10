@@ -401,7 +401,7 @@ param = {
             options = options,
             action = function(v)
                 for _,k in ipairs(options) do sc.stereo('post_filter_'..k, i, 0) end
-                stereo('post_filter_'..options[v], i, 1)
+                sc.stereo('post_filter_'..options[v], i, 1)
                 --redraw()
             end
         }

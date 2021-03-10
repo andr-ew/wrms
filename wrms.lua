@@ -31,6 +31,7 @@ include 'wrms/lib/nest/txt'
 warden = include 'wrms/lib/warden/warden'
 cs = require 'controlspec'
 
+local
 sc, gfx, param, reg = include 'wrms/lib/wrms'
 
 --params
@@ -303,16 +304,15 @@ local function setup()
     sc.mod:init(1)
     sc.mod:init(2)
     sc.voice:reg(1):set_length(0.3)
-
-    wrms_:init()
 end
 
 function init()
     setup()
+    wrms_:init()
 end
 
 function cleanup()
     --todo: save state for wrm 1 regions & params
 end
 
-return sc, gfx, param, wrms_, setup
+return { sc = sc, gfx = gfx, param = param, wrms_ = wrms_, setup = setup }
