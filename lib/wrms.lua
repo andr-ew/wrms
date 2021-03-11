@@ -33,11 +33,6 @@ sc = {
             softcut.phase_quant(i*2, 1/25)
         end
 
-        reg.play[1]:position(1, 0)
-        reg.play[1]:position(2, 0)
-        reg.rec[2]:position(3, 0)
-        reg.rec[2]:position(4, 0)
-
         local function e(i, ph)
             if i == 2 then gfx.wrms:set_phase(1, ph) 
             elseif i == 4 then 
@@ -48,6 +43,12 @@ sc = {
 
         softcut.event_phase(e)
         softcut.poll_start_phase()
+    end,
+    scoot = function()
+        reg.play[1]:position(1, 0)
+        reg.play[1]:position(2, 0)
+        reg.rec[2]:position(3, 0)
+        reg.rec[2]:position(4, 0)
     end,
     stereo = function(command, pair, ...)
         local off = (pair - 1) * 2
@@ -77,30 +78,29 @@ sc = {
             s[n]:update()
         end
     },
-    recmx = {
-        { rec = 1 },
-        { rec = 0 },
-        update = function(s, n)
-            sc.stereo('rec_level', n, s[n].rec)
-        end
-    },
     oldmx = {
-        { old = 0.5, mode = 'ping-pong' },
-        { old = 1, mode = 'overdub' },
+        { old = 0.5, mode = 'ping-pong', rec = 1 },
+        { old = 1, mode = 'overdub', rec = 0 },
         update = function(s, n)
             local off = n == 1 and 0 or 2
-            if mode == 'overdub' then
-                sc.stereo('pre_level', n, s.old)
-                softcut.level_cut_cut(1 + off, 2 + off, 0)
-                softcut.level_cut_cut(2 + off, 1 + off, 0)
+
+            sc.stereo('rec_level', n, s[n].rec)
+            if s[n].rec == 0 then
+                sc.stereo('pre_level', n, 1)
             else
-                sc.stereo('pre_level', n, 0)
-                if mode == 'ping-pong' then
-                    softcut.level_cut_cut(1 + off, 2 + off, s[n].old)
-                    softcut.level_cut_cut(2 + off, 1 + off, s[n].old)
+                if mode == 'overdub' then
+                    sc.stereo('pre_level', n, s.old)
+                    softcut.level_cut_cut(1 + off, 2 + off, 0)
+                    softcut.level_cut_cut(2 + off, 1 + off, 0)
                 else
-                    softcut.level_cut_cut(1 + off, 1 + off, s[n].old)
-                    softcut.level_cut_cut(2 + off, 2 + off, s[n].old)
+                    sc.stereo('pre_level', n, 0)
+                    if mode == 'ping-pong' then
+                        softcut.level_cut_cut(1 + off, 2 + off, s[n].old)
+                        softcut.level_cut_cut(2 + off, 1 + off, s[n].old)
+                    else
+                        softcut.level_cut_cut(1 + off, 1 + off, s[n].old)
+                        softcut.level_cut_cut(2 + off, 2 + off, s[n].old)
+                    end
                 end
             end
         end
@@ -165,9 +165,9 @@ sc = {
             local i = sc.voice[pair].reg
 
             if s[i].recorded then
-                sc.recmx[pair].rec = v; sc.recmx:update(pair)
+                sc.oldmx[pair].rec = v; sc.oldmx:update(pair)
             elseif v == 1 then
-                sc.recmx[pair].rec = 1; sc.recmx:update(pair)
+                sc.oldmx[pair].rec = 1; sc.oldmx:update(pair)
                 sc.stereo('play', pair, 1)
 
                 reg.rec[i]:set_length(1, 'fraction')
@@ -180,7 +180,7 @@ sc = {
 
                 s[i].recording = true
             elseif s[i].recording then
-                sc.recmx[pair].rec = 0; sc.recmx:update(pair)
+                sc.oldmx[pair].rec = 0; sc.oldmx:update(pair)
 
                 reg.rec[i]:set_length(s[i].t)
                 reg.play[i]:set_length(1, 'fraction')
@@ -194,7 +194,7 @@ sc = {
             end
         end,
         clear = function(s, pair)
-            sc.recmx[pair].rec = 0; sc.recmx:update(pair)
+            sc.oldmx[pair].rec = 0; sc.oldmx:update(pair)
 
             local i = sc.voice[pair].reg
             reg.rec[i]:clear()
@@ -279,8 +279,8 @@ gfx = {
                     screen.pixel(left + width * r:get_end('fraction'), top) --loop end
                     screen.fill()
                 end
-        
-                screen.level(6 + 10 * sc.recmx[i].rec)
+ 
+                screen.level(6 + 10 * sc.oldmx[i].rec)
                 if not sc.punch_in.recorded then 
                     -- rec line
                     if sc.punch_in.recording then

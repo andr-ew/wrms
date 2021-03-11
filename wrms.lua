@@ -72,8 +72,7 @@ params:add {
     behavior = 'toggle',
     id = 'rec 1', default = 1,
     action = function(v)
-        sc.recmx[1].rec = v; sc.recmx:update(1)
-        print('rec1', v)
+        sc.oldmx[1].rec = v; sc.oldmx:update(1)
         --redraw()
     end
 }
@@ -175,20 +174,15 @@ local _trans = function(i, o)
         n = { 2, 3 },
         y = y.key, x = { { x[i][1] }, { x[i][2] } },
         action = function(s, v, t, d, add, rem, l)
-            s.blinktime = sc.slew(i, t[add])
+            s.blinktime = sc.slew(i, t[add]) / 2
 
             if #l == 2 then
                 sc.ratemx[i].dir = sc.ratemx[i].dir * -1
                 sc.ratemx:update(i)
-                
-                print('dir'..i, sc.ratemx[i].dir)
             else
                 local o = sc.ratemx[i].oct
                 sc.ratemx[i].oct = add==2 and o*2 or o/2
                 sc.ratemx:update(i)
-
-                print('add', add)
-                print('oct'..i, sc.ratemx[i].oct)
             end
         end
     } :merge(o)
@@ -318,4 +312,4 @@ function cleanup()
     --todo: save state for wrm 1 regions & params
 end
 
-return { sc = sc, gfx = gfx, param = param, wrms_ = wrms_, setup = setup }
+return { sc = sc, gfx = gfx, param = param, reg = reg, wrms_ = wrms_, setup = setup }
