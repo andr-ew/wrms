@@ -70,9 +70,10 @@ end
 params:add {
     type = 'binary',
     behavior = 'toggle',
-    id = 'rec 1',
+    id = 'rec 1', default = 1,
     action = function(v)
         sc.recmx[1].rec = v; sc.recmx:update(1)
+        print('rec1', v)
         --redraw()
     end
 }
