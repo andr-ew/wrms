@@ -31,8 +31,7 @@ include 'wrms/lib/nest/txt'
 warden = include 'wrms/lib/warden/warden'
 cs = require 'controlspec'
 
-local
-sc, gfx, param, reg = include 'wrms/lib/wrms'
+local sc, gfx, param, reg = include 'wrms/lib/wrms'
 
 --params
 param.mix()
@@ -63,8 +62,8 @@ for i = 1,2 do
         id = 'old mode ' .. i,
         options = options,
         action = function(v)
-            oldmx[i].mode = options[v]
-            oldmx:update(i)
+            sc.oldmx[i].mode = options[v]
+            sc.oldmx:update(i)
         end
     }
 end
@@ -152,7 +151,7 @@ params:add {
         sc.voice:reg(2):update_voice(3, 4)
     end
 }
-param.filter(1)
+--param.filter(1)
 
 local x, y = gfx.pos.x, gfx.pos.y
 
@@ -277,6 +276,7 @@ wrms_ = nest_ {
             end)
         },
         f = nest_ {
+            --[[
             f = param._control('f', {
                 n = 2, x = x[1][1], y = y.enc,
             }),
@@ -289,6 +289,7 @@ wrms_ = nest_ {
                 value = function() return params:get('filter type') end,
                 action = function(s, v) params:set('filter type', v) end
             }
+            --]]
         }    
     }: each(function(k, v)
         print(k)
@@ -309,6 +310,7 @@ end
 function init()
     setup()
     wrms_:init()
+    params:bang()
 end
 
 function cleanup()
