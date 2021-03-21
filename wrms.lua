@@ -254,7 +254,7 @@ wrms_ = nest_ {
                     sc.voice:reg(1):set_length(v)
 
                     sc.voice:reg(1):update_voice(1, 2)
-                    sc.voice:reg(2):update_voice(1, 2)
+                    sc.voice:reg(2):update_voice(3, 4)
                 end
             },
             trans = _trans(1, {})
