@@ -17,7 +17,8 @@ sc = {
             softcut.enable(i, 1)
             softcut.rec(i, 1)
             softcut.loop(i, 1)
-            softcut.level_slew_time(i, 0.25)
+            softcut.level_slew_time(i, 0.1)
+            softcut.recpre_slew_time(i, 0.1)
             softcut.rate(i, 1)
         end
         for i = 1, 2 do
@@ -43,6 +44,12 @@ sc = {
 
         softcut.event_phase(e)
         softcut.poll_start_phase()
+        
+        for i = 3, 4 do
+            softcut.post_filter_dry(i, 0)
+            softcut.post_filter_lp(i, 1)
+            softcut.post_filter_fc(i, 5000)
+        end
     end,
     scoot = function()
         reg.play[1]:position(1, 0)
@@ -89,7 +96,7 @@ sc = {
                 sc.stereo('pre_level', n, 1)
             else
                 if mode == 'overdub' then
-                    sc.stereo('pre_level', n, s.old)
+                    sc.stereo('pre_level', n, s[n].old)
                     softcut.level_cut_cut(1 + off, 2 + off, 0)
                     softcut.level_cut_cut(2 + off, 1 + off, 0)
                 else
@@ -132,7 +139,7 @@ sc = {
     },
     ratemx = {
         { oct = 1, bnd = 1, mod = 0, dir = 1, rate = 0 },
-        { oct = 1, bnd = 1, mod = 0, dir = -1, rate = 0 },
+        { oct = 1, bnd = 1, mod = 0, dir = 1, rate = 0 },
         update = function(s, n)
             s[n].oct = util.clamp(0, 16, s[n].oct)
             s[n].rate = s[n].oct * 2^(s[n].bnd - 1) * 2^s[n].mod * s[n].dir
@@ -163,32 +170,27 @@ sc = {
         { recording = false, recorded = false, t = 0, clock = nil },
         toggle = function(s, pair, v)
             local i = sc.voice[pair].reg
+            local off = (pair - 1) * 2
 
             if s[i].recorded then
                 sc.oldmx[pair].rec = v; sc.oldmx:update(pair)
             elseif v == 1 then
                 sc.oldmx[pair].rec = 1; sc.oldmx:update(pair)
+
+                reg.rec[i]:position(off + 1, 0)
+                reg.rec[i]:position(off + 2, 0)
                 sc.stereo('play', pair, 1)
 
-                reg.rec[i]:set_length(1, 'fraction')
-                reg.play[i]:set_length(1, 'fraction')
-
-                s[i].clock = clock.run(function()
-                    clock.sleep(s.quant)
-                    s[i].t = s[i].t + (s.quant * sc.ratemx[pair].rate)
-                end)
+                reg.rec[i]:punch_in()
 
                 s[i].recording = true
             elseif s[i].recording then
                 sc.oldmx[pair].rec = 0; sc.oldmx:update(pair)
+            
+                reg.rec[i]:punch_out()
 
-                reg.rec[i]:set_length(s[i].t)
-                reg.play[i]:set_length(1, 'fraction')
-
-                clock.cancel(s[i].clock)
                 s[i].recorded = true
                 s[i].recording = false
-                s[i].t = 0
 
                 gfx.wrms:wake(i)
             end
@@ -197,12 +199,18 @@ sc = {
             sc.oldmx[pair].rec = 0; sc.oldmx:update(pair)
 
             local i = sc.voice[pair].reg
+            local off = (pair - 1) * 2
+
+            reg.rec[i]:position(off + 1, 0)
+            reg.rec[i]:position(off + 2, 0)
+            reg.rec[i]:punch_out()
             reg.rec[i]:clear()
 
-            if s[i].clock then clock.cancel(s[i].clock) end
             s[i].recorded = false
             s[i].recording = false
-            s[i].t = 0
+
+            reg.rec[i]:expand()
+            reg.play[i]:update_voice(i)
         end
     }
 }
@@ -211,7 +219,7 @@ local segs = function()
   ret = {}
   
   for i = 1, 24 do
-    ret[i] = false
+      ret[i] = false
   end
   
   return ret

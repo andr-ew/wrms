@@ -105,6 +105,9 @@ params:add {
     action = function()
         params:set('rec 2', 0)
         sc.punch_in:clear(2)
+
+        sc.voice:reg(1):update_voice(1, 2)
+        sc.voice:reg(2):update_voice(3, 4)
     end
 }
 params:add {
@@ -238,8 +241,9 @@ wrms_ = nest_ {
                     local l = sc.voice:reg(1):get_length()
                     sc.voice:reg(1):set_start(v)
                     sc.voice:reg(1):set_length(l)
+
                     sc.voice:reg(1):update_voice(1, 2)
-                    sc.voice:reg(1):update_voice(3, 4)
+                    sc.voice:reg(2):update_voice(3, 4)
                 end
             },
             l = _txt.enc.number {
@@ -248,6 +252,7 @@ wrms_ = nest_ {
                 value = function() return sc.voice:reg(1):get_length() end,
                 action = function(s, v)
                     sc.voice:reg(1):set_length(v)
+
                     sc.voice:reg(1):update_voice(1, 2)
                     sc.voice:reg(2):update_voice(1, 2)
                 end
