@@ -203,14 +203,12 @@ sc = {
 
             reg.rec[i]:position(off + 1, 0)
             reg.rec[i]:position(off + 2, 0)
-            reg.rec[i]:punch_out()
             reg.rec[i]:clear()
 
             s[i].recorded = false
             s[i].recording = false
 
             reg.rec[i]:expand()
-            reg.play[i]:update_voice(i)
         end
     }
 }
