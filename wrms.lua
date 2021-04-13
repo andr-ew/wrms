@@ -82,7 +82,7 @@ params:add {
     id = 'clear 1',
     action = function()
         params:set('rec 1', 0)
-        sc.voice:reg(1, 'rec'):clear()
+        reg.rec:clear(1)
     end
 }
 params:add {
@@ -90,10 +90,14 @@ params:add {
     behavior = 'toggle',
     id = 'rec 2',
     action = function(v)
-        sc.punch_in:toggle(2, v)
+        if sc.voice[2]==2 then
+            sc.punch_in:toggle(2, v)
+        else
+            -- regular record toggle probably
+        end
 
-        sc.voice:reg(1):update_voice(1, 2)
-        sc.voice:reg(2):update_voice(3, 4)
+        --sc.voice:reg(1):update_voice(1, 2)
+        --sc.voice:reg(2):update_voice(3, 4)
 
         --redraw()
     end
@@ -104,10 +108,14 @@ params:add {
     id = 'clear 2',
     action = function()
         params:set('rec 2', 0)
-        sc.punch_in:clear(2)
 
-        sc.voice:reg(1):update_voice(1, 2)
-        sc.voice:reg(2):update_voice(3, 4)
+        if sc.voice[2]==2 then
+            sc.punch_in:clear(2)
+        else
+        end
+
+        --sc.voice:reg(1):update_voice(1, 2)
+        --sc.voice:reg(2):update_voice(3, 4)
     end
 }
 params:add {
@@ -140,22 +148,12 @@ params:add {
 params:add {
     type = 'number', id = 'buf 1', default = 1,
     min = 1, max = 2, wrap = true,
-    action = function(v)
-        sc.voice[1].reg = v
-        sc.voice[1].reg_name = 'play'
-        sc.voice:reg(1):update_voice(1, 2)
-        sc.voice:reg(2):update_voice(3, 4)
-    end
+    action = function(v) sc.voice:assign(1, 'play', v) end
 }
 params:add {
     type = 'number', id = 'buf 2', default = 2,
     min = 1, max = 2, wrap = true,
-    action = function(v)
-        sc.voice[2].reg = v
-        sc.voice[2].reg_name = v==1 and 'play' or 'rec'
-        sc.voice:reg(1):update_voice(1, 2)
-        sc.voice:reg(2):update_voice(3, 4)
-    end
+    action = function(v) sc.voice:assign(2, 'rec', v) end
 }
 --param.filter(1)
 
@@ -239,25 +237,19 @@ wrms_ = nest_ {
             s = _txt.enc.number {
                 min = 0, max = math.huge, inc = 0.01,
                 n = 2, x = x[1][1], y = y.enc,
-                value = function() return sc.voice:reg(1):get_start() end,
+                value = function() return reg.play:get_start(1) end,
                 action = function(s, v)
-                    local l = sc.voice:reg(1):get_length()
-                    sc.voice:reg(1):set_start(v)
-                    sc.voice:reg(1):set_length(l)
-
-                    sc.voice:reg(1):update_voice(1, 2)
-                    sc.voice:reg(2):update_voice(3, 4)
+                    local l = reg.play:get_length(1)
+                    reg.play:set_start(1, v)
+                    reg.play:set_length(1, l)
                 end
             },
             l = _txt.enc.number {
                 min = 0, max = math.huge, inc = 0.01,
                 n = 3, x = x[1][2], y = y.enc,
-                value = function() return sc.voice:reg(1):get_length() end,
+                value = function() return reg.play:get_length(1) end,
                 action = function(s, v)
-                    sc.voice:reg(1):set_length(v)
-
-                    sc.voice:reg(1):update_voice(1, 2)
-                    sc.voice:reg(2):update_voice(3, 4)
+                    reg.play:set_length(1, v)
                 end
             },
             trans = _trans(1, {})
@@ -306,7 +298,7 @@ local function setup()
     sc.setup()
     sc.stereo('play', 1, 1)
     sc.mod:init(1)
-    sc.voice:reg(1):set_length(0.3)
+    reg.play[1]:set_length(0.3)
 end
 
 function init()

@@ -1,8 +1,8 @@
 --TODO
---buf: match play state from the other pair, switch off record
+--buf: match play state from the other pair, switch off record, fine tune sizing behavior
 --get the filter right
 --test graphics, fix things
---switch to cartographer voice assignment if implemented
+--use _affordance:link() when available
 --s2 page (last)
 --turn on wrap for pager
 
@@ -43,6 +43,9 @@ sc = {
             softcut.phase_quant(i*2, 1/25)
         end
 
+        cartographer.assign(reg.play[1], 1, 2)
+        cartographer.assign(reg.rec[2], 3, 4)
+
         local function e(i, ph)
             if i == 2 then gfx.wrms:set_phase(1, ph) 
             elseif i == 4 then 
@@ -61,10 +64,8 @@ sc = {
         end
     end,
     scoot = function()
-        reg.play[1]:position(1, 0)
-        reg.play[1]:position(2, 0)
-        reg.rec[2]:position(3, 0)
-        reg.rec[2]:position(4, 0)
+        reg.play:position(2, 0)
+        reg.play:position(4, 0)
     end,
     stereo = function(command, pair, ...)
         local off = (pair - 1) * 2
@@ -163,6 +164,7 @@ sc = {
         local vc = (chan - 1) + off
         softcut.level_input_cut(inn, vc, v)
     end end,
+    --[[
     voice = {
         { reg = 1, reg_name = 'play' },
         { reg = 2, reg_name = 'rec' },
@@ -171,51 +173,56 @@ sc = {
             return reg[name][s[pair].reg] 
         end
     },
+    --]]
+    voice = {
+        1, 2,
+        assign = function(s, voice, name, index)
+            s[voice] = index
+            cartographer.assign(reg[name][index], voice)
+        end
+    }
     punch_in = {
         quant = 0.01,
         { recording = false, recorded = true, t = 0, clock = nil },
         { recording = false, recorded = false, t = 0, clock = nil },
-        toggle = function(s, pair, v)
-            local i = sc.voice[pair].reg
-            local off = (pair - 1) * 2
+        toggle = function(s, pair, v) --only use when pair==2 and voice[2]==2
+            local i = pair * 2
 
-            if s[i].recorded then
+            if s[pair].recorded then
                 sc.oldmx[pair].rec = v; sc.oldmx:update(pair)
             elseif v == 1 then
                 sc.oldmx[pair].rec = 1; sc.oldmx:update(pair)
 
-                reg.rec[i]:position(off + 1, 0)
-                reg.rec[i]:position(off + 2, 0)
+                reg.rec:position(i, 0)
+
                 sc.stereo('play', pair, 1)
 
-                reg.rec[i]:punch_in()
+                reg.rec:punch_in(i)
 
-                s[i].recording = true
+                s[pair].recording = true
             elseif s[i].recording then
                 sc.oldmx[pair].rec = 0; sc.oldmx:update(pair)
             
-                reg.rec[i]:punch_out()
+                reg.rec:punch_out(i)
 
-                s[i].recorded = true
-                s[i].recording = false
+                s[pair].recorded = true
+                s[pair].recording = false
 
                 gfx.wrms:wake(i)
             end
         end,
         clear = function(s, pair)
+            local i = pair * 2
+
             sc.oldmx[pair].rec = 0; sc.oldmx:update(pair)
 
-            local i = sc.voice[pair].reg
-            local off = (pair - 1) * 2
+            reg.rec:position(i, 0)
+            reg.rec:clear(i)
 
-            reg.rec[i]:position(off + 1, 0)
-            reg.rec[i]:position(off + 2, 0)
-            reg.rec[i]:clear()
+            s[pair].recorded = false
+            s[pair].recording = false
 
-            s[i].recorded = false
-            s[i].recording = false
-
-            reg.rec[i]:expand()
+            reg.rec:expand(i)
         end
     }
 }
@@ -256,7 +263,8 @@ gfx = {
             )
             ]]
             s.phase_abs[n] = v
-            s.phase[n] = sc.voice:reg(n):phase_relative(v, 'fraction')
+            --s.phase[n] = sc.voice:reg(n):phase_relative(v, 'fraction')
+            s.phase[n] = reg.rec:phase_relative(v, 'fraction')
         end,
         action = function() end,
         draw = function()
@@ -279,8 +287,8 @@ gfx = {
                 local left = 2 + (i-1) * 58
                 local top = 34
                 local width = 44
-                local r = sc.voice:reg(i)
-                local rrec = sc.voice:reg(i, 'rec')
+                local r = reg[i==1 and 'play' or 'rec']:get_slice(i)
+                local rrec = reg.reg:get_slice(i)
                 
                 --phase
                 screen.level(2)
