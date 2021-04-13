@@ -122,7 +122,10 @@ params:add {
 params:add {
     type = 'control', id = 'wgl',
     controlspec = cs.def { min = 0, max = 100, quantum = 0.01/100 },
-    action = function(v) sc.mod.mul = v end --; redraw() end
+    action = function(v) 
+        local d = (util.linexp(0, 1, 0.01, 1, v) - 0.01) * 100
+        sc.mod[1].mul = d * 0.01 
+    end --; redraw() end
 }
 params:add {
     type = 'control', id = '>',
@@ -303,7 +306,6 @@ local function setup()
     sc.setup()
     sc.stereo('play', 1, 1)
     sc.mod:init(1)
-    sc.mod:init(2)
     sc.voice:reg(1):set_length(0.3)
 end
 

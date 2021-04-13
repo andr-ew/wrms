@@ -1,3 +1,12 @@
+--TODO
+--buf: match play state from the other pair, switch off record
+--get the filter right
+--test graphics, fix things
+--switch to warden voice assignment if implemented
+--s2 page (last)
+--turn on wrap for pager
+
+
 --softcut buffer regions
 local reg = {}
 reg.blank = warden.divide(warden.buffer_stereo, 2)
@@ -113,27 +122,25 @@ sc = {
         end
     },
     mod = {  
-        { rate = 0, mul = 0, phase = 0,
+        { rate = 0.4, mul = 0, phase = 0,
             shape = function(p) return math.sin(2 * math.pi * p) end,
             action = function(v) for i = 1,2 do
                 sc.ratemx[i].mod = v; sc.ratemx:update(i)
             end end
         },
-        { rate = 0, mul = 0, phase = 0,
-            shape = function(p) return math.sin(2 * math.pi * p) end,
-            action = function(v) end
-        },
         quant = 0.01, 
         init = function(s, n)
             s[n].clock = clock.run(function()
-                clock.sleep(s.quant)
+                while true do
+                    clock.sleep(s.quant)
 
-                local T = 1/s[n].rate
-                local d = s.quant / T
-                s[n].phase = s[n].phase + d
-                while s[n].phase > 1 do s[n].phase = s[n].phase - 1 end
+                    local T = 1/s[n].rate
+                    local d = s.quant / T
+                    s[n].phase = s[n].phase + d
+                    while s[n].phase > 1 do s[n].phase = s[n].phase - 1 end
 
-                s[n].action(s[n].shape(s[n].phase) * s[n].mul)
+                    s[n].action(s[n].shape(s[n].phase) * s[n].mul)
+                end
             end)
         end
     },
@@ -142,7 +149,7 @@ sc = {
         { oct = 1, bnd = 1, mod = 0, dir = 1, rate = 0 },
         update = function(s, n)
             s[n].oct = util.clamp(0, 16, s[n].oct)
-            s[n].rate = s[n].oct * 2^(s[n].bnd - 1) * 2^s[n].mod * s[n].dir
+            s[n].rate = s[n].oct * 2^(s[n].bnd - 1) * (1 + s[n].mod) * s[n].dir
             sc.stereo('rate', n, s[n].rate)
         end
     },
