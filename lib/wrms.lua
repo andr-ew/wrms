@@ -2,16 +2,16 @@
 --buf: match play state from the other pair, switch off record
 --get the filter right
 --test graphics, fix things
---switch to warden voice assignment if implemented
+--switch to cartographer voice assignment if implemented
 --s2 page (last)
 --turn on wrap for pager
 
 
 --softcut buffer regions
 local reg = {}
-reg.blank = warden.divide(warden.buffer_stereo, 2)
-reg.rec = warden.subloop(reg.blank)
-reg.play = warden.subloop(reg.rec)
+reg.blank = cartographer.divide(cartographer.buffer_stereo, 2)
+reg.rec = cartographer.subloop(reg.blank)
+reg.play = cartographer.subloop(reg.rec)
 
 local sc, gfx, param
 

@@ -28,7 +28,7 @@ function r() norns.script.load(norns.script.state) end
 include 'wrms/lib/nest/core'
 include 'wrms/lib/nest/norns'
 include 'wrms/lib/nest/txt'
-warden = include 'wrms/lib/warden/warden'
+cartographer = include 'wrms/lib/cartographer/cartographer'
 cs = require 'controlspec'
 
 local sc, gfx, param, reg = include 'wrms/lib/wrms'
