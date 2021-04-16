@@ -1,10 +1,13 @@
 --TODO
---buf: match play state from the other pair, switch off record, fine tune sizing behavior
+--buf: fine tune sizing behavior, buffer state presets for certain params (play, rec, feed)
 --get the filter right
 --test graphics, fix things
 --use _affordance:link() when available
 --s2 page (last)
 --turn on wrap for pager
+--phase sync tests (channel desync)
+--channel length offset tests
+--channel pitch detune ? ?
 
 
 --softcut buffer regions
@@ -43,8 +46,8 @@ sc = {
             softcut.phase_quant(i*2, 1/25)
         end
 
-        cartographer.assign(reg.play[1], 1, 2)
-        cartographer.assign(reg.rec[2], 3, 4)
+        --cartographer.assign(reg.play[1], 1, 2)
+        --cartographer.assign(reg.rec[2], 3, 4)
 
         local function e(i, ph)
             if i == 2 then gfx.wrms:set_phase(1, ph) 
@@ -175,16 +178,20 @@ sc = {
     },
     --]]
     voice = {
-        1, 2,
-        assign = function(s, voice, name, index)
-            s[voice] = index
-            cartographer.assign(reg[name][index], voice)
+        1, 2, -- pair -> buf
+        assign = function(s, pair, name, buf)
+            local off = (pair - 1) * 2
+            s[pair] = buf
+            cartographer.assign(reg[name][buf], 1 + off, 2 + off)
         end
-    }
+    },
     punch_in = {
         quant = 0.01,
-        { recording = false, recorded = true, t = 0, clock = nil },
-        { recording = false, recorded = false, t = 0, clock = nil },
+        { recording = false, recorded = true, play = 0, t = 0, clock = nil },
+        { recording = false, recorded = false, play = 0, t = 0, clock = nil },
+        update_play = function(s, pair)
+            sc.stereo('play', pair, s[pair].play)
+        end,
         toggle = function(s, pair, v) --only use when pair==2 and voice[2]==2
             local i = pair * 2
 
@@ -195,12 +202,13 @@ sc = {
 
                 reg.rec:position(i, 0)
 
-                sc.stereo('play', pair, 1)
+                s[pair].play = 1; s:update_play(pair)
 
+                -- set quant to sc.ratemx.rate * s.quant
                 reg.rec:punch_in(i)
 
                 s[pair].recording = true
-            elseif s[i].recording then
+            elseif s[pair].recording then
                 sc.oldmx[pair].rec = 0; sc.oldmx:update(pair)
             
                 reg.rec:punch_out(i)
@@ -215,6 +223,7 @@ sc = {
             local i = pair * 2
 
             sc.oldmx[pair].rec = 0; sc.oldmx:update(pair)
+            s[pair].play = 0; s:update_play(pair)
 
             reg.rec:position(i, 0)
             reg.rec:clear(i)

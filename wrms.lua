@@ -148,12 +148,22 @@ params:add {
 params:add {
     type = 'number', id = 'buf 1', default = 1,
     min = 1, max = 2, wrap = true,
-    action = function(v) sc.voice:assign(1, 'play', v) end
+    action = function(v) 
+        sc.voice:assign(1, 'play', v) 
+    end
 }
 params:add {
     type = 'number', id = 'buf 2', default = 2,
     min = 1, max = 2, wrap = true,
-    action = function(v) sc.voice:assign(2, 'rec', v) end
+    action = function(v) 
+        if v==1 then
+            sc.voice:assign(2, 'play', 1) 
+            sc.stereo('play', 2, 1)
+        else
+            sc.voice:assign(2, 'rec', 2) 
+            sc.punch_in:update_play(2)
+        end
+    end
 }
 --param.filter(1)
 
@@ -204,7 +214,7 @@ wrms_ = nest_ {
         flow = 'y', options = { 'v', 'o', 'b', 's', '>', 'f' }
     },
     pages = nest_ {
-        ['v'] = nest_ {
+        v = nest_ {
             vol = nest_(2):each(function(i)
                 return param._icontrol('vol', i, {
                     n = i + 1, x = x[i][1], y = y.enc
@@ -287,7 +297,6 @@ wrms_ = nest_ {
             --]]
         }    
     }: each(function(k, v)
-        print(k)
         v.enabled = function(s) 
             return wrms_.tab.options[wrms_.tab.v//1] == k 
         end
@@ -303,8 +312,8 @@ end
 
 function init()
     setup()
-    wrms_:init()
     params:bang()
+    wrms_:init()
 end
 
 function cleanup()
