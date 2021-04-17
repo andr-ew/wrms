@@ -1,14 +1,14 @@
 --TODO
---buf: fine tune sizing behavior, buffer state presets for certain params (play, rec, feed)
---get the filter right
 --test graphics, fix things
---use _affordance:link() when available
+--buffer state presets for certain params (play, rec, feed, filer2)
 --s2 page (last)
 --turn on wrap for pager
+--get the filter right + alt for wrm2 filter
 --phase sync tests (channel desync)
 --channel length offset tests
 --channel pitch detune ? ?
-
+--use _affordance:link() when available
+--gfx = _screen { } when available
 
 --softcut buffer regions
 local reg = {}
@@ -43,7 +43,7 @@ sc = {
             softcut.level_input_cut(1, l, 0)
             softcut.level_input_cut(2, l, 1)
             
-            softcut.phase_quant(i*2, 1/25)
+            softcut.phase_quant(i*2, 1/60)
         end
 
         --cartographer.assign(reg.play[1], 1, 2)
@@ -68,7 +68,7 @@ sc = {
     end,
     scoot = function()
         reg.play:position(2, 0)
-        reg.play:position(4, 0)
+        reg.rec:position(4, 0)
     end,
     stereo = function(command, pair, ...)
         local off = (pair - 1) * 2
@@ -216,7 +216,7 @@ sc = {
                 s[pair].recorded = true
                 s[pair].recording = false
 
-                gfx.wrms:wake(i)
+                gfx.wrms:wake(pair)
             end
         end,
         clear = function(s, pair)
@@ -273,9 +273,13 @@ gfx = {
             ]]
             s.phase_abs[n] = v
             --s.phase[n] = sc.voice:reg(n):phase_relative(v, 'fraction')
-            s.phase[n] = reg.rec:phase_relative(v, 'fraction')
+            s.phase[n] = reg.rec:phase_relative(n, v, 'fraction')
         end,
         action = function() end,
+        sleep = function(s, n) s.sleep_index[n] = 24 end,
+        wake = function(s, n) s.sleep_index[n] = 24 end,
+        segment_awake = { segs(), segs() },
+        sleep_index = { 24, 24 },
         draw = function()
             local s = gfx.wrms
 
@@ -296,24 +300,26 @@ gfx = {
                 local left = 2 + (i-1) * 58
                 local top = 34
                 local width = 44
-                local r = reg[i==1 and 'play' or 'rec']:get_slice(i)
-                local rrec = reg.reg:get_slice(i)
+                --local r = reg[i==1 and 'play' or 'rec']:get_slice(i*2)
+                local r = reg.play:get_slice(i*2)
+                local rrec = reg.rec:get_slice(i*2)
                 
                 --phase
                 screen.level(2)
-                if not sc.punch_in.recording then
+                if not sc.punch_in[i].recording then
                     screen.pixel(left + width * r:get_start('fraction'), top) --loop start
                     screen.fill()
                 end
-                if sc.punch_in.recorded then
+                if sc.punch_in[i].recorded then
                     screen.pixel(left + width * r:get_end('fraction'), top) --loop end
+                    --print('end', i, r:get_end('fraction'))
                     screen.fill()
                 end
  
                 screen.level(6 + 10 * sc.oldmx[i].rec)
-                if not sc.punch_in.recorded then 
+                if not sc.punch_in[i].recorded then 
                     -- rec line
-                    if sc.punch_in.recording then
+                    if sc.punch_in[i].recording then
                         screen.move(left + width*r:get_start('fraction'), top + 1)
                         screen.line(1 + left + width*s.phase[i], top + 1)
                         screen.stroke()
@@ -331,41 +337,39 @@ gfx = {
         
                 screen.level(math.floor(sc.lvlmx[i].vol * 10))
 
-                local width = util.linexp(0, rrec:get_length(), 0.01, width, r:get_length() + 4.125)
-                for j = 1, width do
+                local length = util.linexp(0, rrec:get_length(), 0.01, width, (r:get_length() + 3.25*2) / 2)
+                --print('r', r:get_length(), 'rrec', rrec:get_length())
+                --print('len', length)
+                for j = 1, length do
                     local amp = 
                         s.segment_awake[i][j] 
                         and 
                             math.sin(
                                 (
                                     (s.phase_abs[i] - r:get_start())*(i==1 and 1 or 2) 
-                                    / (r:get_end() - r:get_start(i)) + j/width
+                                    / (r:get_end() - r:get_start(i)) + j/length
                                 )
                                 * (i == 1 and 2 or 4) * math.pi
                             ) * util.linlin(
-                                1, width / 2, lowamp, highamp + sc.mod[i].mul, 
-                                j < (width / 2) and j or width - j
+                                1, length / 2, lowamp, highamp + sc.mod[1].mul, 
+                                j < (length / 2) and j or length - j
                             ) 
                             - 0.75*util.linlin(
-                                1, width / 2, lowamp, highamp + sc.mod[i].mul, 
-                                j < (width / 2) and j or width - j
+                                1, length / 2, lowamp, highamp + sc.mod[1].mul, 
+                                j < (length / 2) and j or length - j
                             ) - (
-                                util.linexp(0, 1, 0.5, 6, j/width) 
+                                util.linexp(0, 1, 0.5, 6, j/length) 
                                 * (sc.ratemx[i].bnd - 1)
                             ) 
                         or 0      
                    
-                    local x = left - (r:get_start()) / (r:get_length()) * (width - 44)
+                    local x = (width - length + 20) * r:get_start('fraction')
                 
-                    screen.pixel(x - 1 + j, top + amp)
+                    screen.pixel(left + x + j - 1, top + amp)
                 end
                 screen.fill()
             end
-        end,
-        sleep = function(s, n) s.sleep_index[n] = 24 end,
-        wake = function(s, n) s.sleep_index[n] = 24 end,
-        segment_awake = { segs(), segs() },
-        sleep_index = { 24, 24 },
+        end
     }   
 }
 

@@ -204,11 +204,9 @@ end
 
 --screen interface
 wrms_ = nest_ {
-    --[[
     gfx = _screen.affordance {
         redraw = gfx.wrms.draw
     },
-    --]]
     tab = _txt.enc.option {
         n = 1, x = 128, y = 2, sens = 0.5, align = 'right', margin = 2,
         flow = 'y', options = { 'v', 'o', 'b', 's', '>', 'f' }
@@ -307,7 +305,8 @@ local function setup()
     sc.setup()
     sc.stereo('play', 1, 1)
     sc.mod:init(1)
-    reg.play[1]:set_length(0.3)
+    reg.rec[1]:set_length(4)
+    reg.play[1]:set_length(0.4)
 end
 
 function init()
