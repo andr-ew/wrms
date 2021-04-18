@@ -14,7 +14,7 @@
 local reg = {}
 reg.blank = cartographer.divide(cartographer.buffer_stereo, 2)
 reg.rec = cartographer.subloop(reg.blank)
-reg.play = cartographer.subloop(reg.rec)
+reg.play = cartographer.subloop(reg.rec, 2)
 
 local sc, gfx, param
 
@@ -68,7 +68,7 @@ sc = {
     end,
     scoot = function()
         reg.play:position(2, 0)
-        reg.rec:position(4, 0)
+        reg.play:position(4, 0)
     end,
     stereo = function(command, pair, ...)
         local off = (pair - 1) * 2
@@ -177,12 +177,12 @@ sc = {
         end
     },
     --]]
-    voice = {
+    buf = {
         1, 2, -- pair -> buf
-        assign = function(s, pair, name, buf)
+        assign = function(s, pair, buf, slice)
             local off = (pair - 1) * 2
             s[pair] = buf
-            cartographer.assign(reg[name][buf], 1 + off, 2 + off)
+            cartographer.assign(reg.play[buf][slice], 1 + off, 2 + off)
         end
     },
     punch_in = {
@@ -200,7 +200,7 @@ sc = {
             elseif v == 1 then
                 sc.oldmx[pair].rec = 1; sc.oldmx:update(pair)
 
-                reg.rec:position(i, 0)
+                reg.rec:trigger(i)
 
                 s[pair].play = 1; s:update_play(pair)
 
