@@ -167,18 +167,8 @@ sc = {
         local vc = (chan - 1) + off
         softcut.level_input_cut(inn, vc, v)
     end end,
-    --[[
-    voice = {
-        { reg = 1, reg_name = 'play' },
-        { reg = 2, reg_name = 'rec' },
-        reg = function(s, pair, name) 
-            name = name or s[pair].reg_name
-            return reg[name][s[pair].reg] 
-        end
-    },
-    --]]
     buf = {
-        1, 2, -- pair -> buf
+        1, 2, -- [pair] = buf
         assign = function(s, pair, buf, slice)
             local off = (pair - 1) * 2
             s[pair] = buf
@@ -232,6 +222,12 @@ sc = {
             s[pair].recording = false
 
             reg.rec:expand(i)
+                
+            gfx.wrms:sleep(pair)
+
+            sc.ratemx[pair].oct = 1
+            sc.ratemx[pair].dir = 1
+            sc.ratemx:update(pair)
         end
     }
 }
@@ -265,14 +261,7 @@ gfx = {
         phase = { 0, 0 },
         phase_abs = { 0, 0 },
         set_phase = function(s, n, v)
-            --[[
-            s.phase[n] = (
-                (v - sc.voice:reg(n):get_start('seconds', 'absolute')) 
-                / sc.voice:reg(n):get_length('seconds')
-            )
-            ]]
             s.phase_abs[n] = v
-            --s.phase[n] = sc.voice:reg(n):phase_relative(v, 'fraction')
             s.phase[n] = reg.rec:phase_relative(n*2, v, 'fraction')
         end,
         action = function() end,
@@ -300,7 +289,6 @@ gfx = {
                 local left = 2 + (i-1) * 58
                 local top = 34
                 local width = 44
-                --local r = reg[i==1 and 'play' or 'rec']:get_slice(i*2)
                 local r = reg.play:get_slice(i*2)
                 local rrec = reg.rec:get_slice(i*2)
                 
@@ -312,7 +300,6 @@ gfx = {
                 end
                 if sc.punch_in[i].recorded then
                     screen.pixel(left + width * r:get_end('fraction'), top) --loop end
-                    --print('end', i, r:get_end('fraction'))
                     screen.fill()
                 end
  
@@ -320,8 +307,8 @@ gfx = {
                 if not sc.punch_in[i].recorded then 
                     -- rec line
                     if sc.punch_in[i].recording then
-                        screen.move(left + width*r:get_start('fraction'), top + 1)
-                        screen.line(1 + left + width*s.phase[i], top + 1)
+                        screen.move(left + width*rrec:get_start('fraction'), top + 1)
+                        screen.line(1 + left + width*rrec:get_end('fraction'), top + 1)
                         screen.stroke()
                     end
                 else
@@ -337,13 +324,17 @@ gfx = {
         
                 screen.level(math.floor(sc.lvlmx[i].vol * 10))
 
-                local length = util.linexp(0, rrec:get_length(), 0.01, width, (r:get_length() + 3.25*2) / 2)
-                --print('r', r:get_length(), 'rrec', rrec:get_length())
-                --print('len', length)
+                local length = sc.buf[i]==1 and (
+                    util.linexp(0, 
+                        rrec:get_length(), 0.01, width, (r:get_length() + 3.25*2) / 2
+                    )
+                ) or (
+                    util.linlin(0, rrec:get_length(), 0, width, r:get_length()*1.1 + 1)
+                )
+
                 for j = 1, length do
                     local amp = 
-                        s.segment_awake[i][j] 
-                        and 
+                        s.segment_awake[i][j] and (
                             math.sin(
                                 (
                                     (s.phase_abs[i] - r:get_start())*(i==1 and 1 or 2) 
@@ -361,7 +352,7 @@ gfx = {
                                 util.linexp(0, 1, 0.5, 6, j/length) 
                                 * (sc.ratemx[i].bnd - 1)
                             ) 
-                        or 0      
+                        ) or 0      
                    
                     local x = (width - length + 20) * r:get_start('fraction')
                 
