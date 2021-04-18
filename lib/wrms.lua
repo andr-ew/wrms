@@ -273,7 +273,7 @@ gfx = {
             ]]
             s.phase_abs[n] = v
             --s.phase[n] = sc.voice:reg(n):phase_relative(v, 'fraction')
-            s.phase[n] = reg.rec:phase_relative(n, v, 'fraction')
+            s.phase[n] = reg.rec:phase_relative(n*2, v, 'fraction')
         end,
         action = function() end,
         sleep = function(s, n) s.sleep_index[n] = 24 end,
