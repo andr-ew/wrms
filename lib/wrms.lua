@@ -1,5 +1,4 @@
 --TODO
---test graphics, fix things
 --buffer state presets for certain params (play, rec, feed, filer2)
 --s2 page (last)
 --turn on wrap for pager
