@@ -90,7 +90,7 @@ params:add {
     behavior = 'toggle',
     id = 'rec 2',
     action = function(v)
-        if sc.voice[2]==2 then
+        if sc.buf[2]==2 then
             sc.punch_in:toggle(2, v)
         else
             -- regular record toggle probably
@@ -109,7 +109,7 @@ params:add {
     action = function()
         params:set('rec 2', 0)
 
-        if sc.voice[2]==2 then
+        if sc.buf[2]==2 then
             sc.punch_in:clear(2)
         else
         end
@@ -149,7 +149,7 @@ params:add {
     type = 'number', id = 'buf 1', default = 1,
     min = 1, max = 2, wrap = true,
     action = function(v) 
-        sc.voice:assign(1, 'play', v) 
+        sc.buf:assign(1, v, v) -- play[1][1] or play[2][2]
     end
 }
 params:add {
@@ -157,10 +157,10 @@ params:add {
     min = 1, max = 2, wrap = true,
     action = function(v) 
         if v==1 then
-            sc.voice:assign(2, 'play', 1) 
+            sc.buf:assign(2, 1, 1)  --play[1][1] or play[2][1]
             sc.stereo('play', 2, 1)
         else
-            sc.voice:assign(2, 'rec', 2) 
+            sc.buf:assign(2, 2, 1) 
             sc.punch_in:update_play(2)
         end
     end
@@ -306,7 +306,7 @@ local function setup()
     sc.stereo('play', 1, 1)
     sc.mod:init(1)
     reg.rec[1]:set_length(4)
-    reg.play[1]:set_length(0.4)
+    reg.play[1][1]:set_length(0.4)
 end
 
 function init()
