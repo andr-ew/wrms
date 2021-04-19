@@ -165,7 +165,7 @@ params:add {
         end
     end
 }
---param.filter(1)
+param.filter(1)
 
 local x, y = gfx.pos.x, gfx.pos.y
 
@@ -279,7 +279,6 @@ wrms_ = nest_ {
             end)
         },
         f = nest_ {
-            --[[
             f = param._control('f', {
                 n = 2, x = x[1][1], y = y.enc,
             }),
@@ -292,7 +291,6 @@ wrms_ = nest_ {
                 value = function() return params:get('filter type') end,
                 action = function(s, v) params:set('filter type', v) end
             }
-            --]]
         }    
     }: each(function(k, v)
         v.enabled = function(s) 

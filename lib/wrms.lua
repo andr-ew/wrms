@@ -1,8 +1,8 @@
 --TODO
+--get the filter right + alt for wrm2 filter
 --buffer state presets for certain params (play, rec, feed, filer2)
 --s2 page (last)
 --turn on wrap for pager
---get the filter right + alt for wrm2 filter
 --phase sync tests (channel desync)
 --channel length offset tests
 --channel pitch detune ? ?
@@ -31,6 +31,7 @@ sc = {
             softcut.level_slew_time(i, 0.1)
             softcut.recpre_slew_time(i, 0.1)
             softcut.rate(i, 1)
+            softcut.post_filter_dry(i, 0)
         end
         for i = 1, 2 do
             local l, r = i*2 - 1, i*2
@@ -60,7 +61,6 @@ sc = {
         softcut.poll_start_phase()
         
         for i = 3, 4 do
-            softcut.post_filter_dry(i, 0)
             softcut.post_filter_lp(i, 1)
             softcut.post_filter_fc(i, 5000)
         end
@@ -405,17 +405,19 @@ param = {
     filter = function(i)
         params:add {
             type = 'control', id = 'f', 
-            controlspec = cs.new(50,5000,'exp',0,5000,'hz'),
+            --controlspec = cs.new(20,20000,'exp',0,20000,'hz'),
+            controlspec = cs.def { default = 1, quantum = 1/100/2, step = 0 },
             action = function(v) 
-                sc.stereo('post_filter_fc', i, v) 
+                sc.stereo('post_filter_fc', i, util.linexp(0, 1, 20, 20000, v)) 
                 --redraw()
             end
         }
         params:add {
             type = 'control', id = 'q',
-            controlspec = cs.RQ,
-            action = function(v) 
-                sc.stereo('post_filter_rq', i, v) 
+            --controlspec = cs.new(min,max,'exp',0,10),
+            controlspec = cs.def { default = 0.5 },
+            action = function(v)
+                sc.stereo('post_filter_rq', i, util.linexp(0, 1, 0.01, 20, 1 - v))
                 --redraw()
             end
         }
