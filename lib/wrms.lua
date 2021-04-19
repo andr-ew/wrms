@@ -1,6 +1,6 @@
 --TODO
 --get the filter right + alt for wrm2 filter
---buffer state presets for certain params (play, rec, feed, filer2)
+--buffer state presets for certain params (play, rec, feed, filters, octaves)
 --s2 page (last)
 --turn on wrap for pager
 --phase sync tests (channel desync)
@@ -290,22 +290,24 @@ gfx = {
                 local width = 44
                 local r = reg.play:get_slice(i*2)
                 local rrec = reg.rec:get_slice(i*2)
+                local recorded = sc.punch_in[sc.buf[i]].recorded
+                local recording = sc.punch_in[sc.buf[i]].recording
                 
                 --phase
                 screen.level(2)
-                if not sc.punch_in[i].recording then
+                if not recording then
                     screen.pixel(left + width * r:get_start('fraction'), top) --loop start
                     screen.fill()
                 end
-                if sc.punch_in[i].recorded then
+                if recorded then
                     screen.pixel(left + width * r:get_end('fraction'), top) --loop end
                     screen.fill()
                 end
  
                 screen.level(6 + 10 * sc.oldmx[i].rec)
-                if not sc.punch_in[i].recorded then 
+                if not recorded then 
                     -- rec line
-                    if sc.punch_in[i].recording then
+                    if recording then
                         screen.move(left + width*rrec:get_start('fraction'), top + 1)
                         screen.line(1 + left + width*rrec:get_end('fraction'), top + 1)
                         screen.stroke()
@@ -330,16 +332,18 @@ gfx = {
                 ) or (
                     util.linlin(0, rrec:get_length(), 0, width, r:get_length()*1.1 + 1)
                 )
+                local humps = i
+                if i == 2 and sc.buf[2] == 1 then humps = 1 end
 
                 for j = 1, length do
                     local amp = 
                         s.segment_awake[i][j] and (
                             math.sin(
                                 (
-                                    (s.phase_abs[i] - r:get_start())*(i==1 and 1 or 2) 
+                                    (s.phase_abs[i] - r:get_start())*(humps==1 and 1 or 2) 
                                     / (r:get_end() - r:get_start(i)) + j/length
                                 )
-                                * (i == 1 and 2 or 4) * math.pi
+                                * (humps == 1 and 2 or 4) * math.pi
                             ) * util.linlin(
                                 1, length / 2, lowamp, highamp + sc.mod[1].mul, 
                                 j < (length / 2) and j or length - j
