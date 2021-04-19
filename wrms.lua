@@ -34,7 +34,27 @@ cs = require 'controlspec'
 local sc, gfx, param, reg = include 'wrms/lib/wrms'
 
 --params
-param.mix()
+params:add_separator('mix')
+for i = 1,2 do
+    params:add_control("in L > wrm " .. i .. "  L", "in L > wrm " .. i .. "  L", controlspec.new(0,1,'lin',0,1,''))
+    params:set_action("in L > wrm " .. i .. "  L", sc.input(i, 1, 1))
+
+    params:add_control("in L > wrm " .. i .. "  R", "in L > wrm " .. i .. "  R", controlspec.new(0,1,'lin',0,0,''))
+    params:set_action("in L > wrm " .. i .. "  R", sc.input(i, 1, 2))
+    
+    params:add_control("in R > wrm " .. i .. "  R", "in R > wrm " .. i .. "  R", controlspec.new(0,1,'lin',0,1,''))
+    params:set_action("in R > wrm " .. i .. "  R", sc.input(i, 2, 2))
+
+    params:add_control("in R > wrm " .. i .. "  L", "in R > wrm " .. i .. "  L", controlspec.new(0,1,'lin',0,0,''))
+    params:set_action("in R > wrm " .. i .. "  L", sc.input(i, 2, 1))
+
+    params:add_control("wrm " .. i .. " pan", "wrm " .. i .. " pan", controlspec.PAN)
+    params:set_action("wrm " .. i .. " pan", function(v) 
+        sc.lvlmx[i].pan = v 
+        sc.lvlmx:update(i)
+    end)
+end
+params:add_separator('wrms')
 for i = 1,2 do 
     params:add {
         type = 'control',
@@ -96,9 +116,6 @@ params:add {
             -- regular record toggle probably
         end
 
-        --sc.voice:reg(1):update_voice(1, 2)
-        --sc.voice:reg(2):update_voice(3, 4)
-
         --redraw()
     end
 }
@@ -113,9 +130,6 @@ params:add {
             sc.punch_in:clear(2)
         else
         end
-
-        --sc.voice:reg(1):update_voice(1, 2)
-        --sc.voice:reg(2):update_voice(3, 4)
     end
 }
 params:add {
@@ -167,7 +181,36 @@ params:add {
         end
     end
 }
-param.filter(1)
+for i = 1,2 do
+    params:add {
+        type = 'control', id = 'f'..i,
+        --controlspec = cs.new(20,20000,'exp',0,20000,'hz'),
+        controlspec = cs.def { default = 1, quantum = 1/100/2, step = 0 },
+        action = function(v) 
+            sc.stereo('post_filter_fc', i, util.linexp(0, 1, 20, 20000, v)) 
+            --redraw()
+        end
+    }
+    params:add {
+        type = 'control', id = 'q'..i,
+        --controlspec = cs.new(min,max,'exp',0,10),
+        controlspec = cs.def { default = 0.5 },
+        action = function(v)
+            sc.stereo('post_filter_rq', i, util.linexp(0, 1, 0.01, 20, 1 - v))
+            --redraw()
+        end
+    }
+    local options = { 'lp', 'bp', 'hp' } 
+    params:add {
+        type = 'option', id = 'filter type '..i,
+        options = options,
+        action = function(v)
+            for _,k in ipairs(options) do sc.stereo('post_filter_'..k, i, 0) end
+            sc.stereo('post_filter_'..options[v], i, 1)
+            --redraw()
+        end
+    }
+end
 
 local x, y = gfx.pos.x, gfx.pos.y
 
@@ -213,6 +256,7 @@ wrms_ = nest_ {
         n = 1, x = 128, y = 2, sens = 0.5, align = 'right', margin = 2,
         flow = 'y', options = { 'v', 'o', 'b', 's', '>', 'f' }
     },
+    alt = _key.momentary { n = 1 },
     pages = nest_ {
         v = nest_ {
             vol = nest_(2):each(function(i)
@@ -280,23 +324,29 @@ wrms_ = nest_ {
                 }
             end)
         },
-        f = nest_ {
-            f = param._control('f', {
-                n = 2, x = x[1][1], y = y.enc,
-            }),
-            q = param._control('q', {
-                n = 3, x = x[1][2], y = y.enc,
-            }),
-            type = _txt.key.option {
-                n = { 2, 3 }, x = x[1][1], y = y.key,
-                options = params:lookup_param('filter type').options,
-                value = function() return params:get('filter type') end,
-                action = function(s, v) params:set('filter type', v) end
+        f = nest_(2):each(function(i)
+            return nest_ {
+                f = param._control('f'..i, {
+                    n = 2, x = x[i][1], y = y.enc, label = 'f'
+                }),
+                q = param._control('q'..i, {
+                    n = 3, x = x[i][2], y = y.enc, label = 'q'
+                }),
+                type = _txt.key.option {
+                    n = { 2, 3 }, x = x[i][1], y = y.key,
+                    options = params:lookup_param('filter type '..i).options,
+                    value = function() return params:get('filter type '..i) end,
+                    action = function(s, v) params:set('filter type '..i, v) end
+                }
             }
-        }    
+        end)
     }: each(function(k, v)
         v.enabled = function(s) 
             return wrms_.tab.options[wrms_.tab.v//1] == k 
+        end
+        if v[1] then
+            v[1].enabled = function() return wrms_.alt.v == 0 end
+            v[2].enabled = function() return wrms_.alt.v == 1 end
         end
     end)
 } :connect { screen = screen, enc = enc, key = key } 

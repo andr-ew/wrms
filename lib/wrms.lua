@@ -383,59 +383,6 @@ end)
 
 --param utilities
 param = {
-    mix = function()
-        params:add_separator('mix')
-        for i = 1,2 do
-            params:add_control("in L > wrm " .. i .. "  L", "in L > wrm " .. i .. "  L", controlspec.new(0,1,'lin',0,1,''))
-            params:set_action("in L > wrm " .. i .. "  L", sc.input(i, 1, 1))
-
-            params:add_control("in L > wrm " .. i .. "  R", "in L > wrm " .. i .. "  R", controlspec.new(0,1,'lin',0,0,''))
-            params:set_action("in L > wrm " .. i .. "  R", sc.input(i, 1, 2))
-            
-            params:add_control("in R > wrm " .. i .. "  R", "in R > wrm " .. i .. "  R", controlspec.new(0,1,'lin',0,1,''))
-            params:set_action("in R > wrm " .. i .. "  R", sc.input(i, 2, 2))
-
-            params:add_control("in R > wrm " .. i .. "  L", "in R > wrm " .. i .. "  L", controlspec.new(0,1,'lin',0,0,''))
-            params:set_action("in R > wrm " .. i .. "  L", sc.input(i, 2, 1))
-
-            params:add_control("wrm " .. i .. " pan", "wrm " .. i .. " pan", controlspec.PAN)
-            params:set_action("wrm " .. i .. " pan", function(v) 
-                sc.lvlmx[i].pan = v 
-                sc.lvlmx:update(i)
-            end)
-        end
-        params:add_separator('wrms')
-    end,
-    filter = function(i)
-        params:add {
-            type = 'control', id = 'f', 
-            --controlspec = cs.new(20,20000,'exp',0,20000,'hz'),
-            controlspec = cs.def { default = 1, quantum = 1/100/2, step = 0 },
-            action = function(v) 
-                sc.stereo('post_filter_fc', i, util.linexp(0, 1, 20, 20000, v)) 
-                --redraw()
-            end
-        }
-        params:add {
-            type = 'control', id = 'q',
-            --controlspec = cs.new(min,max,'exp',0,10),
-            controlspec = cs.def { default = 0.5 },
-            action = function(v)
-                sc.stereo('post_filter_rq', i, util.linexp(0, 1, 0.01, 20, 1 - v))
-                --redraw()
-            end
-        }
-        local options = { 'lp', 'bp', 'hp' } 
-        params:add {
-            type = 'option', id = 'filter type',
-            options = options,
-            action = function(v)
-                for _,k in ipairs(options) do sc.stereo('post_filter_'..k, i, 0) end
-                sc.stereo('post_filter_'..options[v], i, 1)
-                --redraw()
-            end
-        }
-    end,
     _control = function(id, o)
         return _txt.enc.control {
             label = id,
