@@ -63,7 +63,6 @@ for i = 1,2 do
         action = function(v)
             sc.lvlmx[i].vol = v
             sc.lvlmx:update(i)
-            --redraw()
         end
     }
     params:add {
@@ -73,27 +72,26 @@ for i = 1,2 do
         action = function(v)
             sc.oldmx[i].old = v
             sc.oldmx:update(i)
-            --redraw()
         end
     }
     local options = { 'overdub', 'feedback', 'ping-pong' } 
     params:add {
         type = 'option',
         id = 'old mode ' .. i,
-        options = options,
+        options = options, default = i==1 and 3 or 1,
         action = function(v)
             sc.oldmx[i].mode = options[v]
             sc.oldmx:update(i)
         end
     }
 end
+
 params:add {
     type = 'binary',
     behavior = 'toggle',
     id = 'rec 1', default = 1,
     action = function(v)
         sc.oldmx[1].rec = v; sc.oldmx:update(1)
-        --redraw()
     end
 }
 params:add {
@@ -115,8 +113,6 @@ params:add {
         else
             -- regular record toggle probably
         end
-
-        --redraw()
     end
 }
 params:add {
@@ -138,7 +134,6 @@ params:add {
     action = function(v)
         sc.ratemx[1].bnd = v
         sc.ratemx:update(1)
-        --redraw()
     end
 }
 params:add {
@@ -147,7 +142,7 @@ params:add {
     action = function(v) 
         local d = (util.linexp(0, 1, 0.01, 1, v) - 0.01) * 100
         sc.mod[1].mul = d * 0.01 
-    end --; redraw() end
+    end
 }
 params:add {
     type = 'control', id = '>',
@@ -188,7 +183,6 @@ for i = 1,2 do
         controlspec = cs.def { default = 1, quantum = 1/100/2, step = 0 },
         action = function(v) 
             sc.stereo('post_filter_fc', i, util.linexp(0, 1, 20, 20000, v)) 
-            --redraw()
         end
     }
     params:add {
@@ -197,17 +191,15 @@ for i = 1,2 do
         controlspec = cs.def { default = 0.5 },
         action = function(v)
             sc.stereo('post_filter_rq', i, util.linexp(0, 1, 0.01, 20, 1 - v))
-            --redraw()
         end
     }
-    local options = { 'lp', 'bp', 'hp' } 
+    local options = { 'dry', 'lp', 'hp', 'bp', 'br' } 
     params:add {
         type = 'option', id = 'filter type '..i,
         options = options,
         action = function(v)
-            for _,k in ipairs(options) do sc.stereo('post_filter_'..k, i, 0) end
+            for _,k in pairs(options) do sc.stereo('post_filter_'..k, i, 0) end
             sc.stereo('post_filter_'..options[v], i, 1)
-            --redraw()
         end
     }
 end

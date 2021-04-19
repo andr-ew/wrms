@@ -102,6 +102,7 @@ sc = {
         { old = 1, mode = 'overdub', rec = 0 },
         update = function(s, n)
             local off = n == 1 and 0 or 2
+            local mode = s[n].mode
 
             sc.stereo('rec_level', n, s[n].rec)
             if s[n].rec == 0 then
