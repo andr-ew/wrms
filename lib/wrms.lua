@@ -370,8 +370,8 @@ gfx.wrms.sleep_clock = clock.run(function()
         for i = 1,2 do
             local si = s.sleep_index[i]
             if si > 0 and si <= 24 then
-                s.segment_awake[i][math.floor(si)] = sc.punch_in[i].recorded
-                s.sleep_index[i] = si + 0.5*(sc.punch_in[i].recorded and -1 or -2)
+                s.segment_awake[i][math.floor(si)] = sc.punch_in[sc.buf[i]].recorded
+                s.sleep_index[i] = si + 0.5*(sc.punch_in[sc.buf[i]].recorded and -1 or -2)
             end
         end
     end
