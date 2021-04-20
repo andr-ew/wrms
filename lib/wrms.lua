@@ -1,14 +1,38 @@
 --TODO
---s2 page (last)
---turn on wrap for pager
 --phase sync tests (channel desync)
 --channel length offset tests
 --channel pitch detune ? ?
 --smol length sensitivity
 --oct + direction display
+--wrm2 independent delay (using end)
 --persistence (delay slice + all preset data) - (reset preset 2,3 oct 2 at load)
 --use _affordance:link() when available
 --gfx = _screen { } when available
+
+
+--cartographer hax
+Slice.skew = 0
+
+function Slice:update()
+    --re-clamp start/end
+    self.startend[1] = util.clamp(self.startend[1], self.bounds[1], self.bounds[2])
+    self.startend[2] = util.clamp(self.startend[2], self.startend[1], self.bounds[2])
+
+    local b = self.buffer
+    for i,v in ipairs(self.voices) do
+        softcut.loop_start(v, self.startend[1])
+        softcut.loop_end(v, 
+            self.startend[2]
+            + (self.skew)*(i==1 and 0 or -1)
+        )
+        softcut.buffer(v, b[(i - 1)%(#b) + 1])
+    end
+
+    --propagate downward
+    for i,v in ipairs(self.children) do
+        v:update()
+    end
+end
 
 --softcut buffer regions
 local reg = {}
@@ -44,16 +68,13 @@ sc = {
             softcut.level_input_cut(1, l, 0)
             softcut.level_input_cut(2, l, 1)
             
-            softcut.phase_quant(i*2, 1/60)
+            softcut.phase_quant(i*2 - 1, 1/60)
             sc.slew(i, 0.2)
         end
 
-        --cartographer.assign(reg.play[1], 1, 2)
-        --cartographer.assign(reg.rec[2], 3, 4)
-
         local function e(i, ph)
-            if i == 2 then gfx.wrms:set_phase(1, ph) 
-            elseif i == 4 then 
+            if i == 1 then gfx.wrms:set_phase(1, ph) 
+            elseif i == 3 then 
                 gfx.wrms:set_phase(2, ph)
                 redraw()
             end
@@ -61,11 +82,6 @@ sc = {
 
         softcut.event_phase(e)
         softcut.poll_start_phase()
-        
-        for i = 3, 4 do
-            softcut.post_filter_lp(i, 1)
-            softcut.post_filter_fc(i, 5000)
-        end
     end,
     scoot = function()
         reg.play:position(2, 0)
@@ -220,6 +236,7 @@ sc = {
 
             reg.rec:position(i, 0)
             reg.rec:clear(i)
+            reg.rec:punch_out(i)
 
             s[pair].recorded = false
             s[pair].recording = false
@@ -228,9 +245,11 @@ sc = {
                 
             gfx.wrms:sleep(pair)
 
+            --[[
             sc.ratemx[pair].oct = 1
             sc.ratemx[pair].dir = 1
             sc.ratemx:update(pair)
+            --]]
         end
     }
 }

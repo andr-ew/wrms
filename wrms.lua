@@ -124,6 +124,8 @@ params:add {
 
         if sc.buf[2]==2 then
             sc.punch_in:clear(2)
+            params:set('oct 2', 0)
+            params:set('dir 2', 2)
         else
         end
     end
@@ -255,26 +257,6 @@ local _trans = function(i, o)
         end
     } :merge(o)
 end
-local _s2 = function()
-    return _txt.enc.number {
-        min = 0, max = math.huge, inc = 0.01,
-        n = 2, x = x[2][1], y = y.enc,
-        value = function() return reg.play:get_start(2*2) end,
-        action = function(s, v)
-            reg.play:set_start(2*2, v)
-        end
-    }
-end
-local _e2 = function()
-    return _txt.enc.number {
-        min = 0, max = math.huge, inc = 0.01,
-        n = 3, x = x[2][2], y = y.enc,
-        value = function() return reg.play:get_end(2*2) end,
-        action = function(s, v)
-            reg.play:set_end(2*2, v)
-        end
-    }
-end
 
 --screen interface
 wrms_ = nest_ {
@@ -296,7 +278,22 @@ wrms_ = nest_ {
                 end),
                 rec = nest_(2):each(function(i) return _rec(i) end)
             }, nest_ {
-                s = _s2(), e = _e2(),
+                s = _txt.enc.number {
+                    min = 0, max = math.huge, inc = 0.01,
+                    n = 2, x = x[2][1], y = y.enc,
+                    value = function() return reg.play:get_start(2*2) end,
+                    action = function(s, v)
+                        reg.play:set_start(2*2, v)
+                    end
+                },
+                e = _txt.enc.number {
+                    min = 0, max = math.huge, inc = 0.01,
+                    n = 3, x = x[2][2], y = y.enc,
+                    value = function() return reg.play:get_end(2*2) end,
+                    action = function(s, v)
+                        reg.play:set_end(2*2, v)
+                    end
+                },
                 rec = nest_(2):each(function(i) return _rec(i) end)
             }
         },
@@ -309,7 +306,21 @@ wrms_ = nest_ {
                 end),
                 rec = nest_(2):each(function(i) return _rec(i) end)
             }, nest_ {
-                s = _s2(), e = _e2(),
+                ph = _txt.enc.control {
+                    n = 2, x = x[2][1], y = y.enc, persistent = false,
+                    action = function(s, v)
+                        softcut.position(4, gfx.wrms.phase_abs[2] + v*reg.play:get_length(4)/2)
+                    end
+                },
+                sk = _txt.enc.control {
+                    min = 0, max = 3, quant = 1/100, step = 0,
+                    n = 3, x = x[2][2], y = y.enc,
+                    value = function(s, v) return reg.play:get_slice(3).skew end,
+                    action = function(s, v)
+                        reg.play:get_slice(3).skew = v 
+                        reg.play:get_slice(3):update()
+                    end
+                },
                 rec = nest_(2):each(function(i) return _rec(i) end)
             }
         },
@@ -333,25 +344,44 @@ wrms_ = nest_ {
             }
         },
         s = nest_ {
-            s = _txt.enc.number {
-                min = 0, max = math.huge, inc = 0.01,
-                n = 2, x = x[1][1], y = y.enc,
-                value = function() return reg.play:get_start(1) end,
-                action = function(s, v)
-                    local l = reg.play:get_length(1)
-                    reg.play:set_start(1, v)
-                    reg.play:set_length(1, l)
-                end
-            },
-            l = _txt.enc.number {
-                min = 0, max = math.huge, inc = 0.01,
-                n = 3, x = x[1][2], y = y.enc,
-                value = function() return reg.play:get_length(1) end,
-                action = function(s, v)
-                    reg.play:set_length(1, v)
-                end
-            },
-            trans = _trans(1, {})
+            nest_ {
+                s = _txt.enc.number {
+                    min = 0, max = math.huge, inc = 0.01,
+                    n = 2, x = x[1][1], y = y.enc,
+                    value = function() return reg.play:get_start(1) end,
+                    action = function(s, v)
+                        local l = reg.play:get_length(1)
+                        reg.play:set_start(1, v)
+                        reg.play:set_length(1, l)
+                    end
+                },
+                l = _txt.enc.number {
+                    min = 0, max = math.huge, inc = 0.01,
+                    n = 3, x = x[1][2], y = y.enc,
+                    value = function() return reg.play:get_length(1) end,
+                    action = function(s, v)
+                        reg.play:set_length(1, v)
+                    end
+                },
+                trans = _trans(1, {})
+            }, nest_ {
+                ph = _txt.enc.control {
+                    n = 2, x = x[1][1], y = y.enc, persistent = false,
+                    action = function(s, v)
+                        softcut.position(2, gfx.wrms.phase_abs[1] + v)
+                    end
+                },
+                sk = _txt.enc.control {
+                    min = 0, max = 0.2, quant = 1/2000, step = 0,
+                    n = 3, x = x[1][2], y = y.enc,
+                    value = function(s, v) return reg.play:get_slice(1).skew end,
+                    action = function(s, v) 
+                        reg.play:get_slice(1).skew = v 
+                        reg.play:get_slice(1):update()
+                    end
+                },
+                trans = _trans(1, {})
+            }
         },
         ['>'] = nest_ {
             ['>'] = param._control('>', {
