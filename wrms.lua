@@ -147,17 +147,24 @@ params:add {
 for i = 1,2 do
     params:add {
         type = 'number', id = 'oct '..i,
+        min = -32, max = 4, default = 0,
+        action = function(v) sc.ratemx[i].oct = v; sc.ratemx:update(i) end
+    }
+    local options = { -1, 1 }
+    params:add {
+        type = 'option', id = 'dir '..i, options = options, default = 2,
+        action = function(v) sc.ratemx[i].dir = options[v]; sc.ratemx:update(i) end
     }
 end
 params:add {
     type = 'control', id = '>',
     controlspec = cs.def { default = 1 },
-    action = function(v) sc.lvlmx[1].send = v; sc.lvlmx:update(1) end --; redraw() end
+    action = function(v) sc.lvlmx[1].send = v; sc.lvlmx:update(1) end
 }
 params:add {
     type = 'control', id = '<',
     controlspec = cs.def { default = 0 },
-    action = function(v) sc.lvlmx[2].send = v; sc.lvlmx:update(2) end --; redraw() end
+    action = function(v) sc.lvlmx[2].send = v; sc.lvlmx:update(2) end
 }
 params:add {
     type = 'number', id = 'buf 1', default = 1,
@@ -233,12 +240,9 @@ local _trans = function(i, o)
             s.blinktime = sc.slew(i, t[add]) / 2
 
             if #l == 2 then
-                sc.ratemx[i].dir = sc.ratemx[i].dir * -1
-                sc.ratemx:update(i)
+                params:set('dir '..i, params:get('dir '..i)==1 and 2 or 1)
             else
-                local o = sc.ratemx[i].oct
-                sc.ratemx[i].oct = add==2 and o*2 or o/2
-                sc.ratemx:update(i)
+                params:delta('oct '..i, add==2 and 1 or -1)
             end
         end
     } :merge(o)

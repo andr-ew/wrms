@@ -1,11 +1,11 @@
 --TODO
---buffer state presets for certain params (play, rec, feed, filters, octaves)
 --s2 page (last)
 --turn on wrap for pager
 --phase sync tests (channel desync)
 --channel length offset tests
 --channel pitch detune ? ?
 --smol length sensitivity
+--persistence (delay only)
 --use _affordance:link() when available
 --gfx = _screen { } when available
 
@@ -152,8 +152,7 @@ sc = {
         { oct = 1, bnd = 1, mod = 0, dir = 1, rate = 0 },
         { oct = 1, bnd = 1, mod = 0, dir = 1, rate = 0 },
         update = function(s, n)
-            s[n].oct = util.clamp(0, 16, s[n].oct)
-            s[n].rate = s[n].oct * 2^(s[n].bnd - 1) * (1 + s[n].mod) * s[n].dir
+            s[n].rate = 2^s[n].oct * 2^(s[n].bnd - 1) * (1 + s[n].mod) * s[n].dir
             sc.stereo('rate', n, s[n].rate)
         end
     },
@@ -392,14 +391,18 @@ param = {
             ['>'] = 0, ['<'] = 0, 
             ['filter type 1'] = 2, 
             ['filter type 2'] = 2,
-            ['f1'] = 0.75, ['f2'] = 0.75
+            ['f1'] = 0.7, ['f2'] = 0.7,
+            ['oct 1'] = 0, ['oct 2'] = -1,
+            ['dir 1'] = 2, ['dir 2'] = 1
         },
         [3] = {
             ['rec 1'] = 0, 
             ['>'] = 0, ['<'] = 0, 
             ['filter type 1'] = 2, 
             ['filter type 2'] = 2,
-            ['f1'] = 0.9, ['f2'] = 0.9
+            ['f1'] = 0.9, ['f2'] = 0.9,
+            ['oct 1'] = 1, ['oct 2'] = 0,
+            ['dir 1'] = 2, ['dir 2'] = 2
         },
         active = 2,
         save = function(s, i) 
