@@ -1,7 +1,4 @@
 --TODO
---phase sync tests (channel desync)
---channel length offset tests
---channel pitch detune ? ?
 --smol length sensitivity
 --oct + direction display
 --wrm2 independent delay (using end)
