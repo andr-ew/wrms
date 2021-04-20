@@ -1,11 +1,11 @@
 --TODO
---get the filter right + alt for wrm2 filter
 --buffer state presets for certain params (play, rec, feed, filters, octaves)
 --s2 page (last)
 --turn on wrap for pager
 --phase sync tests (channel desync)
 --channel length offset tests
 --channel pitch detune ? ?
+--smol length sensitivity
 --use _affordance:link() when available
 --gfx = _screen { } when available
 
@@ -173,6 +173,8 @@ sc = {
             local off = (pair - 1) * 2
             s[pair] = buf
             cartographer.assign(reg.play[buf][slice], 1 + off, 2 + off)
+
+            param.preset:set((s[1]-1) + (s[2]-1)*2)
         end
     },
     punch_in = {
@@ -384,6 +386,36 @@ end)
 
 --param utilities
 param = {
+    preset = {
+        [0] = {
+            ['rec 1'] = 1, 
+            ['>'] = 0, ['<'] = 0, 
+            ['filter type 1'] = 2, 
+            ['filter type 2'] = 2,
+            ['f1'] = 0.75, ['f2'] = 0.75
+        },
+        [3] = {
+            ['rec 1'] = 0, 
+            ['>'] = 0, ['<'] = 0, 
+            ['filter type 1'] = 2, 
+            ['filter type 2'] = 2,
+            ['f1'] = 0.9, ['f2'] = 0.9
+        },
+        active = 2,
+        save = function(s, i) 
+            local keys = s[#s]
+            s[i] = {}
+            for k,_ in pairs(keys) do s[i][k] = params:get(k) end
+        end,
+        load = function(s, i)
+            if s[i] then for k,v in pairs(s[i]) do params:set(k, v) end end
+        end,
+        set = function(s, active)
+            s:save(s.active)
+            s:load(active)
+            s.active = active
+        end
+    },
     _control = function(id, o)
         return _txt.enc.control {
             label = id,

@@ -144,6 +144,11 @@ params:add {
         sc.mod[1].mul = d * 0.01 
     end
 }
+for i = 1,2 do
+    params:add {
+        type = 'number', id = 'oct '..i,
+    }
+end
 params:add {
     type = 'control', id = '>',
     controlspec = cs.def { default = 1 },
@@ -188,7 +193,7 @@ for i = 1,2 do
     params:add {
         type = 'control', id = 'q'..i,
         --controlspec = cs.new(min,max,'exp',0,10),
-        controlspec = cs.def { default = 0.5 },
+        controlspec = cs.def { default = 0.4 },
         action = function(v)
             sc.stereo('post_filter_rq', i, util.linexp(0, 1, 0.01, 20, 1 - v))
         end
@@ -249,7 +254,7 @@ wrms_ = nest_ {
         flow = 'y', options = { 'v', 'o', 'b', 's', '>', 'f' }
     },
     alt = _key.momentary { n = 1 },
-    pages = nest_ {
+    page = nest_ {
         v = nest_ {
             vol = nest_(2):each(function(i)
                 return param._icontrol('vol', i, {
