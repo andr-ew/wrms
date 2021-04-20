@@ -5,7 +5,8 @@
 --channel length offset tests
 --channel pitch detune ? ?
 --smol length sensitivity
---persistence (delay only)
+--oct + direction display
+--persistence (delay slice + all preset data) - (reset preset 2,3 oct 2 at load)
 --use _affordance:link() when available
 --gfx = _screen { } when available
 
@@ -44,6 +45,7 @@ sc = {
             softcut.level_input_cut(2, l, 1)
             
             softcut.phase_quant(i*2, 1/60)
+            sc.slew(i, 0.2)
         end
 
         --cartographer.assign(reg.play[1], 1, 2)

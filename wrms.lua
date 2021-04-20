@@ -129,11 +129,19 @@ params:add {
     end
 }
 params:add {
-    type = 'control', id = 'bnd',
+    type = 'control', id = 'bnd 1',
     controlspec = cs.def { default = 1, min = 1, max = 2 },
     action = function(v)
         sc.ratemx[1].bnd = v
         sc.ratemx:update(1)
+    end
+}
+params:add {
+    type = 'control', id = 'bnd 2',
+    controlspec = cs.def { default = 1, min = 0, max = 2 },
+    action = function(v)
+        sc.ratemx[2].bnd = v
+        sc.ratemx:update(2)
     end
 }
 params:add {
@@ -247,6 +255,26 @@ local _trans = function(i, o)
         end
     } :merge(o)
 end
+local _s2 = function()
+    return _txt.enc.number {
+        min = 0, max = math.huge, inc = 0.01,
+        n = 2, x = x[2][1], y = y.enc,
+        value = function() return reg.play:get_start(2*2) end,
+        action = function(s, v)
+            reg.play:set_start(2*2, v)
+        end
+    }
+end
+local _e2 = function()
+    return _txt.enc.number {
+        min = 0, max = math.huge, inc = 0.01,
+        n = 3, x = x[2][2], y = y.enc,
+        value = function() return reg.play:get_end(2*2) end,
+        action = function(s, v)
+            reg.play:set_end(2*2, v)
+        end
+    }
+end
 
 --screen interface
 wrms_ = nest_ {
@@ -260,33 +288,49 @@ wrms_ = nest_ {
     alt = _key.momentary { n = 1 },
     page = nest_ {
         v = nest_ {
-            vol = nest_(2):each(function(i)
-                return param._icontrol('vol', i, {
-                    n = i + 1, x = x[i][1], y = y.enc
-                })
-            end),
-            rec = nest_(2):each(function(i)
-                return _rec(i)
-            end)
+            nest_ {
+                vol = nest_(2):each(function(i)
+                    return param._icontrol('vol', i, {
+                        n = i + 1, x = x[i][1], y = y.enc
+                    })
+                end),
+                rec = nest_(2):each(function(i) return _rec(i) end)
+            }, nest_ {
+                s = _s2(), e = _e2(),
+                rec = nest_(2):each(function(i) return _rec(i) end)
+            }
         },
         o = nest_ {
-            old = nest_(2):each(function(i)
-                return param._icontrol('old', i, {
-                    n = i + 1, x = x[i][1], y = y.enc
-                })
-            end),
-            rec = nest_(2):each(function(i)
-               return _rec(i)
-            end)
+            nest_ {
+                old = nest_(2):each(function(i)
+                    return param._icontrol('old', i, {
+                        n = i + 1, x = x[i][1], y = y.enc
+                    })
+                end),
+                rec = nest_(2):each(function(i) return _rec(i) end)
+            }, nest_ {
+                s = _s2(), e = _e2(),
+                rec = nest_(2):each(function(i) return _rec(i) end)
+            }
         },
         b = nest_ {
-            bnd = param._control('bnd', {
-                n = 2, x = x[1][1], y = y.enc
-            }),
-            wgl = param._control('wgl', {
-                n = 3, x = x[1.5], y = y.enc
-            }),
-            trans = _trans(2, {})
+            nest_ {
+                bnd = param._control('bnd 1', {
+                    n = 2, x = x[1][1], y = y.enc, label = 'bnd', sens = 1
+                }),
+                wgl = param._control('wgl', {
+                    n = 3, x = x[1.5], y = y.enc
+                }),
+                trans = _trans(2, {})
+            }, nest_ {
+                wgl = param._control('wgl', {
+                    n = 2, x = x[1.5], y = y.enc
+                }),
+                bnd = param._control('bnd 2', {
+                    n = 3, x = x[2][2], y = y.enc, label = 'bnd', sens = 0.5
+                }),
+                trans = _trans(2, {})
+            }
         },
         s = nest_ {
             s = _txt.enc.number {
@@ -342,9 +386,7 @@ wrms_ = nest_ {
             }
         end)
     }: each(function(k, v)
-        v.enabled = function(s) 
-            return wrms_.tab.options[wrms_.tab.v//1] == k 
-        end
+        v.enabled = function(s) return wrms_.tab.options[wrms_.tab.v//1] == k end
         if v[1] then
             v[1].enabled = function() return wrms_.alt.v == 0 end
             v[2].enabled = function() return wrms_.alt.v == 1 end
