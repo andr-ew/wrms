@@ -357,8 +357,9 @@ wrms_ = nest_ {
                 },
                 l = _txt.enc.number {
                     min = 0, max = math.huge, inc = 0.01,
-                    n = 3, x = x[1][2], y = y.enc,
+                    n = 3, x = x[1][2], y = y.enc, step = 1/100/100/100,
                     value = function() return reg.play:get_length(1) end,
+                    sens = function(s) return s.p_.v <= 0.00019 and 1/100/100 or s.p_.v <= 0.019 and 1/100 or 1 end,
                     action = function(s, v)
                         reg.play:set_length(1, v)
                     end

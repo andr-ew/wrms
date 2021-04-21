@@ -1,5 +1,4 @@
 --TODO
---smol length sensitivity
 --oct + direction display
 --wrm2 independent delay (using end)
 --persistence (delay slice + all preset data) - (reset preset 2,3 oct 2 at load)
@@ -54,6 +53,8 @@ sc = {
             softcut.recpre_slew_time(i, 0.1)
             softcut.rate(i, 1)
             softcut.post_filter_dry(i, 0)
+            softcut.pre_filter_dry(i, 1)
+            softcut.pre_filter_lp(i, 0)
         end
         for i = 1, 2 do
             local l, r = i*2 - 1, i*2
