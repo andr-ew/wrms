@@ -364,10 +364,15 @@ gfx = {
                 local highamp = 1.75
                 
                 --octave
+                --[[
                 screen.move(41 + i + 1, top + (sc.ratemx[i].oct > 0 and 1 or 0))
-                screen.level(6)
+                screen.level(3)
                 screen.line(41 + i + 1, top - sc.ratemx[i].oct + 1)
                 screen.stroke()
+                ]]
+                screen.level(2)
+                screen.pixel(41 + i, top)
+                screen.fill()
                 screen.level(6)
                 screen.pixel(41 + i, top - sc.ratemx[i].oct)
                 screen.fill()
