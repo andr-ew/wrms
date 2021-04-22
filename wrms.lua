@@ -139,10 +139,22 @@ params:add {
     end
 }
 params:add {
-    type = 'control', id = 'bnd 2',
-    controlspec = cs.def { default = 1, min = 0, max = 2 },
+    type = 'control', id = 'tp 1', 
+    controlspec = cs.def { 
+        default = 0, min = -10, max = 4, quantum = 1/12/14, step = 1/12
+    },
     action = function(v)
-        sc.ratemx[2].bnd = v
+        sc.ratemx[1].bndw = v
+        sc.ratemx:update(1)
+    end
+}
+params:add {
+    type = 'control', id = 'tp 2',
+    controlspec = cs.def { 
+        default = 0, min = -10, max = 4, quantum = 1/12/14, step = 1/12
+    },
+    action = function(v)
+        sc.ratemx[2].bndw = v
         sc.ratemx:update(2)
     end
 }
@@ -225,6 +237,20 @@ for i = 1,2 do
         end
     }
 end
+params:add {
+    type = 'option', id = 'antialiasing', options = { 'on', 'off' }, default = 1,
+    action = function(v)
+        for i = 1,4 do
+            if v==2 then
+                softcut.pre_filter_dry(i, 1)
+                softcut.pre_filter_lp(i, 0)
+            else
+                softcut.pre_filter_dry(i, 0)
+                softcut.pre_filter_lp(i, 1)
+            end
+        end
+    end
+}
 
 local x, y = gfx.pos.x, gfx.pos.y
 
@@ -327,18 +353,18 @@ wrms_ = nest_ {
         b = nest_ {
             nest_ {
                 bnd = param._control('bnd 1', {
-                    n = 2, x = x[1][1], y = y.enc, label = 'bnd', sens = 1
+                    n = 2, x = x[1][1], y = y.enc, label = 'bnd'
                 }),
                 wgl = param._control('wgl', {
                     n = 3, x = x[1.5], y = y.enc
                 }),
                 trans = _trans(2, {})
             }, nest_ {
-                wgl = param._control('wgl', {
-                    n = 2, x = x[1.5], y = y.enc
+                tp1 = param._control('tp 1', {
+                    n = 2, x = x[1][1], y = y.enc, label = 'tp'
                 }),
-                bnd = param._control('bnd 2', {
-                    n = 3, x = x[2][2], y = y.enc, label = 'bnd', sens = 0.5
+                tp2 = param._control('tp 2', {
+                    n = 3, x = x[2][1], y = y.enc, label = 'tp'
                 }),
                 trans = _trans(2, {})
             }

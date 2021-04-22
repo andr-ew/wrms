@@ -1,7 +1,16 @@
 --TODO
 --oct + direction display
---wrm2 independent delay (using end)
---persistence (delay slice + all preset data) - (reset preset 2,3 oct 2 at load)
+--mix: in levels & in pans
+--alt >: inpan 1, outpan 2, aa
+--combine punch-in & delay behaviors
+--  (punch or len>0) -> loop -> clear
+--  wrm1 starts at step 2
+--persistence 
+--  paramset
+--  all preset data
+--  regions
+--  clear punched in loops, 
+--  reset all pitch data
 --use _affordance:link() when available
 --gfx = _screen { } when available
 
@@ -53,8 +62,6 @@ sc = {
             softcut.recpre_slew_time(i, 0.1)
             softcut.rate(i, 1)
             softcut.post_filter_dry(i, 0)
-            softcut.pre_filter_dry(i, 1)
-            softcut.pre_filter_lp(i, 0)
         end
         for i = 1, 2 do
             local l, r = i*2 - 1, i*2
@@ -165,10 +172,10 @@ sc = {
         end
     },
     ratemx = {
-        { oct = 1, bnd = 1, mod = 0, dir = 1, rate = 0 },
-        { oct = 1, bnd = 1, mod = 0, dir = 1, rate = 0 },
+        { oct = 1, bnd = 1, bndw = 0, mod = 0, dir = 1, rate = 0 },
+        { oct = 1, bnd = 1, bndw = 0, mod = 0, dir = 1, rate = 0 },
         update = function(s, n)
-            s[n].rate = 2^s[n].oct * 2^(s[n].bnd - 1) * (1 + s[n].mod) * s[n].dir
+            s[n].rate = 2^s[n].oct * 2^(s[n].bnd - 1) * 2^s[n].bndw * (1 + s[n].mod) * s[n].dir
             sc.stereo('rate', n, s[n].rate)
         end
     },
