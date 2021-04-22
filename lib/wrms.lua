@@ -1,7 +1,4 @@
 --TODO
---mix: in levels & in pans
---alt >: inpan 1, outpan 2, aa
---tp: trim digits
 --combine punch-in & delay behaviors
 --  (punch or len>0) -> loop -> clear
 --  wrm1 starts at step 2
@@ -12,6 +9,8 @@
 --  clear punched in loops, 
 --  reset all pitch data
 --grid ????????? 
+--tp: display note name (nest)
+--s: small length bugs (cartographer) (add delta_startend)
 --use _affordance:link() when available
 --gfx = _screen { } when available
 
@@ -117,7 +116,7 @@ sc = {
             local v, p = s[n].vol, s[n].pan
             local off = (n - 1) * 2
             softcut.level(off + 1, v * ((p > 0) and 1 - p or 1))
-            softcut.level(off + 2, v * ((p < 0) and 1 - p or 1))
+            softcut.level(off + 2, v * ((p < 0) and 1 + p or 1))
             s[n]:update()
         end
     },
@@ -185,11 +184,25 @@ sc = {
         sc.stereo('rate_slew_time', n, st)
         return st
     end,
+    --[[
     input = function(pair, inn, chan) return function(v) 
         local off = (pair - 1) * 2
         local vc = (chan - 1) + off
         softcut.level_input_cut(inn, vc, v)
     end end,
+    ]]
+    inmx = {
+        { vol = 1, pan = 0 },
+        { vol = 1, pan = 0 },
+        update = function(s, n)
+            local v, p = s[n].vol, s[n].pan
+            local off = (n - 1) * 2
+            softcut.level_input_cut(1, off + 1, v * ((p > 0) and 1 - p or 1))
+            softcut.level_input_cut(2, off + 1, 0)
+            softcut.level_input_cut(2, off + 2, v * ((p < 0) and 1 + p or 1))
+            softcut.level_input_cut(1, off + 2, 0)
+        end
+    },
     buf = {
         1, 2, -- [pair] = buf
         assign = function(s, pair, buf, slice)

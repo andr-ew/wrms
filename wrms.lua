@@ -28,7 +28,7 @@ function r() norns.script.load(norns.script.state) end
 include 'wrms/lib/nest/core'
 include 'wrms/lib/nest/norns'
 include 'wrms/lib/nest/txt'
-cartographer = include 'wrms/lib/cartographer/cartographer'
+cartographer, Slice = include 'wrms/lib/cartographer/cartographer'
 cs = require 'controlspec'
 
 local sc, gfx, param, reg = include 'wrms/lib/wrms'
@@ -36,23 +36,18 @@ local sc, gfx, param, reg = include 'wrms/lib/wrms'
 --params
 params:add_separator('mix')
 for i = 1,2 do
-    params:add_control("in L > wrm " .. i .. "  L", "in L > wrm " .. i .. "  L", controlspec.new(0,1,'lin',0,1,''))
-    params:set_action("in L > wrm " .. i .. "  L", sc.input(i, 1, 1))
-
-    params:add_control("in L > wrm " .. i .. "  R", "in L > wrm " .. i .. "  R", controlspec.new(0,1,'lin',0,0,''))
-    params:set_action("in L > wrm " .. i .. "  R", sc.input(i, 1, 2))
-    
-    params:add_control("in R > wrm " .. i .. "  R", "in R > wrm " .. i .. "  R", controlspec.new(0,1,'lin',0,1,''))
-    params:set_action("in R > wrm " .. i .. "  R", sc.input(i, 2, 2))
-
-    params:add_control("in R > wrm " .. i .. "  L", "in R > wrm " .. i .. "  L", controlspec.new(0,1,'lin',0,0,''))
-    params:set_action("in R > wrm " .. i .. "  L", sc.input(i, 2, 1))
-
-    params:add_control("wrm " .. i .. " pan", "wrm " .. i .. " pan", controlspec.PAN)
-    params:set_action("wrm " .. i .. " pan", function(v) 
-        sc.lvlmx[i].pan = v 
-        sc.lvlmx:update(i)
-    end)
+    params:add {
+        type = 'control', id = 'in lvl '..i, controlspec = cs.def { default = 1 },
+        action = function(v) sc.inmx[i].vol = v; sc.inmx:update(i) end
+    }
+    params:add {
+        type = 'control', id = 'in pan '..i, controlspec = cs.PAN,
+        action = function(v) sc.inmx[i].pan = v; sc.inmx:update(i) end
+    }
+    params:add {
+        type = 'control', id = 'out pan '..i, controlspec = cs.PAN,
+        action = function(v) sc.lvlmx[i].pan = v; sc.lvlmx:update(i) end
+    }
 end
 params:add_separator('wrms')
 for i = 1,2 do 
@@ -238,10 +233,10 @@ for i = 1,2 do
     }
 end
 params:add {
-    type = 'option', id = 'antialiasing', options = { 'on', 'off' }, default = 1,
+    type = 'binary', id = 'aliasing', behavior = 'toggle', default = 0,
     action = function(v)
         for i = 1,4 do
-            if v==2 then
+            if v==1 then
                 softcut.pre_filter_dry(i, 1)
                 softcut.pre_filter_lp(i, 0)
             else
@@ -411,20 +406,40 @@ wrms_ = nest_ {
             }
         },
         ['>'] = nest_ {
-            ['>'] = param._control('>', {
-                n = 2, x = x[1][1], y = y.enc,
-            }),
-            ['<'] = param._control('<', {
-                n = 3, x = x[2][1], y = y.enc,
-            }),
-            buf = nest_(2):each(function(i)
-                return _txt.key.number {
-                    label = 'buf', n = i+1, x = x[i][1], y = y.key,
-                    min = 1, max = 2, inc = 1, wrap = true, step = 1,
-                    value = function() return params:get('buf '..i) end,
-                    action = function(s, v) params:set('buf '..i, v) end
+            nest_ {
+                ['>'] = param._control('>', {
+                    n = 2, x = x[1][1], y = y.enc,
+                }),
+                ['<'] = param._control('<', {
+                    n = 3, x = x[2][1], y = y.enc,
+                }),
+                buf = nest_(2):each(function(i)
+                    return _txt.key.number {
+                        label = 'buf', n = i+1, x = x[i][1], y = y.key,
+                        min = 1, max = 2, inc = 1, wrap = true, step = 1,
+                        value = function() return params:get('buf '..i) end,
+                        action = function(s, v) params:set('buf '..i, v) end
+                    }
+                end)
+            }, nest_ {
+                pan1 = param._control('in pan 1', {
+                    n = 2, x = x[1][1], y = y.enc, label = 'pan'
+                }),
+                pan2 = param._control('in pan 2', {
+                    n = 3, x = x[2][1], y = y.enc, label = 'pan'
+                }),
+                mode = _txt.key.option {
+                    n = 2, x = x[1][1], y = y.key, scroll_window = 1, wrap = true,
+                    options = params:lookup_param('old mode 1').options,
+                    value = function() return params:get('old mode 1') end,
+                    action = function(s, v) params:set('old mode 1', v) end
+                },
+                aliasing = _txt.key.toggle {
+                    n = 3, x = x[2][1], y = y.key, 
+                    v = function() return params:get('aliasing') end,
+                    action = function(s, v) params:set('aliasing', v) end
                 }
-            end)
+            }
         },
         f = nest_(2):each(function(i)
             return nest_ {
