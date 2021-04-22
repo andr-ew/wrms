@@ -1,7 +1,7 @@
 --TODO
---oct + direction display
 --mix: in levels & in pans
 --alt >: inpan 1, outpan 2, aa
+--tp: trim digits
 --combine punch-in & delay behaviors
 --  (punch or len>0) -> loop -> clear
 --  wrm1 starts at step 2
@@ -11,6 +11,7 @@
 --  regions
 --  clear punched in loops, 
 --  reset all pitch data
+--grid ????????? 
 --use _affordance:link() when available
 --gfx = _screen { } when available
 
@@ -298,19 +299,30 @@ gfx = {
         sleep_index = { 24, 24 },
         draw = function()
             local s = gfx.wrms
+            local top = 5
 
             --feed indicators
             screen.level(math.floor(sc.lvlmx[1].send * 4))
-            screen.pixel(42, 23)
-            screen.pixel(43, 24)
-            screen.pixel(42, 25)
+            screen.pixel(42, top + 23)
+            screen.pixel(43, top + 24)
+            screen.pixel(42, top + 25)
             screen.fill()
           
             screen.level(math.floor(sc.lvlmx[2].send * 4))
-            screen.pixel(54, 23)
-            screen.pixel(53, 24)
-            screen.pixel(54, 25)
+            screen.pixel(54, top + 23)
+            screen.pixel(53, top + 24)
+            screen.pixel(54, top + 25)
             screen.fill()
+
+            --rate display
+            --[[
+            screen.level(6)
+            screen.move(128, gfx.pos.y.key + 3)
+            local rate = {}
+            for i = 1,2 do rate[i] = 2^sc.ratemx[i].oct * sc.ratemx[i].dir end
+            for i = 1,2 do rate[i] = (rate[i] >= 1 and math.floor(rate[i]) or rate[i]) end
+            screen.text_right(rate[1] .. 'x ' .. rate[2] .. 'x')
+            ]]
           
             for i = 1,2 do
                 local left = 2 + (i-1) * 58
@@ -320,7 +332,8 @@ gfx = {
                 local rrec = reg.rec:get_slice(i*2)
                 local recorded = sc.punch_in[sc.buf[i]].recorded
                 local recording = sc.punch_in[sc.buf[i]].recording
-                
+                screen.fill()
+
                 --phase
                 screen.level(2)
                 if not recording then
@@ -345,12 +358,22 @@ gfx = {
                     screen.fill()
                 end
         
-                --fun wrm animaions
                 local top = 18
                 local width = 24
                 local lowamp = 0.5
                 local highamp = 1.75
-        
+                
+                --octave
+                screen.move(41 + i + 1, top + (sc.ratemx[i].oct > 0 and 1 or 0))
+                screen.level(6)
+                screen.line(41 + i + 1, top - sc.ratemx[i].oct + 1)
+                screen.stroke()
+                screen.level(6)
+                screen.pixel(41 + i, top - sc.ratemx[i].oct)
+                screen.fill()
+                
+                
+                --fun wrm animaions
                 screen.level(math.floor(sc.lvlmx[i].vol * 10))
 
                 local length = sc.buf[i]==1 and (
