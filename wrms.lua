@@ -293,9 +293,9 @@ wrms_ = nest_ {
         v = nest_ {
             nest_ {
                 vol = nest_(2):each(function(i)
-                    return param._icontrol('vol', i, {
-                        n = i + 1, x = x[i][1], y = y.enc
-                    })
+                    return _txt.enc.control {
+                        n = i + 1, x = x[i][1], y = y.enc, label = 'vol'
+                    } :link('vol '..i)
                 end),
                 rec = nest_(2):each(function(i) return _rec(i) end)
             }, nest_ {
@@ -321,9 +321,9 @@ wrms_ = nest_ {
         o = nest_ {
             nest_ {
                 old = nest_(2):each(function(i)
-                    return param._icontrol('old', i, {
-                        n = i + 1, x = x[i][1], y = y.enc
-                    })
+                    return _txt.enc.control {
+                        n = i + 1, x = x[i][1], y = y.enc, label = 'old'
+                    } :link('old '..i)
                 end),
                 rec = nest_(2):each(function(i) return _rec(i) end)
             }, nest_ {
@@ -347,20 +347,20 @@ wrms_ = nest_ {
         },
         b = nest_ {
             nest_ {
-                bnd = param._control('bnd 1', {
+                bnd = _txt.enc.control {
                     n = 2, x = x[1][1], y = y.enc, label = 'bnd'
-                }),
-                wgl = param._control('wgl', {
+                } :link('bnd 1'),
+                wgl = _txt.enc.control {
                     n = 3, x = x[1.5], y = y.enc
-                }),
+                } :link('wgl'),
                 trans = _trans(2, {})
             }, nest_ {
-                tp1 = param._control('tp 1', {
+                tp1 = _txt.enc.control {
                     n = 2, x = x[1][1], y = y.enc, label = 'tp'
-                }),
-                tp2 = param._control('tp 2', {
+                } :link('tp 1'),
+                tp2 = _txt.enc.control {
                     n = 3, x = x[2][1], y = y.enc, label = 'tp'
-                }),
+                } :link('tp 2'),
                 trans = _trans(2, {})
             }
         },
@@ -407,12 +407,12 @@ wrms_ = nest_ {
         },
         ['>'] = nest_ {
             nest_ {
-                ['>'] = param._control('>', {
+                ['>'] = _txt.enc.control {
                     n = 2, x = x[1][1], y = y.enc,
-                }),
-                ['<'] = param._control('<', {
+                } :link('>'),
+                ['<'] = _txt.enc.control {
                     n = 3, x = x[2][1], y = y.enc,
-                }),
+                } :link('<'),
                 buf = nest_(2):each(function(i)
                     return _txt.key.number {
                         label = 'buf', n = i+1, x = x[i][1], y = y.key,
@@ -422,12 +422,12 @@ wrms_ = nest_ {
                     }
                 end)
             }, nest_ {
-                pan1 = param._control('in pan 1', {
+                pan1 = _txt.enc.control {
                     n = 2, x = x[1][1], y = y.enc, label = 'pan'
-                }),
-                pan2 = param._control('in pan 2', {
+                } :link('in pan 1'),
+                pan2 = _txt.enc.control {
                     n = 3, x = x[2][1], y = y.enc, label = 'pan'
-                }),
+                } :link('in pan 2'),
                 mode = _txt.key.option {
                     n = 2, x = x[1][1], y = y.key, scroll_window = 1, wrap = true,
                     options = params:lookup_param('old mode 1').options,
@@ -443,18 +443,15 @@ wrms_ = nest_ {
         },
         f = nest_(2):each(function(i)
             return nest_ {
-                f = param._control('f'..i, {
+                f = _txt.enc.control {
                     n = 2, x = x[i][1], y = y.enc, label = 'f'
-                }),
-                q = param._control('q'..i, {
+                } :link('f'..i),
+                q = _txt.enc.control {
                     n = 3, x = x[i][2], y = y.enc, label = 'q'
-                }),
+                } :link('q'..i),
                 type = _txt.key.option {
                     n = { 2, 3 }, x = x[i][1], y = y.key,
-                    options = params:lookup_param('filter type '..i).options,
-                    value = function() return params:get('filter type '..i) end,
-                    action = function(s, v) params:set('filter type '..i, v) end
-                }
+                } :link('filter type '..i)
             }
         end)
     }: each(function(k, v)

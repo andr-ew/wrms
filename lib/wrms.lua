@@ -1,4 +1,5 @@
 --TODO
+--add in mode - mono, stereo
 --combine punch-in & delay behaviors
 --  (punch or len>0) -> loop -> clear
 --  wrm1 starts at step 2
@@ -10,8 +11,8 @@
 --  reset all pitch data
 --grid ????????? 
 --tp: display note name (nest)
+--punch-in varispeed (cartographer -> rate_query)
 --s: small length bugs (cartographer) (add delta_startend)
---use _affordance:link() when available
 --gfx = _screen { } when available
 
 
@@ -485,23 +486,7 @@ param = {
             s:load(active)
             s.active = active
         end
-    },
-    _control = function(id, o)
-        return _txt.enc.control {
-            label = id,
-            controlspec = params:lookup_param(id).controlspec,
-            value = function() return params:get(id) end,
-            action = function(s, v) params:set(id, v) end
-        } :merge(o)
-    end,
-    _icontrol = function(label, i, o)
-        return _txt.enc.control {
-            label = label,
-            controlspec = params:lookup_param(label ..' '..i).controlspec,
-            value = function() return params:get(label ..' '..i) end,
-            action = function(s, v) params:set(label ..' '..i, v) end
-        } :merge(o)
-    end
+    }
 }
 
 return sc, gfx, param, reg
