@@ -1,5 +1,5 @@
 --TODO
---add in mode - mono, stereo
+--add 'in mode' - mono, stereo
 --combine punch-in & delay behaviors
 --  (punch or len>0) -> loop -> clear
 --  wrm1 starts at step 2
@@ -9,7 +9,6 @@
 --  regions
 --  clear punched in loops, 
 --  reset all pitch data
---grid ????????? 
 --tp: display note name (nest)
 --punch-in varispeed (cartographer -> rate_query)
 --s: small length bugs (cartographer) (add delta_startend)
@@ -46,10 +45,14 @@ reg.blank = cartographer.divide(cartographer.buffer_stereo, 2)
 reg.rec = cartographer.subloop(reg.blank)
 reg.play = cartographer.subloop(reg.rec, 2)
 
-local sc, gfx, param
-
 -- softcut utilities
-sc = {
+local sc = {
+    phase = { 0, 0 },
+    phase_abs = { 0, 0 },
+    set_phase = function(s, n, v)
+        s.phase_abs[n] = v
+        s.phase[n] = reg.rec:phase_relative(n*2, v, 'fraction')
+    end,
     setup = function()
         audio.level_cut(1.0)
         audio.level_adc_cut(1)
@@ -79,9 +82,9 @@ sc = {
         end
 
         local function e(i, ph)
-            if i == 1 then gfx.wrms:set_phase(1, ph) 
+            if i == 1 then sc:set_phase(1, ph) 
             elseif i == 3 then 
-                gfx.wrms:set_phase(2, ph)
+                sc:set_phase(2, ph)
                 redraw()
             end
         end
@@ -211,7 +214,7 @@ sc = {
             s[pair] = buf
             cartographer.assign(reg.play[buf][slice], 1 + off, 2 + off)
 
-            param.preset:set((s[1]-1) + (s[2]-1)*2)
+            wrms.preset:set((s[1]-1) + (s[2]-1)*2)
         end
     },
     punch_in = {
@@ -245,7 +248,7 @@ sc = {
                 s[pair].recorded = true
                 s[pair].recording = false
 
-                gfx.wrms:wake(pair)
+                gfx:wake(pair)
             end
         end,
         clear = function(s, pair)
@@ -263,7 +266,7 @@ sc = {
 
             reg.rec:expand(i)
                 
-            gfx.wrms:sleep(pair)
+            gfx:sleep(pair)
 
             --[[
             sc.ratemx[pair].oct = 1
@@ -274,219 +277,4 @@ sc = {
     }
 }
 
-local segs = function()
-  ret = {}
-  
-  for i = 1, 24 do
-      ret[i] = false
-  end
-  
-  return ret
-end
-
-local mar, mul = 2, 29
-
---screen graphics
-gfx = {
-    pos = { 
-        x = {
-            [1] = { mar, mar + mul },
-            [1.5] = mar + mul*1.5,
-            [2] = { mar + mul*2, mar + mul*3 }
-        }, 
-        y = {
-            enc = 46,
-            key = 46 + 10
-        }
-    },
-    wrms = {
-        phase = { 0, 0 },
-        phase_abs = { 0, 0 },
-        set_phase = function(s, n, v)
-            s.phase_abs[n] = v
-            s.phase[n] = reg.rec:phase_relative(n*2, v, 'fraction')
-        end,
-        action = function() end,
-        sleep = function(s, n) s.sleep_index[n] = 24 end,
-        wake = function(s, n) s.sleep_index[n] = 24 end,
-        segment_awake = { segs(), segs() },
-        sleep_index = { 24, 24 },
-        draw = function()
-            local s = gfx.wrms
-            local top = 5
-
-            --feed indicators
-            screen.level(math.floor(sc.lvlmx[1].send * 4))
-            screen.pixel(42, top + 23)
-            screen.pixel(43, top + 24)
-            screen.pixel(42, top + 25)
-            screen.fill()
-          
-            screen.level(math.floor(sc.lvlmx[2].send * 4))
-            screen.pixel(54, top + 23)
-            screen.pixel(53, top + 24)
-            screen.pixel(54, top + 25)
-            screen.fill()
-
-            --rate display
-            --[[
-            screen.level(6)
-            screen.move(128, gfx.pos.y.key + 3)
-            local rate = {}
-            for i = 1,2 do rate[i] = 2^sc.ratemx[i].oct * sc.ratemx[i].dir end
-            for i = 1,2 do rate[i] = (rate[i] >= 1 and math.floor(rate[i]) or rate[i]) end
-            screen.text_right(rate[1] .. 'x ' .. rate[2] .. 'x')
-            ]]
-          
-            for i = 1,2 do
-                local left = 2 + (i-1) * 58
-                local top = 34
-                local width = 44
-                local r = reg.play:get_slice(i*2)
-                local rrec = reg.rec:get_slice(i*2)
-                local recorded = sc.punch_in[sc.buf[i]].recorded
-                local recording = sc.punch_in[sc.buf[i]].recording
-                screen.fill()
-
-                --phase
-                screen.level(2)
-                if not recording then
-                    screen.pixel(left + width * r:get_start('fraction'), top) --loop start
-                    screen.fill()
-                end
-                if recorded then
-                    screen.pixel(left + width * r:get_end('fraction'), top) --loop end
-                    screen.fill()
-                end
- 
-                screen.level(6 + 10 * sc.oldmx[i].rec)
-                if not recorded then 
-                    -- rec line
-                    if recording then
-                        screen.move(left + width*rrec:get_start('fraction'), top + 1)
-                        screen.line(1 + left + width*rrec:get_end('fraction'), top + 1)
-                        screen.stroke()
-                    end
-                else
-                    screen.pixel(left + width*s.phase[i], top) -- loop point
-                    screen.fill()
-                end
-        
-                local top = 18
-                local width = 24
-                local lowamp = 0.5
-                local highamp = 1.75
-                
-                --octave
-                --[[
-                screen.move(41 + i + 1, top + (sc.ratemx[i].oct > 0 and 1 or 0))
-                screen.level(3)
-                screen.line(41 + i + 1, top - sc.ratemx[i].oct + 1)
-                screen.stroke()
-                ]]
-                screen.level(2)
-                screen.pixel(41 + i, top)
-                screen.fill()
-                screen.level(6)
-                screen.pixel(41 + i, top - sc.ratemx[i].oct)
-                screen.fill()
-                
-                
-                --fun wrm animaions
-                screen.level(math.floor(sc.lvlmx[i].vol * 10))
-
-                local length = sc.buf[i]==1 and (
-                    util.linexp(0, 
-                        rrec:get_length(), 0.01, width, (r:get_length() + 3.25*2) / 2
-                    )
-                ) or (
-                    util.linlin(0, rrec:get_length(), 0, width, r:get_length()*1.1 + 1)
-                )
-                local humps = i
-                if i == 2 and sc.buf[2] == 1 then humps = 1 end
-
-                for j = 1, length do
-                    local amp = 
-                        s.segment_awake[i][j] and (
-                            math.sin(
-                                (
-                                    (s.phase_abs[i] - r:get_start())*(humps==1 and 1 or 2) 
-                                    / (r:get_end() - r:get_start(i)) + j/length
-                                )
-                                * (humps == 1 and 2 or 4) * math.pi
-                            ) * util.linlin(
-                                1, length / 2, lowamp, highamp + sc.mod[1].mul, 
-                                j < (length / 2) and j or length - j
-                            ) 
-                            - 0.75*util.linlin(
-                                1, length / 2, lowamp, highamp + sc.mod[1].mul, 
-                                j < (length / 2) and j or length - j
-                            ) - (
-                                util.linexp(0, 1, 0.5, 6, j/length) 
-                                * (sc.ratemx[i].bnd - 1)
-                            ) 
-                        ) or 0      
-                   
-                    local x = (width - length + 20) * r:get_start('fraction')
-                
-                    screen.pixel(left + x + j - 1, top + amp)
-                end
-                screen.fill()
-            end
-        end
-    }   
-}
-
-gfx.wrms.sleep_clock = clock.run(function()
-    local s = gfx.wrms
-    while true do
-        clock.sleep(1/150)
-        for i = 1,2 do
-            local si = s.sleep_index[i]
-            if si > 0 and si <= 24 then
-                s.segment_awake[i][math.floor(si)] = sc.punch_in[sc.buf[i]].recorded
-                s.sleep_index[i] = si + 0.5*(sc.punch_in[sc.buf[i]].recorded and -1 or -2)
-            end
-        end
-    end
-end)
-
---param utilities
-param = {
-    preset = {
-        [0] = {
-            ['rec 1'] = 1, 
-            ['>'] = 0, ['<'] = 0, 
-            ['filter type 1'] = 2, 
-            ['filter type 2'] = 2,
-            ['f1'] = 0.7, ['f2'] = 0.7,
-            ['oct 1'] = 0, ['oct 2'] = -1,
-            ['dir 1'] = 2, ['dir 2'] = 1
-        },
-        [3] = {
-            ['rec 1'] = 0, 
-            ['>'] = 0, ['<'] = 0, 
-            ['filter type 1'] = 2, 
-            ['filter type 2'] = 2,
-            ['f1'] = 0.9, ['f2'] = 0.9,
-            ['oct 1'] = 1, ['oct 2'] = 0,
-            ['dir 1'] = 2, ['dir 2'] = 2
-        },
-        active = 2,
-        save = function(s, i) 
-            local keys = s[#s]
-            s[i] = {}
-            for k,_ in pairs(keys) do s[i][k] = params:get(k) end
-        end,
-        load = function(s, i)
-            if s[i] then for k,v in pairs(s[i]) do params:set(k, v) end end
-        end,
-        set = function(s, active)
-            s:save(s.active)
-            s:load(active)
-            s.active = active
-        end
-    }
-}
-
-return sc, gfx, param, reg
+return sc, reg
