@@ -220,7 +220,7 @@ for i = 1,2 do
             sc.stereo('post_filter_rq', i, util.linexp(0, 1, 0.01, 20, 1 - v))
         end
     }
-    local options = { 'dry', 'lp', 'hp', 'bp', 'br' } 
+    local options = { 'dry', 'lp', 'hp', 'bp' } 
     params:add {
         type = 'option', id = 'filter type '..i,
         options = options,

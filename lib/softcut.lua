@@ -266,9 +266,9 @@ local sc = {
             s[pair].recording = false
             s[pair].big = false
 
-            reg.rec:expand(i)
-            for i,v in ipairs(reg.rec:get_slice(i).children) do
-                v:set_length(0)
+            reg.rec[pair]:expand()
+            for j = 1,2 do
+                reg.play[pair][j]:set_length(0)
             end
                 
             wrms.gfx:sleep(pair)

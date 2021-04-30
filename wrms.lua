@@ -24,7 +24,10 @@
 
 function r() norns.script.load(norns.script.state) end
 
-local mar, mul = 2, 29
+
+local sh = norns.is_shield
+--sh = true
+mar, mul = sh and 2 or 18, 29
 
 --globals
 wrms = {
@@ -32,12 +35,15 @@ wrms = {
         x = {
             [1] = { mar, mar + mul },
             [1.5] = mar + mul*1.5,
-            [2] = { mar + mul*2, mar + mul*3 }
+            [2] = { mar + mul*2, mar + mul*3 },
+            tab = sh and 128 or 1
         }, 
         y = {
+            tab = 10,
             enc = 46,
             key = 46 + 10
-        }
+        },
+        mar = mar, mul = mul
     }
 }
 
@@ -95,8 +101,9 @@ wrms_ = nest_ {
         redraw = wrms.gfx.draw
     },
     tab = _txt.enc.option {
-        n = 1, x = 128, y = 2, sens = 0.5, align = 'right', margin = 2,
-        flow = 'y', options = { 'v', 'o', 'b', 's', '>', 'f' }
+        n = 1, x = x.tab, y = y.tab, sens = 0.5, align = sh and 'right' or 'left', margin = 2,
+        flow = 'y', options = { 'v', 'o', 'b', 's', '>', 'f' },
+        lvl = function() return wrms_.alt.v==1 and { 1, 15 } or { 4, 15 } end
     },
     alt = _key.momentary { n = 1 },
     page = nest_ {
@@ -295,8 +302,8 @@ end
 
 function init()
     wrms.setup()
-    params:bang()
     wrms.load()
+    params:bang()
     wrms_:init()
 end
 

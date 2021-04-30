@@ -21,18 +21,19 @@ local gfx = {
 gfx.draw = function()
     local s = gfx
     local top = 5
+    local mar = wrms.pos.mar
 
     --feed indicators
     screen.level(math.floor(sc.lvlmx[1].send * 4))
-    screen.pixel(42, top + 23)
-    screen.pixel(43, top + 24)
-    screen.pixel(42, top + 25)
+    screen.pixel(mar - 2 + 42, top + 23)
+    screen.pixel(mar - 2 + 43, top + 24)
+    screen.pixel(mar - 2 + 42, top + 25)
     screen.fill()
   
     screen.level(math.floor(sc.lvlmx[2].send * 4))
-    screen.pixel(54, top + 23)
-    screen.pixel(53, top + 24)
-    screen.pixel(54, top + 25)
+    screen.pixel(mar - 2 + 54, top + 23)
+    screen.pixel(mar - 2 + 53, top + 24)
+    screen.pixel(mar - 2 + 54, top + 25)
     screen.fill()
 
     --rate display
@@ -46,9 +47,9 @@ gfx.draw = function()
     ]]
   
     for i = 1,2 do
-        local left = 2 + (i-1) * 58
+        local left = mar + (i-1) * 58
         local top = 34
-        local width = 44
+        local width = 40
         local r = reg.play:get_slice(i*2)
         local rrec = reg.rec:get_slice(i*2)
         local recorded = sc.punch_in[sc.buf[i]].recorded
@@ -80,7 +81,7 @@ gfx.draw = function()
         end
 
         local top = 18
-        local width = 24
+        local width = 18
         local lowamp = 0.5
         local highamp = 1.75
         
@@ -92,10 +93,10 @@ gfx.draw = function()
         screen.stroke()
         ]]
         screen.level(2)
-        screen.pixel(41 + i, top)
+        screen.pixel(mar - 2 + 41 + i, top)
         screen.fill()
         screen.level(6)
-        screen.pixel(41 + i, top - sc.ratemx[i].oct)
+        screen.pixel(mar - 2 + 41 + i, top - sc.ratemx[i].oct)
         screen.fill()
         
         
