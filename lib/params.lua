@@ -84,7 +84,7 @@ params:add {
     behavior = 'toggle',
     id = 'rec 1', default = 1,
     action = function(v)
-        sc.oldmx[1].rec = v; sc.oldmx:update(1)
+        sc.punch_in:toggle(1, v)
     end
 }
 params:add {
@@ -93,7 +93,7 @@ params:add {
     id = 'clear 1',
     action = function()
         params:set('rec 1', 0)
-        reg.rec:clear(1)
+        sc.punch_in:clear(1)
     end
 }
 params:add {

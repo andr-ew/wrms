@@ -89,6 +89,7 @@ local _trans = function(i, o)
         end
     } :merge(o)
 end
+
 wrms_ = nest_ {
     gfx = _screen.affordance {
         redraw = wrms.gfx.draw
@@ -108,20 +109,19 @@ wrms_ = nest_ {
                 end),
                 rec = nest_(2):each(function(i) return _rec(i) end)
             }, nest_ {
-                s = _txt.enc.number {
-                    min = 0, max = math.huge, inc = 0.01,
-                    n = 2, x = x[2][1], y = y.enc,
-                    value = function() return reg.play:get_start(2*2) end,
+                ph = _txt.enc.control {
+                    n = 2, x = x[1][1], y = y.enc, persistent = false,
                     action = function(s, v)
-                        reg.play:set_start(2*2, v)
+                        softcut.position(2, sc.phase_abs[1] + v)
                     end
                 },
-                e = _txt.enc.number {
-                    min = 0, max = math.huge, inc = 0.01,
-                    n = 3, x = x[2][2], y = y.enc,
-                    value = function() return reg.play:get_end(2*2) end,
-                    action = function(s, v)
-                        reg.play:set_end(2*2, v)
+                sk = _txt.enc.control {
+                    min = 0, max = 0.2, quant = 1/2000, step = 0,
+                    n = 3, x = x[1][2], y = y.enc,
+                    value = function(s, v) return reg.play:get_slice(1).skew end,
+                    action = function(s, v) 
+                        reg.play:get_slice(1).skew = v 
+                        reg.play:get_slice(1):update()
                     end
                 },
                 rec = nest_(2):each(function(i) return _rec(i) end)
@@ -189,29 +189,45 @@ wrms_ = nest_ {
                     min = 0, max = math.huge, inc = 0.01,
                     n = 3, x = x[1][2], y = y.enc, step = 1/100/100/100,
                     value = function() return reg.play:get_length(1) end,
-                    sens = function(s) return s.p_.v <= 0.00019 and 1/100/100 or s.p_.v <= 0.019 and 1/100 or 1 end,
+                    sens = function(s) 
+                        return sc.punch_in[1].big and (
+                            s.p_.v <= 0.00019 and 1/100/100 or s.p_.v <= 0.019 and 1/100 or 1 
+                        ) or 1
+                    end,
                     action = function(s, v)
                         reg.play:set_length(1, v)
+                        
+                        if v > 0 and not sc.punch_in[1].recorded then 
+                            params:set('rec 1', 1, true)
+                            sc.punch_in:manual(1) 
+                        end
+                        if v > 0.2 then sc.punch_in[1].big = true end
                     end
                 },
                 trans = _trans(1, {})
             }, nest_ {
-                ph = _txt.enc.control {
-                    n = 2, x = x[1][1], y = y.enc, persistent = false,
+                s = _txt.enc.number {
+                    min = 0, max = math.huge, inc = 0.01,
+                    n = 2, x = x[2][1], y = y.enc,
+                    value = function() return reg.play:get_start(2*2) end,
                     action = function(s, v)
-                        softcut.position(2, sc.phase_abs[1] + v)
+                        reg.play:set_start(2*2, v)
                     end
                 },
-                sk = _txt.enc.control {
-                    min = 0, max = 0.2, quant = 1/2000, step = 0,
-                    n = 3, x = x[1][2], y = y.enc,
-                    value = function(s, v) return reg.play:get_slice(1).skew end,
-                    action = function(s, v) 
-                        reg.play:get_slice(1).skew = v 
-                        reg.play:get_slice(1):update()
+                e = _txt.enc.number {
+                    min = 0, max = math.huge, inc = 0.01,
+                    n = 3, x = x[2][2], y = y.enc,
+                    value = function() return reg.play:get_end(2*2) end,
+                    action = function(s, v)
+                        reg.play:set_end(2*2, v)
+                        
+                        if reg.play:get_length(2*2) > 0 and not sc.punch_in[2].recorded then 
+                            params:set('rec 2', 1, true)
+                            sc.punch_in:manual(2) 
+                        end
                     end
                 },
-                trans = _trans(1, {})
+                trans = _trans(2, {})
             }
         },
         ['>'] = nest_ {
@@ -268,13 +284,19 @@ function wrms.setup()
     sc.setup()
     sc.stereo('play', 1, 1)
     sc.mod:init(1)
-    reg.rec[1]:set_length(4)
+end
+
+function wrms.load()
+    --reg.rec[1]:expand()
     reg.play[1][1]:set_length(0.4)
+    sc.punch_in:manual(1)
+    sc.punch_in:clear(2)
 end
 
 function init()
     wrms.setup()
     params:bang()
+    wrms.load()
     wrms_:init()
 end
 

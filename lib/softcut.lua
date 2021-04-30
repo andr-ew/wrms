@@ -1,18 +1,16 @@
 --TODO
---add 'in mode' - mono, stereo
---combine punch-in & delay behaviors
---  (punch or len>0) -> loop -> clear
---  wrm1 starts at step 2
 --persistence 
 --  paramset
 --  all preset data
---  regions
+--  region lengths
 --  clear punched in loops, 
 --  reset all pitch data
+--add 'in mode' - mono, stereo
 --tp: display note name (nest)
 --punch-in varispeed (cartographer -> rate_query)
 --s: small length bugs (cartographer) (add delta_startend)
 --gfx = _screen { } when available
+--pan: map input/output based on record state
 
 
 --cartographer hax
@@ -188,13 +186,6 @@ local sc = {
         sc.stereo('rate_slew_time', n, st)
         return st
     end,
-    --[[
-    input = function(pair, inn, chan) return function(v) 
-        local off = (pair - 1) * 2
-        local vc = (chan - 1) + off
-        softcut.level_input_cut(inn, vc, v)
-    end end,
-    ]]
     inmx = {
         { vol = 1, pan = 0 },
         { vol = 1, pan = 0 },
@@ -219,8 +210,9 @@ local sc = {
     },
     punch_in = {
         quant = 0.01,
-        { recording = false, recorded = true, play = 0, t = 0, clock = nil },
-        { recording = false, recorded = false, play = 0, t = 0, clock = nil },
+        delay_size = 4,
+        { recording = false, recorded = false, big = true, play = 0, t = 0, clock = nil },
+        { recording = false, recorded = false, big = false, play = 0, t = 0, clock = nil },
         update_play = function(s, pair)
             sc.stereo('play', pair, s[pair].play)
         end,
@@ -231,12 +223,10 @@ local sc = {
                 sc.oldmx[pair].rec = v; sc.oldmx:update(pair)
             elseif v == 1 then
                 sc.oldmx[pair].rec = 1; sc.oldmx:update(pair)
-
-                reg.rec:trigger(i)
-
                 s[pair].play = 1; s:update_play(pair)
 
                 -- set quant to sc.ratemx.rate * s.quant
+                reg.blank:set_length(i, 16777216 / 48000 / 2)
                 reg.rec:punch_in(i)
 
                 s[pair].recording = true
@@ -246,15 +236,26 @@ local sc = {
                 reg.rec:punch_out(i)
 
                 s[pair].recorded = true
+                s[pair].big = true
                 s[pair].recording = false
 
-                gfx:wake(pair)
+                wrms.gfx:wake(pair)
+            end
+        end,
+        manual = function(s, pair)
+            if not s[pair].recorded then
+                reg.blank[pair]:set_length(s.delay_size)
+
+                sc.oldmx[pair].rec = 1; sc.oldmx:update(pair)
+                s[pair].play = 1; s:update_play(pair)
+
+                s[pair].recorded = true
+                wrms.gfx:wake(pair)
             end
         end,
         clear = function(s, pair)
             local i = pair * 2
 
-            sc.oldmx[pair].rec = 0; sc.oldmx:update(pair)
             s[pair].play = 0; s:update_play(pair)
 
             reg.rec:position(i, 0)
@@ -263,10 +264,14 @@ local sc = {
 
             s[pair].recorded = false
             s[pair].recording = false
+            s[pair].big = false
 
             reg.rec:expand(i)
+            for i,v in ipairs(reg.rec:get_slice(i).children) do
+                v:set_length(0)
+            end
                 
-            gfx:sleep(pair)
+            wrms.gfx:sleep(pair)
 
             --[[
             sc.ratemx[pair].oct = 1

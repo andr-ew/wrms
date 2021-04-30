@@ -11,6 +11,7 @@ end
 --screen graphics
 local gfx = {
     action = function() end,
+    awake = { 1, 0 },
     sleep = function(s, n) s.sleep_index[n] = 24 end,
     wake = function(s, n) s.sleep_index[n] = 24 end,
     segment_awake = { segs(), segs() },
@@ -101,23 +102,29 @@ gfx.draw = function()
         --fun wrm animaions
         screen.level(math.floor(sc.lvlmx[i].vol * 10))
 
-        local length = sc.buf[i]==1 and (
-            util.linexp(0, 
-                rrec:get_length(), 0.01, width, (r:get_length() + 3.25*2) / 2
+        local length = recorded and (
+            sc.buf[i]==1 and (
+                util.linexp(0, 
+                    rrec:get_length(), 0.01, width, (r:get_length() + 3.25*2) / 2
+                )
+            ) or (
+                util.linlin(0, rrec:get_length(), 0, width, r:get_length()*1.1 + 1)
             )
-        ) or (
-            util.linlin(0, rrec:get_length(), 0, width, r:get_length()*1.1 + 1)
-        )
+        ) or width
+
         local humps = i
         if i == 2 and sc.buf[2] == 1 then humps = 1 end
 
         for j = 1, length do
+            local rl = r:get_end() - r:get_start(i)
+            rl = rl > 0 and rl or rrec:get_length(i)
+
             local amp = 
                 s.segment_awake[i][j] and (
                     math.sin(
                         (
                             (sc.phase_abs[i] - r:get_start())*(humps==1 and 1 or 2) 
-                            / (r:get_end() - r:get_start(i)) + j/length
+                            / rl + j/length
                         )
                         * (humps == 1 and 2 or 4) * math.pi
                     ) * util.linlin(
