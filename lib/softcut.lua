@@ -1,7 +1,4 @@
 --TODO
---punch-in presets
---  old
---  humps ? ?
 --persistence 
 --  paramset
 --  all preset data
