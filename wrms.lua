@@ -293,20 +293,25 @@ function wrms.setup()
     sc.mod:init(1)
 end
 
-function wrms.load()
-    --reg.rec[1]:expand()
+function wrms.load(n)
     reg.play[1][1]:set_length(0.4)
     sc.punch_in:manual(1)
     sc.punch_in:clear(2)
+
+    
+end
+
+function wrms.save(n)
 end
 
 function init()
     wrms.setup()
+    params:read()
     wrms.load()
     params:bang()
     wrms_:init()
 end
 
 function cleanup()
-    --todo: save state for wrm 1 regions & params
+    params:write()
 end

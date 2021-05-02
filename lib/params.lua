@@ -1,35 +1,54 @@
 wrms.preset = { 
-    [0] = {
-        ['rec 1'] = 1, 
-        ['>'] = 0, ['<'] = 0, 
-        ['filter type 1'] = 2, 
-        ['filter type 2'] = 2,
-        ['f1'] = 0.7, ['f2'] = 0.7,
-        ['oct 1'] = 0, ['oct 2'] = -1,
-        ['dir 1'] = 2, ['dir 2'] = 1
+    data = {
+        buf = {
+            [0] = {
+                ['rec 1'] = 1, 
+                ['>'] = 0, ['<'] = 0, 
+                ['filter type 1'] = 2, 
+                ['filter type 2'] = 2,
+                ['f1'] = 0.7, ['f2'] = 0.7,
+                ['oct 1'] = 0, ['oct 2'] = -1,
+                ['dir 1'] = 2, ['dir 2'] = 1
+            },
+            [3] = {
+                ['rec 1'] = 0, 
+                ['>'] = 0, ['<'] = 0, 
+                ['filter type 1'] = 2, 
+                ['filter type 2'] = 2,
+                ['f1'] = 0.9, ['f2'] = 0.9,
+                ['oct 1'] = 1, ['oct 2'] = 0,
+                ['dir 1'] = 2, ['dir 2'] = 2
+            }
+        },
+        ['manual 1'] = {
+            [false] = {
+                ['old 1'] = 1,
+                ['old mode 1'] = 1 --overdub
+            }
+        },
+        ['manual 2'] = {
+            [true] = {
+                ['old 2'] = 0.5,
+            }
+        },
     },
-    [3] = {
-        ['rec 1'] = 0, 
-        ['>'] = 0, ['<'] = 0, 
-        ['filter type 1'] = 2, 
-        ['filter type 2'] = 2,
-        ['f1'] = 0.9, ['f2'] = 0.9,
-        ['oct 1'] = 1, ['oct 2'] = 0,
-        ['dir 1'] = 2, ['dir 2'] = 2
+    active = {
+        buf = 2,
+        ['manual 1'] = true,
+        ['manual 2'] = false
     },
-    active = 2,
-    save = function(s, i) 
-        local keys = s[#s]
-        s[i] = {}
-        for k,_ in pairs(keys) do s[i][k] = params:get(k) end
+    save = function(s, id, i) 
+        local _, any = next(s.data[id]) --any table value
+        s.data[id][i] = {}
+        for k,_ in pairs(any) do s.data[id][i][k] = params:get(k) end
     end,
-    load = function(s, i)
-        if s[i] then for k,v in pairs(s[i]) do params:set(k, v) end end
+    load = function(s, id, i)
+        if s.data[id][i] then for k,v in pairs(s.data[id][i]) do params:set(k, v) end end
     end,
-    set = function(s, active)
-        s:save(s.active)
-        s:load(active)
-        s.active = active
+    set = function(s, id, active)
+        s:save(id, s.active[id])
+        s:load(id, active)
+        s.active[id] = active
     end
 }
 

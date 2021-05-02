@@ -1,16 +1,21 @@
 --TODO
+--punch-in presets
+--  old
+--  humps ? ?
 --persistence 
 --  paramset
 --  all preset data
---  region lengths
---  clear punched in loops, 
+--  manual lengths
 --  reset all pitch data
---add 'in mode' - mono, stereo
+--add 'in mode' param - mono, stereo
 --tp: display note name (nest)
 --punch-in varispeed (cartographer -> rate_query)
 --s: small length bugs (cartographer) (add delta_startend)
 --gfx = _screen { } when available
 --pan: map input/output based on record state
+--tap tempo o->K3/4
+--K1+E1 alt lock
+--bug: old mode ping-pong overdub -> ping-pong
 
 
 --cartographer hax
@@ -205,14 +210,14 @@ local sc = {
             s[pair] = buf
             cartographer.assign(reg.play[buf][slice], 1 + off, 2 + off)
 
-            wrms.preset:set((s[1]-1) + (s[2]-1)*2)
+            wrms.preset:set('buf', (s[1]-1) + (s[2]-1)*2)
         end
     },
     punch_in = {
         quant = 0.01,
         delay_size = 4,
-        { recording = false, recorded = false, big = true, play = 0, t = 0, clock = nil },
-        { recording = false, recorded = false, big = false, play = 0, t = 0, clock = nil },
+        { recording = false, recorded = false, manual = false, big = true, play = 0, t = 0, clock = nil },
+        { recording = false, recorded = false, manual = false, big = false, play = 0, t = 0, clock = nil },
         update_play = function(s, pair)
             sc.stereo('play', pair, s[pair].play)
         end,
@@ -228,6 +233,9 @@ local sc = {
                 -- set quant to sc.ratemx.rate * s.quant
                 reg.blank:set_length(i, 16777216 / 48000 / 2)
                 reg.rec:punch_in(i)
+
+                s[pair].manual = false
+                wrms.preset:set('manual '..pair, s[pair].manual)
 
                 s[pair].recording = true
             elseif s[pair].recording then
@@ -245,6 +253,9 @@ local sc = {
         manual = function(s, pair)
             if not s[pair].recorded then
                 reg.blank[pair]:set_length(s.delay_size)
+                
+                s[pair].manual = true
+                wrms.preset:set('manual '..pair, s[pair].manual)
 
                 sc.oldmx[pair].rec = 1; sc.oldmx:update(pair)
                 s[pair].play = 1; s:update_play(pair)
@@ -265,6 +276,7 @@ local sc = {
             s[pair].recorded = false
             s[pair].recording = false
             s[pair].big = false
+            s[pair].manual = false
 
             reg.rec[pair]:expand()
             for j = 1,2 do

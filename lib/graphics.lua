@@ -113,8 +113,8 @@ gfx.draw = function()
             )
         ) or width
 
-        local humps = i
-        if i == 2 and sc.buf[2] == 1 then humps = 1 end
+        local humps = sc.punch_in[sc.buf[i]].manual and 1 or 2
+        --if i == 2 and sc.buf[2] == 1 then humps = 1 end
 
         for j = 1, length do
             local rl = r:get_end() - r:get_start(i)
