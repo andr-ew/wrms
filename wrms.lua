@@ -197,18 +197,18 @@ wrms_ = nest_ {
                     n = 3, x = x[1][2], y = y.enc, step = 1/100/100/100,
                     value = function() return reg.play:get_length(1) end,
                     sens = function(s) 
-                        return sc.punch_in[1].big and (
+                        return sc.punch_in[sc.buf[1]].big and (
                             s.p_.v <= 0.00019 and 1/100/100 or s.p_.v <= 0.019 and 1/100 or 1 
                         ) or 1
                     end,
                     action = function(s, v)
                         reg.play:set_length(1, v)
                         
-                        if v > 0 and not sc.punch_in[1].recorded then 
+                        if v > 0 and not sc.punch_in[sc.buf[1]].recorded then 
                             params:set('rec 1', 1, true)
                             sc.punch_in:manual(1) 
                         end
-                        if v > 0.2 then sc.punch_in[1].big = true end
+                        sc.punch_in:big(1, v)
                     end
                 },
                 trans = _trans(1, {})
@@ -295,10 +295,6 @@ end
 
 function wrms.load(n)
     reg.play[1][1]:set_length(0.4)
-    sc.punch_in:manual(1)
-    sc.punch_in:clear(2)
-
-    
 end
 
 function wrms.save(n)

@@ -215,78 +215,118 @@ local sc = {
         delay_size = 4,
         { recording = false, recorded = false, manual = false, big = true, play = 0, t = 0, clock = nil },
         { recording = false, recorded = false, manual = false, big = false, play = 0, t = 0, clock = nil },
-        update_play = function(s, pair)
-            sc.stereo('play', pair, s[pair].play)
+        update_play = function(s, buf)
+            sc.stereo('play', buf, s[buf].play)
         end,
-        toggle = function(s, pair, v) --only use when pair==2 and voice[2]==2
-            local i = pair * 2
+        big = function(s, pair, v)
+            local buf = sc.buf[pair]
+            if v > 0.2 then s[buf].big = true end
+        end,
+        toggle = function(s, pair, v)
+            local buf = sc.buf[pair]
+            local i = buf * 2
 
-            if s[pair].recorded then
-                sc.oldmx[pair].rec = v; sc.oldmx:update(pair)
+            if s[buf].recorded then
+                sc.oldmx[buf].rec = v; sc.oldmx:update(buf)
             elseif v == 1 then
-                sc.oldmx[pair].rec = 1; sc.oldmx:update(pair)
-                s[pair].play = 1; s:update_play(pair)
+                sc.oldmx[buf].rec = 1; sc.oldmx:update(buf)
+                s[buf].play = 1; s:update_play(buf)
 
-                -- set quant to sc.ratemx.rate * s.quant
+                --[[
                 reg.blank:set_length(i, 16777216 / 48000 / 2)
                 reg.rec:punch_in(i)
+                --]]
+                -- set quant to sc.ratemx.rate * s.quant
+                reg.blank[buf]:set_length(16777216 / 48000 / 2)
+                reg.rec[buf]:punch_in()
 
-                s[pair].manual = false
-                wrms.preset:set('manual '..pair, s[pair].manual)
+                s[buf].manual = false
+                wrms.preset:set('manual '..buf, s[buf].manual)
 
-                s[pair].recording = true
-            elseif s[pair].recording then
-                sc.oldmx[pair].rec = 0; sc.oldmx:update(pair)
+                s[buf].recording = true
+            elseif s[buf].recording then
+                sc.oldmx[buf].rec = 0; sc.oldmx:update(buf)
             
-                reg.rec:punch_out(i)
+                --reg.rec:punch_out(i)
+                reg.rec[buf]:punch_out()
 
-                s[pair].recorded = true
-                s[pair].big = true
-                s[pair].recording = false
+                s[buf].recorded = true
+                s[buf].big = true
+                s[buf].recording = false
 
-                wrms.gfx:wake(pair)
+                wrms.gfx:wake(buf)
             end
         end,
         manual = function(s, pair)
-            if not s[pair].recorded then
-                reg.blank[pair]:set_length(s.delay_size)
+            local buf = sc.buf[pair]
+            if not s[buf].recorded then
+                reg.blank[buf]:set_length(s.delay_size)
                 
-                s[pair].manual = true
-                wrms.preset:set('manual '..pair, s[pair].manual)
+                s[buf].manual = true
+                wrms.preset:set('manual '..buf, s[buf].manual)
 
-                sc.oldmx[pair].rec = 1; sc.oldmx:update(pair)
-                s[pair].play = 1; s:update_play(pair)
+                sc.oldmx[buf].rec = 1; sc.oldmx:update(buf)
+                s[buf].play = 1; s:update_play(buf)
 
-                s[pair].recorded = true
-                wrms.gfx:wake(pair)
+                s[buf].recorded = true
+                wrms.gfx:wake(buf)
             end
         end,
         clear = function(s, pair)
-            local i = pair * 2
+            local buf = sc.buf[pair]
+            local i = buf * 2
 
-            s[pair].play = 0; s:update_play(pair)
+            s[buf].play = 0; s:update_play(buf)
 
+            --[[
             reg.rec:position(i, 0)
             reg.rec:clear(i)
             reg.rec:punch_out(i)
+            --]]
+            reg.rec[buf]:position(0)
+            reg.rec[buf]:clear()
+            reg.rec[buf]:punch_out()
 
-            s[pair].recorded = false
-            s[pair].recording = false
-            s[pair].big = false
-            s[pair].manual = false
 
-            reg.rec[pair]:expand()
+            s[buf].recorded = false
+            s[buf].recording = false
+            s[buf].big = false
+            s[buf].manual = false
+
+            reg.rec[buf]:expand()
             for j = 1,2 do
-                reg.play[pair][j]:set_length(0)
+                reg.play[buf][j]:set_length(0)
             end
                 
-            wrms.gfx:sleep(pair)
-
-            --[[
-            sc.ratemx[pair].oct = 1
-            sc.ratemx[pair].dir = 1
-            sc.ratemx:update(pair)
-            --]]
+            wrms.gfx:sleep(buf)
+        end,
+        save = function(s)
+            local data = {}
+            for i,v in ipairs(s) do data[i] = s[i].manual end
+            return dat
+        end,
+        load = function(s, data)
+            for i,v in ipairs(data) do
+                s[i].manual = v
+                if v==true then 
+                    s:manual(i)
+                    s:big(i, reg.play:get_length(i*2))
+                else 
+                    --s:clear(i) 
+                    if sc.buf[i]==i then params:delta('clear '..i) end
+                end
+            end
+        end
+    },
+    length = {
+        save = function()
+            local dat = {}
+            for i,v in ipairs(reg.play) do
+                for j,w in ipairs(v) do
+                end
+            end
+        end,
+        load = function(data) --run before punch_in:load()
         end
     }
 }

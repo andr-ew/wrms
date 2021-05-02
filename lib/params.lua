@@ -37,17 +37,21 @@ wrms.preset = {
         ['manual 1'] = true,
         ['manual 2'] = false
     },
-    save = function(s, id, i) 
+    remember = function(s, id, i) 
         local _, any = next(s.data[id]) --any table value
         s.data[id][i] = {}
         for k,_ in pairs(any) do s.data[id][i][k] = params:get(k) end
     end,
-    load = function(s, id, i)
+    recall = function(s, id, i)
         if s.data[id][i] then for k,v in pairs(s.data[id][i]) do params:set(k, v) end end
     end,
+    save = function(s)
+    end,
+    load = function(s, st)
+    end,
     set = function(s, id, active)
-        s:save(id, s.active[id])
-        s:load(id, active)
+        s:remember(id, s.active[id])
+        s:recall(id, active)
         s.active[id] = active
     end
 }
