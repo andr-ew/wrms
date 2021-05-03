@@ -48,6 +48,10 @@ wrms.preset = {
     save = function(s)
     end,
     load = function(s, st)
+        --reset both buf[2].oct,dir
+        --reset buf[3][oct 2], buf[0][oct 1]
+
+        --go agead and recall once done, params should be banged already
     end,
     set = function(s, id, active)
         s:remember(id, s.active[id])

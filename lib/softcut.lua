@@ -200,6 +200,7 @@ local sc = {
             softcut.level_input_cut(1, off + 2, 0)
         end
     },
+    --buf, punch_in, length -> buf
     buf = {
         1, 2, -- [pair] = buf
         assign = function(s, pair, buf, slice)
@@ -303,7 +304,7 @@ local sc = {
         save = function(s)
             local data = {}
             for i,v in ipairs(s) do data[i] = s[i].manual end
-            return dat
+            return data
         end,
         load = function(s, data)
             for i,v in ipairs(data) do
@@ -320,13 +321,21 @@ local sc = {
     },
     length = {
         save = function()
-            local dat = {}
+            local data = {}
             for i,v in ipairs(reg.play) do
+                data[i] = {}
                 for j,w in ipairs(v) do
+                    data[i][j] = v:get_length()        
                 end
             end
+            return data
         end,
         load = function(data) --run before punch_in:load()
+            for i,v in ipairs(data) do
+                for j,w in ipairs(v) do
+                    reg.play[i][j]:set_length(w)
+                end
+            end
         end
     }
 }

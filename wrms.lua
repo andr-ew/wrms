@@ -293,17 +293,35 @@ function wrms.setup()
     sc.mod:init(1)
 end
 
-function wrms.load(n)
+function wrms.init(n)
     reg.play[1][1]:set_length(0.4)
+    sc.punch_in:manual(1)
+    sc.punch_in:clear(2)
 end
 
 function wrms.save(n)
 end
 
+function wrms.load(n) --after params:read(), params:bang()
+    data = {
+        --hardcode save file for testing, later use ./data/init/
+    }
+
+    wrms.preset:load(data.preset)
+    sc.length:load(data.length)
+    sc.punch_in:load(data.punch_in)
+
+    --reset non-preset rate params
+    params:set('bnd 1', 1)
+    for i = 1,2 do 
+        params:set('tp '..i, 0)
+    end
+end
+
 function init()
     wrms.setup()
     params:read()
-    wrms.load()
+    wrms.init()
     params:bang()
     wrms_:init()
 end
