@@ -293,6 +293,7 @@ function wrms.setup()
     sc.mod:init(1)
 end
 
+--testing
 function wrms.init(n)
     reg.play[1][1]:set_length(0.4)
     sc.punch_in:manual(1)
@@ -304,7 +305,7 @@ end
 
 function wrms.load(n) --after params:read(), params:bang()
     data = {
-        --hardcode save file for testing, later use ./data/init/
+        --hardcode save file for testing, later copy to ./data/init/
     }
 
     wrms.preset:load(data.preset)
