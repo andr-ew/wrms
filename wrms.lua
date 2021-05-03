@@ -24,29 +24,6 @@
 
 function r() norns.script.load(norns.script.state) end
 
-
-local sh = norns.is_shield
---sh = true
-mar, mul = sh and 2 or 18, 29
-
---globals
-wrms = {
-    pos = { 
-        x = {
-            [1] = { mar, mar + mul },
-            [1.5] = mar + mul*1.5,
-            [2] = { mar + mul*2, mar + mul*3 },
-            tab = sh and 128 or 1
-        }, 
-        y = {
-            tab = 10,
-            enc = 46,
-            key = 46 + 10
-        },
-        mar = mar, mul = mul
-    }
-}
-
 --external libs
 include 'wrms/lib/nest/core'
 include 'wrms/lib/nest/norns'
@@ -54,18 +31,15 @@ include 'wrms/lib/nest/txt'
 cartographer, Slice = include 'wrms/lib/cartographer/cartographer'
 cs = require 'controlspec'
 
---softcut utilities
-sc, reg = include 'wrms/lib/softcut'
-
---animations
-wrms.gfx = include 'wrms/lib/graphics'
-
---params stuff
-include 'wrms/lib/params'
+include 'wrs/lib/globals'              --saving, loading, values, etc
+sc, reg = include 'wrms/lib/softcut'   --softcut utilities
+wrms.gfx = include 'wrms/lib/graphics' --animations
+include 'wrms/lib/params'              --params
 
 --norns interface
 
 local x, y = wrms.pos.x, wrms.pos.y
+
 local _rec = function(i)
     return _txt.key.toggle {
         n = i+1, x = x[i][1], y = y.key,
@@ -286,41 +260,6 @@ wrms_ = nest_ {
         end
     end)
 } :connect { screen = screen, enc = enc, key = key } 
-
-function wrms.setup()
-    sc.setup()
-    sc.stereo('play', 1, 1) --shouldn't need this currently
-    sc.mod:init(1)
-end
-
---testing
-function wrms.init(n)
-    reg.play[1][1]:set_length(0.4)
-    sc.punch_in:manual(1)
-    sc.punch_in:clear(2)
-end
-
-function wrms.save(n)
-end
-
-function wrms.load(n) --after params:read(), params:bang()
-    data = {
-        --hardcode save file for testing, later copy to ./data/init/
-        preset = wrms.preset.data,
-        length = { { 0.4, 0 }, { 0, 0 } },
-        punch_in = { true, false }
-    }
-
-    wrms.preset:load(data.preset)
-    sc.length:load(data.length)
-    sc.punch_in:load(data.punch_in)
-
-    --reset non-preset rate params
-    params:set('bnd 1', 1)
-    for i = 1,2 do 
-        params:set('tp '..i, 0)
-    end
-end
 
 function init()
     wrms.setup()
