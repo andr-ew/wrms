@@ -46,12 +46,20 @@ wrms.preset = {
         if s.data[id][i] then for k,v in pairs(s.data[id][i]) do params:set(k, v) end end
     end,
     save = function(s)
+        for id,v in pairs(s.data) do s:remember(id, s.active[id]) end
+        return s.data
     end,
-    load = function(s, st)
-        --reset both buf[2].oct,dir
-        --reset buf[3][oct 2], buf[0][oct 1]
+    load = function(s, data)
+        --reset some of the pitch data
+        for i = 1,2 do
+            data.buf[2]['oct '..i] = 0
+            data.buf[2]['dir '..i] = 1
+        end
+        data.buf[3]['oct 2'] = 0
+        data.buf[0]['oct 1'] = 0
 
-        --go agead and recall once done, params should be banged already
+        s.data = data
+        for id,v in pairs(s.data) do s:recall(id, s.active[id]) end
     end,
     set = function(s, id, active)
         s:remember(id, s.active[id])

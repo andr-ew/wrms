@@ -5,7 +5,7 @@
 --  manual lengths
 --  reset all pitch data
 --add 'in mode' param - mono, stereo
---tp: display note name (nest)
+--tp: display +/-st (nest)
 --punch-in varispeed (cartographer -> rate_query)
 --s: small length bugs (cartographer) (add delta_startend)
 --gfx = _screen { } when available
@@ -14,6 +14,7 @@
 --K1+E1 alt lock
 --bug: old mode ping-pong overdub -> ping-pong
 --config.lua >> ./data/init, config post_init
+--move the whole nest to config.lua (!)
 
 
 --cartographer hax

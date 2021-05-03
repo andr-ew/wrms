@@ -306,6 +306,9 @@ end
 function wrms.load(n) --after params:read(), params:bang()
     data = {
         --hardcode save file for testing, later copy to ./data/init/
+        preset = wrms.preset.data,
+        length = { { 0.4, 0 }, { 0, 0 } },
+        punch_in = { true, false }
     }
 
     wrms.preset:load(data.preset)
