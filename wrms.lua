@@ -289,7 +289,7 @@ wrms_ = nest_ {
 
 function wrms.setup()
     sc.setup()
-    sc.stereo('play', 1, 1)
+    sc.stereo('play', 1, 1) --shouldn't need this currently
     sc.mod:init(1)
 end
 

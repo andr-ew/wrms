@@ -13,7 +13,7 @@
 --tap tempo o->K3/4
 --K1+E1 alt lock
 --bug: old mode ping-pong overdub -> ping-pong
---config.lua >> ./data/init
+--config.lua >> ./data/init, config post_init
 
 
 --cartographer hax
