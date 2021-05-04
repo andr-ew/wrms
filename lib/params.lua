@@ -66,11 +66,7 @@ params:add {
     behavior = 'toggle',
     id = 'rec 2',
     action = function(v)
-        if sc.buf[2]==2 then
-            sc.punch_in:toggle(2, v)
-        else
-            -- regular record toggle probably
-        end
+        sc.punch_in:toggle(2, v)
     end
 }
 params:add {

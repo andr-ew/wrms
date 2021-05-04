@@ -1,7 +1,7 @@
 local sh = norns.is_shield
 mar, mul = sh and 2 or 18, 29
 
-wrms = {
+local wrms = {
     pos = { 
         x = {
             [1] = { mar, mar + mul },
@@ -130,3 +130,5 @@ function wrms.load(n) --after params:read(), params:bang()
         params:set('tp '..i, 0)
     end
 end
+
+return wrms

@@ -31,10 +31,10 @@ include 'wrms/lib/nest/txt'
 cartographer, Slice = include 'wrms/lib/cartographer/cartographer'
 cs = require 'controlspec'
 
-include 'wrs/lib/globals'              --saving, loading, values, etc
+wrms = include 'wrms/lib/globals'              --saving, loading, values, etc
 sc, reg = include 'wrms/lib/softcut'   --softcut utilities
 wrms.gfx = include 'wrms/lib/graphics' --animations
-include 'wrms/lib/params'              --params
+include 'wrms/lib/params'              --create params
 
 --norns interface
 
@@ -252,7 +252,7 @@ wrms_ = nest_ {
                 } :link('filter type '..i)
             }
         end)
-    }: each(function(k, v)
+    } :each(function(k, v)
         v.enabled = function(s) return wrms_.tab.options[wrms_.tab.v//1] == k end
         if v[1] then
             v[1].enabled = function() return wrms_.alt.v == 0 end
@@ -263,12 +263,12 @@ wrms_ = nest_ {
 
 function init()
     wrms.setup()
-    params:read()
+    --params:read()
     wrms.init()
     params:bang()
     wrms_:init()
 end
 
 function cleanup()
-    params:write()
+    --params:write()
 end

@@ -229,7 +229,9 @@ local sc = {
             local buf = sc.buf[pair]
             local i = buf * 2
 
-            if s[buf].recorded then
+            if pair ~= buf then
+                sc.oldmx[pair].rec = v; sc.oldmx:update(pair)
+            elseif s[buf].recorded then
                 sc.oldmx[buf].rec = v; sc.oldmx:update(buf)
             elseif v == 1 then
                 sc.oldmx[buf].rec = 1; sc.oldmx:update(buf)
