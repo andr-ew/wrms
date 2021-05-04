@@ -264,11 +264,14 @@ wrms_ = nest_ {
 function init()
     wrms.setup()
     --params:read()
-    wrms.init()
+    --wrms.init()
+    wrms.load()
+
     params:bang()
     wrms_:init()
 end
 
 function cleanup()
-    --params:write()
+    wrms.save()
+    params:write()
 end

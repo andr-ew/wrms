@@ -91,7 +91,7 @@ wrms.preset = {
 function wrms.setup()
     sc.setup()
     --sc.stereo('play', 1, 1) --shouldn't need this currently
-    sc.mod:init(1)
+    --sc.mod:init(1)
 end
 
 --testing
@@ -120,8 +120,8 @@ function wrms.load(n) --after params:read(), params:bang()
         punch_in = { true, false }
     }
 
-    wrms.preset:load(data.preset)
-    sc.length:load(data.length)
+    --wrms.preset:load(data.preset)
+    sc.length.load(data.length)
     sc.punch_in:load(data.punch_in)
 
     --reset non-preset rate params

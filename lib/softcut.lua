@@ -44,6 +44,8 @@ end
 --softcut buffer regions
 local reg = {}
 reg.blank = cartographer.divide(cartographer.buffer_stereo, 2)
+for i = 1,2 do reg.blank[i]:set_length(100) end
+
 reg.rec = cartographer.subloop(reg.blank)
 reg.play = cartographer.subloop(reg.rec, 2)
 
@@ -84,8 +86,10 @@ local sc = {
         end
 
         local function e(i, ph)
-            if i == 1 then sc:set_phase(1, ph) 
+            if i == 1 then 
+                sc:set_phase(1, ph) 
             elseif i == 3 then 
+                --if ph > 200 or ph < 150 then print('phase', ph) end
                 sc:set_phase(2, ph)
                 redraw()
             end
@@ -234,16 +238,11 @@ local sc = {
             elseif s[buf].recorded then
                 sc.oldmx[buf].rec = v; sc.oldmx:update(buf)
             elseif v == 1 then
-                sc.oldmx[buf].rec = 1; sc.oldmx:update(buf)
-                s[buf].play = 1; s:update_play(buf)
-
-                --[[
-                reg.blank:set_length(i, 16777216 / 48000 / 2)
-                reg.rec:punch_in(i)
-                --]]
                 -- set quant to sc.ratemx.rate * s.quant
                 reg.blank[buf]:set_length(16777216 / 48000 / 2)
                 reg.rec[buf]:punch_in()
+
+                sc.oldmx[buf].rec = 1; sc.oldmx:update(buf)
 
                 s[buf].manual = false
                 wrms.preset:set('manual '..buf, s[buf].manual)
@@ -251,6 +250,7 @@ local sc = {
                 s[buf].recording = true
             elseif s[buf].recording then
                 sc.oldmx[buf].rec = 0; sc.oldmx:update(buf)
+                s[buf].play = 1; s:update_play(buf)
             
                 --reg.rec:punch_out(i)
                 reg.rec[buf]:punch_out()
@@ -266,6 +266,7 @@ local sc = {
             local buf = sc.buf[pair]
             if not s[buf].recorded then
                 reg.blank[buf]:set_length(s.delay_size)
+                reg.rec[buf]:set_length(1, 'fraction')
                 
                 s[buf].manual = true
                 wrms.preset:set('manual '..buf, s[buf].manual)
@@ -298,7 +299,7 @@ local sc = {
             s[buf].big = false
             s[buf].manual = false
 
-            reg.rec[buf]:expand()
+            reg.rec[buf]:set_length(1, 'fraction')
             for j = 1,2 do
                 reg.play[buf][j]:set_length(0)
             end
@@ -315,7 +316,7 @@ local sc = {
                 s[i].manual = v
                 if v==true then 
                     s:manual(i)
-                    s:big(i, reg.play:get_length(i*2))
+                    s:big(i, reg.play[1][1]:get_length())
                 else 
                     --s:clear(i) 
                     if sc.buf[i]==i then params:delta('clear '..i) end
