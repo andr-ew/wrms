@@ -1,9 +1,4 @@
 --TODO
---persistence 
---  paramset
---  all preset data
---  manual lengths
---  reset all pitch data
 --add 'in mode' param - mono, stereo
 --tp: display +/-st (nest)
 --punch-in varispeed (cartographer -> rate_query)
@@ -11,10 +6,10 @@
 --gfx = _screen { } when available
 --pan: map input/output based on record state
 --tap tempo o->K3/4
---K1+E1 alt lock
 --bug: old mode ping-pong overdub -> ping-pong
 --config.lua >> ./data/init, config post_init
---move the whole nest to config.lua (!)
+--inital .data to ./data/init
+--K1+E1 alt lock
 
 
 --cartographer hax
@@ -252,7 +247,6 @@ local sc = {
                 sc.oldmx[buf].rec = 0; sc.oldmx:update(buf)
                 s[buf].play = 1; s:update_play(buf)
             
-                --reg.rec:punch_out(i)
                 reg.rec[buf]:punch_out()
 
                 s[buf].recorded = true
@@ -283,12 +277,6 @@ local sc = {
             local i = buf * 2
 
             s[buf].play = 0; s:update_play(buf)
-
-            --[[
-            reg.rec:position(i, 0)
-            reg.rec:clear(i)
-            reg.rec:punch_out(i)
-            --]]
             reg.rec[buf]:position(0)
             reg.rec[buf]:clear()
             reg.rec[buf]:punch_out()
@@ -327,18 +315,18 @@ local sc = {
     length = {
         save = function()
             local data = {}
-            for i,v in ipairs(reg.play) do
+            for i = 1,2 do
                 data[i] = {}
-                for j,w in ipairs(v) do
-                    data[i][j] = v:get_length()        
+                for j = 1,2 do
+                    data[i][j] = reg.play[i][j]:get_length() 
                 end
             end
             return data
         end,
         load = function(data) --run before punch_in:load()
-            for i,v in ipairs(data) do
-                for j,w in ipairs(v) do
-                    reg.play[i][j]:set_length(w)
+            for i = 1,2 do
+                for j = 1,2 do
+                    reg.play[i][j]:set_length(data[i][j])
                 end
             end
         end

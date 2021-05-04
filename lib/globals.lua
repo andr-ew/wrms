@@ -73,7 +73,7 @@ wrms.preset = {
         --reset some of the pitch data
         for i = 1,2 do
             data.buf[2]['oct '..i] = 0
-            data.buf[2]['dir '..i] = 1
+            data.buf[2]['dir '..i] = 2
         end
         data.buf[3]['oct 2'] = 0
         data.buf[0]['oct 1'] = 0
@@ -90,21 +90,11 @@ wrms.preset = {
 
 function wrms.setup()
     sc.setup()
-    --sc.stereo('play', 1, 1) --shouldn't need this currently
-    --sc.mod:init(1)
-end
-
---testing
-function wrms.init(n)
-    reg.play[1][1]:set_length(0.4)
-    sc.stereo('play', 1, 1) --shouldn't need this currently
-    sc.punch_in:manual(1)
-    sc.punch_in:clear(2)
+    sc.mod:init(1)
 end
 
 function wrms.save(n)
-    n = n or 0
-    local filename = norns.state.data..'wrms'..n..'.data'
+    local filename = norns.state.data..'wrms-'..(n or 0)..'.data'
     tab.save({
         preset = wrms.preset:save(),
         length = sc.length:save(),
@@ -112,15 +102,15 @@ function wrms.save(n)
     }, filename)
 end
 
-function wrms.load(n) --after params:read(), params:bang()
+function wrms.load(n)
     data = {
         --hardcode save file for testing, later copy to ./data/init/
-        preset = wrms.preset.data,
+        preset = wrms.preset:save(),
         length = { { 0.4, 0 }, { 0, 0 } },
         punch_in = { true, false }
     }
 
-    --wrms.preset:load(data.preset)
+    wrms.preset:load(data.preset)
     sc.length.load(data.length)
     sc.punch_in:load(data.punch_in)
 

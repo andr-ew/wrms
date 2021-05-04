@@ -264,7 +264,6 @@ wrms_ = nest_ {
 function init()
     wrms.setup()
     --params:read()
-    --wrms.init()
     wrms.load()
 
     params:bang()
