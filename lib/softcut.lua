@@ -3,14 +3,11 @@
 --tp: display +/-st (nest)
 --punch-in varispeed (cartographer -> rate_query)
 --s: small length bugs (cartographer) (add delta_startend)
---gfx = _screen { } when available
 --pan: map input/output based on record state
---tap tempo o->K3/4
---bug: old mode ping-pong overdub -> ping-pong
---config.lua >> ./data/init, config post_init
+--tap tempo > v/o alt
+--bug: old mode overdub -> ping-pong
+--opposite route as default
 --inital .data to ./data/init
---K1+E1 alt lock
-
 
 --cartographer hax
 Slice.skew = 0

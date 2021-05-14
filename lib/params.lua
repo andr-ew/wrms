@@ -92,6 +92,12 @@ params:add {
         sc.ratemx:update(1)
     end
 }
+local intervals = {
+    "unison", "min 2nd", "maj 2nd",
+    "min 3rd", "maj 3rd", "4th",
+    "tritone", "5th", "min 6th",
+    "maj 6th", "min 7th", "maj 7th"
+}
 params:add {
     type = 'control', id = 'tp 1', 
     controlspec = cs.def { 

@@ -43,7 +43,7 @@ local x, y = wrms.pos.x, wrms.pos.y
 local _rec = function(i)
     return _txt.key.toggle {
         n = i+1, x = x[i][1], y = y.key,
-        label = 'rec', edge = 0,
+        label = 'rec', edge = 'falling',
         v = function() return params:get('rec '..i) end,
         action = function(s, v, t)
             if t < 0.5 then params:set('rec '..i, v)
@@ -54,7 +54,7 @@ end
 local _trans = function(i, o)
     return _txt.key.trigger {
         label = { '<<', '>>' },
-        edge = 0,
+        edge = 'falling',
         blinktime = 0.2,
         n = { 2, 3 },
         y = y.key, x = { { x[i][1] }, { x[i][2] } },
@@ -71,7 +71,7 @@ local _trans = function(i, o)
 end
 
 wrms_ = nest_ {
-    gfx = _screen.affordance {
+    gfx = _screen {
         redraw = wrms.gfx.draw
     },
     tab = _txt.enc.option {
@@ -86,7 +86,7 @@ wrms_ = nest_ {
                 vol = nest_(2):each(function(i)
                     return _txt.enc.control {
                         n = i + 1, x = x[i][1], y = y.enc, label = 'vol'
-                    } :link('vol '..i)
+                    } :param('vol '..i)
                 end),
                 rec = nest_(2):each(function(i) return _rec(i) end)
             }, nest_ {
@@ -113,7 +113,7 @@ wrms_ = nest_ {
                 old = nest_(2):each(function(i)
                     return _txt.enc.control {
                         n = i + 1, x = x[i][1], y = y.enc, label = 'old'
-                    } :link('old '..i)
+                    } :param('old '..i)
                 end),
                 rec = nest_(2):each(function(i) return _rec(i) end)
             }, nest_ {
@@ -139,18 +139,18 @@ wrms_ = nest_ {
             nest_ {
                 bnd = _txt.enc.control {
                     n = 2, x = x[1][1], y = y.enc, label = 'bnd'
-                } :link('bnd 1'),
+                } :param('bnd 1'),
                 wgl = _txt.enc.control {
                     n = 3, x = x[1.5], y = y.enc
-                } :link('wgl'),
+                } :param('wgl'),
                 trans = _trans(2, {})
             }, nest_ {
                 tp1 = _txt.enc.control {
-                    n = 2, x = x[1][1], y = y.enc, label = 'tp'
-                } :link('tp 1'),
+                    n = 2, x = x[1][1], y = y.enc, label = false
+                } :param('tp 1'),
                 tp2 = _txt.enc.control {
-                    n = 3, x = x[2][1], y = y.enc, label = 'tp'
-                } :link('tp 2'),
+                    n = 3, x = x[2][1], y = y.enc, label = false
+                } :param('tp 2'),
                 trans = _trans(2, {})
             }
         },
@@ -215,41 +215,41 @@ wrms_ = nest_ {
             nest_ {
                 ['>'] = _txt.enc.control {
                     n = 2, x = x[1][1], y = y.enc,
-                } :link('>'),
+                } :param('>'),
                 ['<'] = _txt.enc.control {
                     n = 3, x = x[2][1], y = y.enc,
-                } :link('<'),
+                } :param('<'),
                 buf = nest_(2):each(function(i)
                     return _txt.key.number {
                         label = 'buf', n = i+1, x = x[i][1], y = y.key,
-                    } :link('buf '..i)
+                    } :param('buf '..i)
                 end)
             }, nest_ {
                 pan1 = _txt.enc.control {
                     n = 2, x = x[1][1], y = y.enc, label = 'pan'
-                } :link('in pan 1'),
+                } :param('in pan 1'),
                 pan2 = _txt.enc.control {
                     n = 3, x = x[2][1], y = y.enc, label = 'pan'
-                } :link('in pan 2'),
+                } :param('in pan 2'),
                 mode = _txt.key.option {
                     n = 2, x = x[1][1], y = y.key, scroll_window = 1, wrap = true,
-                } :link('old mode 1'),
+                } :param('old mode 1'),
                 aliasing = _txt.key.toggle {
                     n = 3, x = x[2][1], y = y.key, 
-                } :link('aliasing')
+                } :param('aliasing')
             }
         },
         f = nest_(2):each(function(i)
             return nest_ {
                 f = _txt.enc.control {
                     n = 2, x = x[i][1], y = y.enc, label = 'f'
-                } :link('f'..i),
+                } :param('f'..i),
                 q = _txt.enc.control {
                     n = 3, x = x[i][2], y = y.enc, label = 'q'
-                } :link('q'..i),
+                } :param('q'..i),
                 type = _txt.key.option {
                     n = { 2, 3 }, x = x[i][1], y = y.key,
-                } :link('filter type '..i)
+                } :param('filter type '..i)
             }
         end)
     } :each(function(k, v)
