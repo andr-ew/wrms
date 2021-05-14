@@ -1,5 +1,4 @@
 --TODO
---add 'in mode' param - mono, stereo
 --punch-in varispeed (cartographer -> rate_query)
 --s: small length bugs (cartographer) (add delta_startend)
 --pan: map input/output based on record state
@@ -186,15 +185,32 @@ local sc = {
         return st
     end,
     inmx = {
+        route = 'stereo',
         { vol = 1, pan = 0 },
         { vol = 1, pan = 0 },
         update = function(s, n)
             local v, p = s[n].vol, s[n].pan
             local off = (n - 1) * 2
-            softcut.level_input_cut(1, off + 1, v * ((p > 0) and 1 - p or 1))
-            softcut.level_input_cut(2, off + 1, 0)
-            softcut.level_input_cut(2, off + 2, v * ((p < 0) and 1 + p or 1))
-            softcut.level_input_cut(1, off + 2, 0)
+
+            if s.route == 'stereo' then
+                softcut.level_input_cut(1, off + 1, v * ((p > 0) and 1 - p or 1))
+                softcut.level_input_cut(2, off + 1, 0)
+                softcut.level_input_cut(2, off + 2, v * ((p < 0) and 1 + p or 1))
+                softcut.level_input_cut(1, off + 2, 0)
+            elseif s.route == 'mono' then
+                softcut.level_input_cut(1, off + 1, v * ((p > 0) and 1 - p or 1))
+                softcut.level_input_cut(1, off + 2, v * ((p < 0) and 1 + p or 1))
+                softcut.level_input_cut(2, off + 1, v * ((p > 0) and 1 - p or 1))
+                softcut.level_input_cut(2, off + 2, v * ((p < 0) and 1 + p or 1))
+            elseif s.route == '2x mono' then
+                softcut.level_input_cut(1, off + 1, 0)
+                softcut.level_input_cut(1, off + 2, 0)
+                softcut.level_input_cut(2, off + 1, 0)
+                softcut.level_input_cut(2, off + 2, 0)
+
+                softcut.level_input_cut(n, off + 1, v * ((p > 0) and 1 - p or 1))
+                softcut.level_input_cut(n, off + 2, v * ((p < 0) and 1 + p or 1))
+            end
         end
     },
     --buf, punch_in, length -> buf

@@ -1,4 +1,12 @@
 params:add_separator('mix')
+local ir_op = { 'stereo', 'mono', '2x mono' } 
+params:add {
+    type = 'option', id = 'input routing', options = ir_op,
+    action = function(v)
+        sc.inmx.route = ir_op[v]
+        for i = 1,2 do sc.inmx:update(i) end
+    end
+}
 for i = 1,2 do
     params:add {
         type = 'control', id = 'in lvl '..i, controlspec = cs.def { default = 1 },
