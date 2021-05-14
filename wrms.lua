@@ -145,10 +145,10 @@ wrms_ = nest_ {
                 } :param('wgl'),
                 trans = _trans(2, {})
             }, nest_ {
-                tp1 = _txt.enc.control {
+                tp1 = _txt.enc.number {
                     n = 2, x = x[1][1], y = y.enc, label = false
                 } :param('tp 1'),
-                tp2 = _txt.enc.control {
+                tp2 = _txt.enc.number {
                     n = 3, x = x[2][1], y = y.enc, label = false
                 } :param('tp 2'),
                 trans = _trans(2, {})
@@ -222,6 +222,7 @@ wrms_ = nest_ {
                 buf = nest_(2):each(function(i)
                     return _txt.key.number {
                         label = 'buf', n = i+1, x = x[i][1], y = y.key,
+                        formatter = function(s, v) return math.tointeger(v) end
                     } :param('buf '..i)
                 end)
             }, nest_ {

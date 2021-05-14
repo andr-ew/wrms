@@ -93,31 +93,24 @@ params:add {
     end
 }
 local intervals = {
-    "unison", "min 2nd", "maj 2nd",
+    "0th", "min 2nd", "maj 2nd",
     "min 3rd", "maj 3rd", "4th",
     "tritone", "5th", "min 6th",
     "maj 6th", "min 7th", "maj 7th"
 }
-params:add {
-    type = 'control', id = 'tp 1', 
-    controlspec = cs.def { 
-        default = 0, min = -10, max = 4, quantum = 1/12/14, step = 1/12
-    },
-    action = function(v)
-        sc.ratemx[1].bndw = v
-        sc.ratemx:update(1)
-    end
-}
-params:add {
-    type = 'control', id = 'tp 2',
-    controlspec = cs.def { 
-        default = 0, min = -10, max = 4, quantum = 1/12/14, step = 1/12
-    },
-    action = function(v)
-        sc.ratemx[2].bndw = v
-        sc.ratemx:update(2)
-    end
-}
+local tp_fm = function(s) return 
+    math.tointeger(s.value//12).." + "..intervals[s.value%12 + 1] 
+end
+for i = 1,2 do
+    params:add {
+        type = 'number', id = 'tp '..i, formatter = tp_fm,
+        default = 0, min = -10*12, max = 4*12,
+        action = function(v)
+            sc.ratemx[i].bndw = v/12
+            sc.ratemx:update(i)
+        end
+    }
+end
 params:add {
     type = 'control', id = 'wgl',
     controlspec = cs.def { min = 0, max = 100, quantum = 0.01/100 },

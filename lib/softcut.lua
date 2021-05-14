@@ -1,6 +1,5 @@
 --TODO
 --add 'in mode' param - mono, stereo
---tp: display +/-st (nest)
 --punch-in varispeed (cartographer -> rate_query)
 --s: small length bugs (cartographer) (add delta_startend)
 --pan: map input/output based on record state
