@@ -66,6 +66,7 @@ params:add {
     id = 'clear 1',
     action = function()
         params:set('rec 1', 0)
+        params:set('dir 1', 2)
         sc.punch_in:clear(1)
     end
 }
@@ -83,13 +84,8 @@ params:add {
     id = 'clear 2',
     action = function()
         params:set('rec 2', 0)
-
-        if sc.buf[2]==2 then
-            sc.punch_in:clear(2)
-            params:set('oct 2', 0)
-            params:set('dir 2', 2)
-        else
-        end
+        params:set('dir 2', 2)
+        sc.punch_in:clear(2)
     end
 }
 params:add {

@@ -71,6 +71,11 @@ local sc = {
             
             softcut.phase_quant(i*2 - 1, 1/60)
             sc.slew(i, 0.2)
+            
+            --adjust punch_in time quantum based on rate
+            reg.rec[i].rate_callback = function() 
+                return sc.ratemx[sc.buf[i]].rate
+            end
         end
 
         local function e(i, ph)
@@ -85,6 +90,7 @@ local sc = {
 
         softcut.event_phase(e)
         softcut.poll_start_phase()
+        
     end,
     scoot = function()
         reg.play:position(2, 0)
@@ -170,8 +176,8 @@ local sc = {
         end
     },
     ratemx = {
-        { oct = 1, bnd = 1, bndw = 0, mod = 0, dir = 1, rate = 0 },
-        { oct = 1, bnd = 1, bndw = 0, mod = 0, dir = 1, rate = 0 },
+        { oct = 1, bnd = 1, bndw = 0, mod = 0, dir = 1, rate = 1 },
+        { oct = 1, bnd = 1, bndw = 0, mod = 0, dir = 1, rate = 1 },
         update = function(s, n)
             s[n].rate = 2^s[n].oct * 2^(s[n].bnd - 1) * 2^s[n].bndw * (1 + s[n].mod) * s[n].dir
             sc.stereo('rate', n, s[n].rate)
@@ -223,7 +229,6 @@ local sc = {
         end
     },
     punch_in = {
-        quant = 0.01,
         delay_size = 4,
         { recording = false, recorded = false, manual = false, big = true, play = 0, t = 0, clock = nil },
         { recording = false, recorded = false, manual = false, big = false, play = 0, t = 0, clock = nil },
@@ -243,7 +248,6 @@ local sc = {
             elseif s[buf].recorded then
                 sc.oldmx[buf].rec = v; sc.oldmx:update(buf)
             elseif v == 1 then
-                -- set quant to sc.ratemx.rate * s.quant
                 reg.blank[buf]:set_length(16777216 / 48000 / 2)
                 reg.rec[buf]:punch_in()
 
