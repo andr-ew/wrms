@@ -160,10 +160,8 @@ wrms_ = nest_ {
                     min = 0, max = math.huge, inc = 0.01,
                     n = 2, x = x[1][1], y = y.enc,
                     value = function() return reg.play:get_start(1) end,
-                    action = function(s, v)
-                        local l = reg.play:get_length(1)
-                        reg.play:set_start(1, v)
-                        reg.play:set_length(1, l)
+                    action = function(s, v, delta)
+                        reg.play:delta_startend(1, delta)
                     end
                 },
                 l = _txt.enc.number {

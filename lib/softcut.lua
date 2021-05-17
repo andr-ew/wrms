@@ -1,13 +1,11 @@
 --TODO
 --punch-in varispeed (cartographer -> rate_query)
---s: small length bugs (cartographer) (add delta_startend)
 --pan: map input/output based on record state
 --tap tempo > v/o alt
 --bug: old mode overdub -> ping-pong
---opposite route as default
---inital .data to ./data/init
 
 --cartographer hax
+
 Slice.skew = 0
 
 function Slice:update()
