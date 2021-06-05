@@ -1,11 +1,12 @@
 --TODO
---punch-in varispeed (cartographer -> rate_query)
---pan: map input/output based on record state
---tap tempo > v/o alt
+--tap tempo > old alt
+--reset > v alt
 --bug: old mode overdub -> ping-pong
+--data/init
+--replace ph w/ fade - map phase to key option (0%, 50%)
+--crow ins (mappings: reset, bipolar bnd, filter cut, s/l, old, vol, octave(no slew)) 
 
 --cartographer hax
-
 Slice.skew = 0
 
 function Slice:update()
