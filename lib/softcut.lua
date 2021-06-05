@@ -3,8 +3,8 @@
 --reset > v alt
 --bug: old mode overdub -> ping-pong
 --data/init
---replace ph w/ fade - map phase to key option (0%, 50%)
---crow ins (mappings: reset, bipolar bnd, filter cut, s/l, old, vol, octave(no slew)) 
+--replace ph w/ fade
+--crow ins (mappings: reset, tap, bipolar bnd, filter cut, s/l, old, vol, octave(no slew)) 
 
 --cartographer hax
 Slice.skew = 0
