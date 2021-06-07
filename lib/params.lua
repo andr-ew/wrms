@@ -88,6 +88,14 @@ params:add {
         sc.punch_in:clear(2)
     end
 }
+for i = 1,2 do
+    params:add {
+        type = 'binary', behavior = 'trigger', id = 'res '..i,
+        action = function()
+            reg.play:trigger(i)
+        end
+    }
+end
 params:add {
     type = 'control', id = 'bnd 1',
     controlspec = cs.def { default = 1, min = 1, max = 2 },

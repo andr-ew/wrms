@@ -231,8 +231,8 @@ local sc = {
     },
     punch_in = {
         delay_size = 4,
-        { recording = false, recorded = false, manual = false, big = true, play = 0, t = 0, clock = nil },
-        { recording = false, recorded = false, manual = false, big = false, play = 0, t = 0, clock = nil },
+        { recording = false, recorded = false, manual = false, big = true, play = 0, t = 0, tap_blink = 0, tap_clock = nil, tap_buf = {} },
+        { recording = false, recorded = false, manual = false, big = false, play = 0, t = 0, tap_blink = 0, tap_clock = nil, tap_buf = {} },
         update_play = function(s, buf)
             sc.stereo('play', buf, s[buf].play)
         end,
@@ -287,6 +287,39 @@ local sc = {
                 wrms.gfx:wake(buf)
             end
         end,
+        untap = function(s, pair)
+            local buf = sc.buf[pair]
+
+            s[buf].tap_buf = {}
+            if s[buf].tap_clock then clock.cancel(s[buf].tap_clock) end
+            s[buf].tap_clock = nil
+            s[buf].tap_blink = 0
+        end,
+        tap = function(s, pair, t)
+            local buf = sc.buf[pair]
+            print('tap', pair, buf, t)
+
+            if t < 1 and t > 0 then
+                table.insert(s[buf].tap_buf, t)
+                if #s[buf].tap_buf > 2 then table.remove(s[buf].tap_buf, 1) end
+                local avg = 0
+                for i,v in ipairs(s[buf].tap_buf) do avg = avg + v end
+                avg = avg / #s[buf].tap_buf
+
+                reg.play:set_length(pair*2, avg)
+                sc.punch_in:big(pair, avg)
+
+                if s[buf].tap_clock then clock.cancel(s[buf].tap_clock) end
+                s[buf].tap_clock = clock.run(function() 
+                    while true do
+                        s[buf].tap_blink = 1
+                        clock.sleep(avg*0.5)
+                        s[buf].tap_blink = 0
+                        clock.sleep(avg*0.5)
+                    end
+                end)
+            else s:untap(pair) end
+        end,
         clear = function(s, pair)
             local buf = sc.buf[pair]
             local i = buf * 2
@@ -301,6 +334,7 @@ local sc = {
             s[buf].recording = false
             s[buf].big = false
             s[buf].manual = false
+            s:untap(pair)
 
             reg.rec[buf]:set_length(1, 'fraction')
             for j = 1,2 do

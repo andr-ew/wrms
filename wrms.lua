@@ -132,7 +132,29 @@ wrms_ = nest_ {
                         reg.play:get_slice(3):update()
                     end
                 },
-                rec = nest_(2):each(function(i) return _rec(i) end)
+                tap = nest_(2):each(function(i)
+                    return _txt.key.trigger {
+                        label = 'tap', n = i+1, x = x[i][1], y = y.key, selected = 1,
+                        lvl = function() 
+                            return sc.punch_in[sc.buf[i]].tap_blink*11 + 4 
+                        end,
+                        action = function(s, v, t, dt) 
+                            if i == 1 then
+                                if not sc.punch_in[sc.buf[1]].recorded then 
+                                    params:set('rec 1', 1, true)
+                                    sc.punch_in:manual(1) 
+                                end
+                            else
+                                if not sc.punch_in[2].recorded then 
+                                    params:set('rec 2', 1, true)
+                                    sc.punch_in:manual(2) 
+                                end
+                            end
+
+                            sc.punch_in:tap(i, dt) 
+                        end
+                    }
+                end)
             }
         },
         b = nest_ {
@@ -181,6 +203,7 @@ wrms_ = nest_ {
                             sc.punch_in:manual(1) 
                         end
                         sc.punch_in:big(1, v)
+                        sc.punch_in:untap(1)
                     end
                 },
                 trans = _trans(1, {})
@@ -191,6 +214,7 @@ wrms_ = nest_ {
                     value = function() return reg.play:get_start(2*2) end,
                     action = function(s, v)
                         reg.play:set_start(2*2, v)
+                        sc.punch_in:untap(2)
                     end
                 },
                 e = _txt.enc.number {
@@ -204,6 +228,7 @@ wrms_ = nest_ {
                             params:set('rec 2', 1, true)
                             sc.punch_in:manual(2) 
                         end
+                        sc.punch_in:untap(2)
                     end
                 },
                 trans = _trans(2, {})
