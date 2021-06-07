@@ -91,9 +91,7 @@ params:add {
 for i = 1,2 do
     params:add {
         type = 'binary', behavior = 'trigger', id = 'res '..i,
-        action = function()
-            reg.play:trigger(i)
-        end
+        action = function() reg.play:trigger(i) end
     }
 end
 params:add {

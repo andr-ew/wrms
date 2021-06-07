@@ -105,7 +105,11 @@ wrms_ = nest_ {
                         reg.play:get_slice(1):update()
                     end
                 },
-                rec = nest_(2):each(function(i) return _rec(i) end)
+                res = nest_(2):each(function(i)
+                    return _txt.key.trigger {
+                        label = 'res', n = i+1, x = x[i][1], y = y.key
+                    } :param('res '..i)
+                end)
             }
         },
         o = nest_ {

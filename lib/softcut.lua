@@ -1,6 +1,4 @@
 --TODO
---tap tempo > old alt
---reset > v alt
 --bug: old mode overdub -> ping-pong
 --data/init
 --replace ph w/ fade
