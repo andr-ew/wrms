@@ -1,8 +1,9 @@
 --TODO
 --bug: old mode overdub -> ping-pong
---data/init
+--data / persistence
 --replace ph w/ fade
---crow ins (mappings: reset, tap, bipolar bnd, filter cut, s/l, old, vol, octave(no slew)) 
+--include crowify
+--  ins (mappings: reset, tap, bipolar bnd, filter cut, s/l, old, vol, octave(no slew)) 
 
 --cartographer hax
 Slice.skew = 0

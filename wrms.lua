@@ -7,7 +7,8 @@
 -- time-wigglers / echo loopers
 --
 -- version 2.0.0 @andrew
--- https://llllllll.co/t/wrms
+-- https://norns.community/
+-- authors/andrew/wrms
 --
 -- two wrms (stereo loops), 
 -- similar in function but each 

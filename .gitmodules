@@ -4,3 +4,6 @@
 [submodule "lib/cartographer"]
 	path = lib/cartographer
 	url = https://github.com/andr-ew/cartographer
+[submodule "lib/crowify"]
+	path = lib/crowify
+	url = https://github.com/21echoes/crowify
