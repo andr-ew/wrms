@@ -33,7 +33,7 @@ the first time you meet the wrms wrm1 (on the left) will be set up as a delay & 
 - **old:** set the overdub/delay feedback level - or the rate at which old material fades away. turn it up in a delay for long echo tails, or turn it down in a loop for tape decay memory loss.
 - **bnd:** bnd is the simplest time warping control - K2 fine-tunes wrm1 between 1x & 2x pitch/speed for instant delay bendiness 
     - <Summmary> (when orbiting a black hole, the rate of time is inversely proportional to orbital altitude). </Summary>
-- **wgl:** wgl is a slow LFO routed to the pitch of both wrms, causing various orbital instabilities. set it to around 0.08 for pleasant tape wow/flutter, or paitiently turn it up to 100 to pass through the singularity & back.
+- **wgl:** wgl is a slow LFO routed to the pitch of both wrms, causing various orbital instabilities. set it to around 0.08 for pleasant tape wow/flutter, or paitiently turn it up to 100 to pass through the singularity.
 - **<< & >>:** octave transports double and halve the rate of time. hold & release a key for a playable tape glide effect. pressing or holding both keys at once will reverse time.
 - **s & l:** the start & length of the playback window. 
     - in delay mode, "l" is the most useful as it sets the time between repeats - ranging from 4-second phrase repeats down to resonator-like phasing at 1 millisecond. 
