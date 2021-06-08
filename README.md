@@ -51,7 +51,7 @@ the first time you meet the wrms wrm1 (on the left) will be set up as a delay & 
 - the **mix** section has a handful of useful level controls not available on the main screen. **input routing** will be important when using mono inputs.
     - "mono" sends both inputs to both wrms in mono
     - "2x mono" sends L in to wrm 1 only and R in to wrm 2 only
-- in the **wrms** section all main & alt params are available for midi mapping
+- in the **wrms** section all main & alt params are available for midi mapping (including for midi foot switches)
 - the **crow** section allows you to map most controls to crow inputs (using @21echos' crowify). 
 
 ## alt
