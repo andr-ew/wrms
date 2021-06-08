@@ -6,7 +6,7 @@ two time-travel wrms for loops, delays, & everything in-between
 ![screen recording](lib/img/wrm.gif)
 
 ### requirements
-- norns
+- norns (update 210607 or later)
 - audio input
 
 ### download
