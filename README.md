@@ -29,7 +29,7 @@ the first time you meet the wrms wrm1 (on the left) will be set up as a delay & 
 - **rec:** set the record state. 
     - if the wrm is asleep (flat line) toggling rec will punch in a new loop time. 
     - for an awake wrm (wiggling), rec sets whether the loop is overdubbing new material, or causes a stutter freeze in a delay. 
-    - in an awake state, hold rec to clear the loop (or delay) and put the wrm to sleep. if wrm 1 is being a delay, you can use rec to turn it into a looper (!!).
+    - in an awake state, hold rec to clear the loop (or delay) and put the wrm to sleep. if wrm 1 is being a delay, you can use rec to turn it into a second looper (!!).
 - **old:** set the overdub/delay feedback level - or the rate at which old material fades away. turn it up in a delay for long echo tails, or turn it down in a loop for tape decay memory loss.
 - **bnd:** bnd is the simplest time warping control - K2 fine-tunes wrm1 between 1x & 2x pitch/speed for instant delay bendiness 
     - <Summmary> (when orbiting a black hole, the rate of time is inversely proportional to orbital altitude). </Summary>
