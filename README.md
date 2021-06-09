@@ -71,7 +71,7 @@ holding K1 reveals a hidden batch of controls behind every page. these are meant
 
 # templates
 
-templates are variations of the main UI to fit a person's specific needs & preferences or even add new features. you could make a new template to remove an unused feature to declutter the UI, add an additonal page with some frequently used alt controls, or hack in new controls with softcut features from another app. templates are just lua script that pulls in wrm's various libraries & hooks them all together with an on-screen user interface.
+templates are variations of the main UI to fit a person's specific needs & preferences or even add new features. you could make a new template to remove an unused feature to declutter the UI, add an additonal page with some frequently used alt controls, or hack in new softcut features from another app. templates are just lua script that pulls in wrm's various libraries & hooks them all together with an on-screen user interface.
 
 ## wrms/lite
 
