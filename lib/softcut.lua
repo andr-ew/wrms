@@ -1,5 +1,4 @@
 --TODO
---bug: old mode overdub -> ping-pong
 --data / persistence
 --replace ph w/ fade
 --include crowify
@@ -78,19 +77,13 @@ local sc = {
             end
         end
 
-        local function e(i, ph)
-            if i == 1 then 
+        softcut.event_position(function(i, ph)
+            if i == 2 then 
                 sc:set_phase(1, ph) 
-            elseif i == 3 then 
-                --if ph > 200 or ph < 150 then print('phase', ph) end
+            elseif i == 4 then 
                 sc:set_phase(2, ph)
-                redraw()
             end
-        end
-
-        softcut.event_phase(e)
-        softcut.poll_start_phase()
-        
+        end)
     end,
     scoot = function()
         reg.play:position(2, 0)
@@ -137,16 +130,22 @@ local sc = {
             else
                 if mode == 'overdub' then
                     sc.stereo('pre_level', n, s[n].old)
+                    softcut.level_cut_cut(1 + off, 1 + off, 0)
+                    softcut.level_cut_cut(2 + off, 2 + off, 0)
                     softcut.level_cut_cut(1 + off, 2 + off, 0)
                     softcut.level_cut_cut(2 + off, 1 + off, 0)
                 else
                     sc.stereo('pre_level', n, 0)
                     if mode == 'ping-pong' then
+                        softcut.level_cut_cut(1 + off, 1 + off, 0)
+                        softcut.level_cut_cut(2 + off, 2 + off, 0)
                         softcut.level_cut_cut(1 + off, 2 + off, s[n].old)
                         softcut.level_cut_cut(2 + off, 1 + off, s[n].old)
                     else
                         softcut.level_cut_cut(1 + off, 1 + off, s[n].old)
                         softcut.level_cut_cut(2 + off, 2 + off, s[n].old)
+                        softcut.level_cut_cut(1 + off, 2 + off, 0)
+                        softcut.level_cut_cut(2 + off, 1 + off, 0)
                     end
                 end
             end
@@ -296,7 +295,6 @@ local sc = {
         end,
         tap = function(s, pair, t)
             local buf = sc.buf[pair]
-            print('tap', pair, buf, t)
 
             if t < 1 and t > 0 then
                 table.insert(s[buf].tap_buf, t)

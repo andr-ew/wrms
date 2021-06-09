@@ -1,3 +1,12 @@
+--screen redraw loop
+clock.run(function()
+    while true do
+        clock.sleep(1/30)
+        redraw()
+    end
+end)
+
+
 local segs = function()
   ret = {}
   
@@ -47,6 +56,9 @@ gfx.draw = function()
     ]]
   
     for i = 1,2 do
+        --query positions & set phase values
+        softcut.query_position(i*2)
+
         local left = mar + (i-1) * 58
         local top = 34
         local width = 40

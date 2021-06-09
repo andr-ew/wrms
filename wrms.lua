@@ -32,9 +32,9 @@ include 'wrms/lib/nest/txt'
 cartographer, Slice = include 'wrms/lib/cartographer/cartographer'
 cs = require 'controlspec'
 
-wrms = include 'wrms/lib/globals'              --saving, loading, values, etc
+wrms = include 'wrms/lib/globals'      --saving, loading, values, etc
 sc, reg = include 'wrms/lib/softcut'   --softcut utilities
-wrms.gfx = include 'wrms/lib/graphics' --animations
+wrms.gfx = include 'wrms/lib/graphics' --graphics & animations
 include 'wrms/lib/params'              --create params
 
 --norns interface
