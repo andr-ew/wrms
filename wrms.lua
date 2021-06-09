@@ -3,25 +3,40 @@
 -- | |/ |/ / /  / / / / / (__  )   
 -- |__/|__/_/  /_/ /_/ /_/____/    
 --
--- dual asyncronous 
--- time-wigglers / echo loopers
+-- dual stereo time-wigglers
+-- / echo loopers
 --
 -- version 2.0.0 @andrew
 -- https://norns.community/
 -- authors/andrew/wrms
 --
--- two wrms (stereo loops), 
--- similar in function but each 
--- with thier own quirks + 
--- abilities
+-- two time-travel wrms for 
+-- loops, delays, & everything 
+-- in-between
 -- 
 -- E1 changes which page 
 -- is displayed. pages contain 
 -- controls, mapped to the
 -- lower keys and encoders. 
 -- the location of the control 
+-- (left, right, center)
 -- shows which wrm will be 
 -- affected.
+--
+-- the first time you meet the 
+-- wrms, wrm1 (on the left) will 
+-- be set up as a delay & wrm 2 
+-- (on the right) will be 
+-- configured as a looper pedal. 
+-- feed the wrms some audio to 
+-- begin exploring ! tap K3 once 
+-- to begin recording a loop, 
+-- then again to begin playback.
+--
+-- for documentation of each 
+-- control, head to:
+-- https://norns.community/
+-- authors/andrew/wrms
 
 function r() norns.script.load(norns.script.state) end
 
@@ -37,7 +52,6 @@ sc, reg = include 'wrms/lib/softcut'   --softcut utilities
 wrms.gfx = include 'wrms/lib/graphics' --graphics & animations
 include 'wrms/lib/params'              --create params
 
---norns interface
 
 local x, y = wrms.pos.x, wrms.pos.y
 
@@ -71,6 +85,7 @@ local _trans = function(i, o)
     } :merge(o)
 end
 
+--the default wrms template
 wrms_ = nest_ {
     gfx = _screen {
         redraw = wrms.gfx.draw
@@ -81,22 +96,20 @@ wrms_ = nest_ {
         lvl = function() return wrms_.alt.v==1 and { 1, 15 } or { 4, 15 } end
     },
     alt = _key.momentary { n = 1 },
-    page = nest_ {
+    pages = nest_ {
         v = nest_ {
-            nest_ {
+            main = nest_ {
                 vol = nest_(2):each(function(i)
                     return _txt.enc.control {
                         n = i + 1, x = x[i][1], y = y.enc, label = 'vol'
                     } :param('vol '..i)
                 end),
                 rec = nest_(2):each(function(i) return _rec(i) end)
-            }, nest_ {
-                ph = _txt.enc.control {
-                    n = 2, x = x[1][1], y = y.enc, persistent = false,
-                    action = function(s, v)
-                        softcut.position(2, sc.phase_abs[1] + v)
-                    end
-                },
+            }, 
+            alt = nest_ {
+                fd = _txt.enc.control {
+                    n = 2, x = x[1][1], y = y.enc
+                } :param('fd 1'),
                 sk = _txt.enc.control {
                     min = 0, max = 0.2, quant = 1/2000, step = 0,
                     n = 3, x = x[1][2], y = y.enc,
@@ -114,14 +127,15 @@ wrms_ = nest_ {
             }
         },
         o = nest_ {
-            nest_ {
+            main = nest_ {
                 old = nest_(2):each(function(i)
                     return _txt.enc.control {
                         n = i + 1, x = x[i][1], y = y.enc, label = 'old'
                     } :param('old '..i)
                 end),
                 rec = nest_(2):each(function(i) return _rec(i) end)
-            }, nest_ {
+            }, 
+            alt = nest_ {
                 ph = _txt.enc.control {
                     n = 2, x = x[2][1], y = y.enc, persistent = false,
                     action = function(s, v)
@@ -163,7 +177,7 @@ wrms_ = nest_ {
             }
         },
         b = nest_ {
-            nest_ {
+            main = nest_ {
                 bnd = _txt.enc.control {
                     n = 2, x = x[1][1], y = y.enc, label = 'bnd'
                 } :param('bnd 1'),
@@ -171,7 +185,8 @@ wrms_ = nest_ {
                     n = 3, x = x[1.5], y = y.enc
                 } :param('wgl'),
                 trans = _trans(2, {})
-            }, nest_ {
+            }, 
+            alt = nest_ {
                 tp1 = _txt.enc.number {
                     n = 2, x = x[1][1], y = y.enc, label = false
                 } :param('tp 1'),
@@ -182,7 +197,7 @@ wrms_ = nest_ {
             }
         },
         s = nest_ {
-            nest_ {
+            main = nest_ {
                 s = _txt.enc.number {
                     min = 0, max = math.huge, inc = 0.01,
                     n = 2, x = x[1][1], y = y.enc,
@@ -212,7 +227,8 @@ wrms_ = nest_ {
                     end
                 },
                 trans = _trans(1, {})
-            }, nest_ {
+            }, 
+            alt = nest_ {
                 s = _txt.enc.number {
                     min = 0, max = math.huge, inc = 0.01,
                     n = 2, x = x[2][1], y = y.enc,
@@ -240,7 +256,7 @@ wrms_ = nest_ {
             }
         },
         ['>'] = nest_ {
-            nest_ {
+            main = nest_ {
                 ['>'] = _txt.enc.control {
                     n = 2, x = x[1][1], y = y.enc,
                 } :param('>'),
@@ -253,7 +269,8 @@ wrms_ = nest_ {
                         formatter = function(s, v) return math.tointeger(v) end
                     } :param('buf '..i)
                 end)
-            }, nest_ {
+            }, 
+            alt = nest_ {
                 pan1 = _txt.enc.control {
                     n = 2, x = x[1][1], y = y.enc, label = 'pan'
                 } :param('in pan 1'),
@@ -268,24 +285,36 @@ wrms_ = nest_ {
                 } :param('aliasing')
             }
         },
-        f = nest_(2):each(function(i)
-            return nest_ {
+        f = nest_ {
+            main = nest_ {
                 f = _txt.enc.control {
-                    n = 2, x = x[i][1], y = y.enc, label = 'f'
-                } :param('f'..i),
+                    n = 2, x = x[1][1], y = y.enc, label = 'f'
+                } :param('f'..1),
                 q = _txt.enc.control {
-                    n = 3, x = x[i][2], y = y.enc, label = 'q'
-                } :param('q'..i),
+                    n = 3, x = x[1][2], y = y.enc, label = 'q'
+                } :param('q'..1),
                 type = _txt.key.option {
-                    n = { 2, 3 }, x = x[i][1], y = y.key,
-                } :param('filter type '..i)
+                    n = { 2, 3 }, x = x[1][1], y = y.key,
+                } :param('filter type '..1)
+            },
+            alt = nest_ {
+                f = _txt.enc.control {
+                    n = 2, x = x[2][1], y = y.enc, label = 'f'
+                } :param('f'..2),
+                q = _txt.enc.control {
+                    n = 3, x = x[2][2], y = y.enc, label = 'q'
+                } :param('q'..2),
+                type = _txt.key.option {
+                    n = { 2, 3 }, x = x[2][1], y = y.key,
+                } :param('filter type '..2)
+
             }
-        end)
+        }
     } :each(function(k, v)
         v.enabled = function(s) return wrms_.tab.options[wrms_.tab.v//1] == k end
-        if v[1] then
-            v[1].enabled = function() return wrms_.alt.v == 0 end
-            v[2].enabled = function() return wrms_.alt.v == 1 end
+        if v.main then
+            v.main.enabled = function() return wrms_.alt.v == 0 end
+            v.alt.enabled = function() return wrms_.alt.v == 1 end
         end
     end)
 } :connect { screen = screen, enc = enc, key = key } 

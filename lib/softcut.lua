@@ -1,6 +1,6 @@
 --TODO
 --data / persistence
---replace ph w/ fade
+--remove fd, link fade to length, max out at 0.01
 --include crowify
 --  ins (mappings: reset, tap, bipolar bnd, filter cut, s/l, old, vol, octave(no slew)) 
 
