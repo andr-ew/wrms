@@ -107,9 +107,12 @@ wrms_ = nest_ {
                 rec = nest_(2):each(function(i) return _rec(i) end)
             }, 
             alt = nest_ {
-                fd = _txt.enc.control {
-                    n = 2, x = x[1][1], y = y.enc
-                } :param('fd 1'),
+                ph = _txt.enc.control {
+                    n = 2, x = x[1][1], y = y.enc, persistent = false,
+                    action = function(s, v)
+                        softcut.position(2, sc.phase_abs[1] + v)
+                    end
+                },
                 sk = _txt.enc.control {
                     min = 0, max = 0.2, quant = 1/2000, step = 0,
                     n = 3, x = x[1][2], y = y.enc,
@@ -223,6 +226,7 @@ wrms_ = nest_ {
                             sc.punch_in:manual(1) 
                         end
                         sc.punch_in:big(1, v)
+                        sc.fade(1, v)
                         sc.punch_in:untap(1)
                     end
                 },

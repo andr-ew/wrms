@@ -1,8 +1,8 @@
 --TODO
 --data / persistence
---remove fd, link fade to length, max out at 0.01
+--params: add wgl rate, wgl ph, wgl ext
 --include crowify
---  ins (mappings: reset, tap, bipolar bnd, filter cut, s/l, old, vol, octave(no slew)) 
+--  ins (mappings: reset, tap, wgl ext, filter cut, s/l, old, vol, octave(no slew)) 
 
 --cartographer hax
 Slice.skew = 0
@@ -94,6 +94,9 @@ local sc = {
         for i = 1, 2 do
             softcut[command](off + i, ...)
         end
+    end,
+    fade = function(pair, length)
+        sc.stereo('fade_time', pair, math.min(0.01, length))
     end,
     lvlmx = {
         {

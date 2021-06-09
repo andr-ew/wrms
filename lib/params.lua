@@ -94,13 +94,6 @@ for i = 1,2 do
         action = function() reg.play:trigger(i) end
     }
 end
-for i = 1,2 do
-    params:add {
-        type = "control", controlspec = cs.def { default = 0.01, quantum = 0.01/10 }, 
-        id = 'fd '..i,
-        action = function(v) sc.stereo('fade_time', i, v) end
-    }
-end
 params:add {
     type = 'control', id = 'bnd 1',
     controlspec = cs.def { default = 1, min = 1, max = 2 },
