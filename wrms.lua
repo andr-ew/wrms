@@ -178,7 +178,7 @@ wrms_ = nest_ {
                 tp2 = _txt.enc.number {
                     n = 3, x = x[2][1], y = y.enc, label = false
                 } :param('tp 2'),
-                trans = _trans(2, {})
+                trans = _trans(1, {})
             }
         },
         s = nest_ {

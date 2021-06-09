@@ -1,12 +1,3 @@
---screen redraw loop
-clock.run(function()
-    while true do
-        clock.sleep(1/30)
-        redraw()
-    end
-end)
-
-
 local segs = function()
   ret = {}
   
@@ -159,6 +150,8 @@ gfx.draw = function()
         end
         screen.fill()
     end
+
+    return true --return true to redraw every frame
 end
 
 gfx.sleep_clock = clock.run(function()
