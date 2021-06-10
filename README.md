@@ -34,7 +34,7 @@ the first time you meet the wrms, wrm1 (on the left) will be set up as a delay &
 - **bnd:** bnd is the simplest time warping control - K2 fine-tunes wrm1 between 1x & 2x pitch/speed for instant delay bendiness 
     - <Summmary> (when orbiting a black hole, the rate of time is inversely proportional to orbital altitude). </Summary>
 - **wgl:** wgl is a slow LFO routed to the pitch of both wrms, causing various orbital instabilities. set it to around 0.08 for pleasant tape wow/flutter, or paitiently turn it up to 100 to pass through the singularity.
-- **<< & >>:** octave transports double and halve the rate of time. hold & release a key for a playable tape glide effect. pressing or holding both keys at once will reverse time.
+- **<< & >>:** octave transports double and halve the rate of time. hold & release a key for a playable tape glide effect. pressing and releasing both keys at once will reverse time.
 - **s & l:** the start & length of the playback window. 
     - in delay mode, "l" is the most useful as it sets the time between repeats - ranging from 4-second phrase repeats down to resonator-like phasing at 1 millisecond.
     - in loop scenarios (esp. with shared buffers) both controls can be used to modify the playback window or scan around buffer space for microlooping or pseudo-granular textures. 
@@ -77,7 +77,15 @@ templates are variations of the main UI to fit a person's specific needs & prefe
 
 wrms ships with the "lite" template, which you can access from the main SELECT menu on norns. It's essentially a much simplified version of vanilla wrms that falls closer to a traditional dealy & looper pedal. this might be a good place to start if you're new to norns ! (the chosen controls & presets were based on those used on jade islan sayson's [paru paro](https://jadeislansayson.bandcamp.com/album/paru-paro))
 
-(add docs of the various controls)
+- **rec:**: record a loop in wrm 2. tap K2 once to begin recording a loop, then again to begin playback. while playing, rec toggles whether new audio is overdubbed. hold K2 to clear.
+- **v:** set the volume of the wrm 1 echo
+- **l:** set the length of time bewteen echos
+- **old:** set decide how much old audio remains between repeats. turn it up on wrm 1 for longer echo tails, or turn it down in wrm 2 for tape decay memory loss.
+- **bnd:** pitch bend wrm 1. this changes the echo time and repitches the echo momentarily.
+- **wgl:** add a slow, tape-like pitch wobble to both wrms. set it to around 0.08 for pleasant tape wow/flutter, or paitiently turn it up to 100 to pass through the singularity.
+- **<< & >>:** octave transports to double and halve the rate of time in wrm 2. hold & release a key for a playable tape glide effect. pressing and releasing both keys at once will reverse time.
+
+even in the lite template, the full collection of controls are still accessible under PARAMS > EDIT.   
 
 ## custom
 
