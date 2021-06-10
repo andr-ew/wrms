@@ -192,7 +192,7 @@ params:add {
 }
 for i = 1,2 do
     params:add {
-        type = 'control', id = 'f'..i,
+        type = 'control', id = 'f '..i,
         --controlspec = cs.new(20,20000,'exp',0,20000,'hz'),
         controlspec = cs.def { default = 1, quantum = 1/100/2, step = 0 },
         action = function(v) 
@@ -200,7 +200,7 @@ for i = 1,2 do
         end
     }
     params:add {
-        type = 'control', id = 'q'..i,
+        type = 'control', id = 'q '..i,
         --controlspec = cs.new(min,max,'exp',0,10),
         controlspec = cs.def { default = 0.4 },
         action = function(v)
@@ -231,3 +231,13 @@ params:add {
         end
     end
 }
+
+params:add_separator('crow')
+crowify:register('wgl in')
+crowify:register('wgrt')
+for i = 1,2 do
+    for _,v in ipairs { 'res',  'f', 'vol', 'old', 'dir', 'oct', 'rec', 'filter type' } do
+        crowify:register(v..' '..i)
+    end
+end
+crowify:add_params()

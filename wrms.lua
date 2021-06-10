@@ -45,6 +45,7 @@ include 'wrms/lib/nest/core'
 include 'wrms/lib/nest/norns'
 include 'wrms/lib/nest/txt'
 cartographer, Slice = include 'wrms/lib/cartographer/cartographer'
+crowify = include 'lib/crowify/lib/crowify' .new(0.01)
 cs = require 'controlspec'
 
 wrms = include 'wrms/lib/globals'      --saving, loading, values, etc
@@ -293,10 +294,10 @@ wrms_ = nest_ {
             main = nest_ {
                 f = _txt.enc.control {
                     n = 2, x = x[1][1], y = y.enc, label = 'f'
-                } :param('f'..1),
+                } :param('f 1'),
                 q = _txt.enc.control {
                     n = 3, x = x[1][2], y = y.enc, label = 'q'
-                } :param('q'..1),
+                } :param('q 1'),
                 type = _txt.key.option {
                     n = { 2, 3 }, x = x[1][1], y = y.key,
                 } :param('filter type '..1)
@@ -304,10 +305,10 @@ wrms_ = nest_ {
             alt = nest_ {
                 f = _txt.enc.control {
                     n = 2, x = x[2][1], y = y.enc, label = 'f'
-                } :param('f'..2),
+                } :param('f 2'),
                 q = _txt.enc.control {
                     n = 3, x = x[2][2], y = y.enc, label = 'q'
-                } :param('q'..2),
+                } :param('q 2'),
                 type = _txt.key.option {
                     n = { 2, 3 }, x = x[2][1], y = y.key,
                 } :param('filter type '..2)
@@ -325,7 +326,7 @@ wrms_ = nest_ {
 
 function init()
     wrms.setup()
-    --params:read()
+    params:read()
     wrms.load()
 
     params:bang()

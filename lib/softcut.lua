@@ -1,8 +1,3 @@
---TODO
---data / persistence
---include crowify
---  ins (mappings: reset, tap, wgl ext, filter cut, s/l, old, vol, octave(no slew)) 
-
 --cartographer hax
 Slice.skew = 0
 

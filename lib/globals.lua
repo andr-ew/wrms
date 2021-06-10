@@ -105,7 +105,7 @@ end
 function wrms.load(n)
     local filename = norns.state.data..'wrms-'..(n or 0)..'.data'
 
-    local data = false --util.file_exists(filename)
+    local data = util.file_exists(filename)
         and tab.load(filename)
         or {
             preset = wrms.preset:save(),
