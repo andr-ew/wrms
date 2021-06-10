@@ -46,6 +46,7 @@ local sc = {
         for i = 1, 4 do
             softcut.enable(i, 1)
             softcut.rec(i, 1)
+            softcut.play(i, 1)
             softcut.loop(i, 1)
             softcut.level_slew_time(i, 0.1)
             softcut.recpre_slew_time(i, 0.1)
@@ -94,20 +95,20 @@ local sc = {
     end,
     lvlmx = {
         {
-            vol = 1, send = 1, pan = 0,
+            vol = 1, play = 0, send = 1, pan = 0,
             update = function(s)
                 softcut.level_cut_cut(1, 3, s.send * s.vol)
                 softcut.level_cut_cut(2, 4, s.send * s.vol)
             end
         }, {
-            vol = 1, send = 0, pan = 0,
+            vol = 1, play = 0, send = 0, pan = 0,
             update = function(s)
                 softcut.level_cut_cut(3, 1, s.send * s.vol)
                 softcut.level_cut_cut(4, 2, s.send * s.vol)
             end
         },
         update = function(s, n)
-            local v, p = s[n].vol, s[n].pan
+            local v, p = s[n].vol * s[n].play, s[n].pan
             local off = (n - 1) * 2
             softcut.level(off + 1, v * ((p > 0) and 1 - p or 1))
             softcut.level(off + 2, v * ((p < 0) and 1 + p or 1))
@@ -231,7 +232,8 @@ local sc = {
         { recording = false, recorded = false, manual = false, big = true, play = 0, t = 0, tap_blink = 0, tap_clock = nil, tap_buf = {} },
         { recording = false, recorded = false, manual = false, big = false, play = 0, t = 0, tap_blink = 0, tap_clock = nil, tap_buf = {} },
         update_play = function(s, buf)
-            sc.stereo('play', buf, s[buf].play)
+            sc.lvlmx[buf].play = s[buf].play
+            sc.lvlmx:update(buf)
         end,
         big = function(s, pair, v)
             local buf = sc.buf[pair]
