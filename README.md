@@ -77,7 +77,7 @@ templates are variations of the main UI to fit a person's specific needs & prefe
 
 wrms ships with the "lite" template, which you can access from the main SELECT menu on norns. It's essentially a much simplified version of vanilla wrms that falls closer to a traditional dealy & looper pedal. this might be a good place to start if you're new to norns ! (the chosen controls & presets were based on those used on jade islan sayson's [paru paro](https://jadeislansayson.bandcamp.com/album/paru-paro))
 
-- **rec:**: record a loop in wrm 2. tap K2 once to begin recording a loop, then again to begin playback. while playing, rec toggles whether new audio is overdubbed. hold K2 to clear.
+- **rec:** record a loop in wrm 2. tap K2 once to begin recording a loop, then again to begin playback. while playing, rec toggles whether new audio is overdubbed. hold K2 to clear.
 - **v:** set the volume of the wrm 1 echo
 - **l:** set the length of time bewteen echos
 - **old:** set decide how much old audio remains between repeats. turn it up on wrm 1 for longer echo tails, or turn it down in wrm 2 for tape decay memory loss.
