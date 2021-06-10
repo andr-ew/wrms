@@ -103,12 +103,15 @@ function wrms.save(n)
 end
 
 function wrms.load(n)
-    data = {
-        --hardcode save file for testing, later copy to ./data/init/
-        preset = wrms.preset:save(),
-        length = { { 0.4, 0 }, { 0, 0 } },
-        punch_in = { true, false }
-    }
+    local filename = norns.state.data..'wrms-'..(n or 0)..'.data'
+
+    local data = false --util.file_exists(filename)
+        and tab.load(filename)
+        or {
+            preset = wrms.preset:save(),
+            length = { { 0.4, 0 }, { 0, 0 } },
+            punch_in = { true, false }
+        }
 
     wrms.preset:load(data.preset)
     sc.length.load(data.length)

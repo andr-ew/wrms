@@ -129,6 +129,23 @@ params:add {
         sc.mod[1].mul = d * 0.01 
     end
 }
+params:add {
+    type = 'control', id = 'wgrt',
+    controlspec = cs.def { min = 0, max = 20, default = 0.4, quantum = 1/100 },
+    action = function(v) 
+        sc.mod[1].rate = v
+    end
+}
+params:add {
+    type = 'control', id = 'wgl in',
+    controlspec = cs.def { default = 0, min = -2, max = 2, quant = 0.01/4 },
+    action = function(v)
+        for i = 1,2 do
+            sc.ratemx[i].pitch = v
+            sc.ratemx:update(i)
+        end
+    end
+}
 for i = 1,2 do
     params:add {
         type = 'number', id = 'oct '..i,

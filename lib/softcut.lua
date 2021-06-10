@@ -1,6 +1,5 @@
 --TODO
 --data / persistence
---params: add wgl rate, wgl ph, wgl ext
 --include crowify
 --  ins (mappings: reset, tap, wgl ext, filter cut, s/l, old, vol, octave(no slew)) 
 
@@ -178,12 +177,14 @@ local sc = {
         end
     },
     ratemx = {
-        { oct = 1, bnd = 1, bndw = 0, mod = 0, dir = 1, rate = 1 },
-        { oct = 1, bnd = 1, bndw = 0, mod = 0, dir = 1, rate = 1 },
-        update = function(s, n)
-            s[n].rate = 2^s[n].oct * 2^(s[n].bnd - 1) * 2^s[n].bndw * (1 + s[n].mod) * s[n].dir
-            sc.stereo('rate', n, s[n].rate)
-        end
+            { oct = 1, bnd = 1, bndw = 0, mod = 0, pitch = 0, dir = 1, rate = 1 },
+            { oct = 1, bnd = 1, bndw = 0, mod = 0, pitch = 0, dir = 1, rate = 1 },
+            update = function(s, n)
+                s[n].rate = 2^s[n].oct * 2^(s[n].bnd - 1) * 2^s[n].bndw 
+                * 2^s[n].pitch * (1 + s[n].mod) * s[n].dir
+
+                sc.stereo('rate', n, s[n].rate)
+            end
     },
     slew = function(n, t)
         local st = (2 + (math.random() * 0.5)) * (t or 0)

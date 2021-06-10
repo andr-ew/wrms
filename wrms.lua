@@ -190,11 +190,11 @@ wrms_ = nest_ {
                 trans = _trans(2, {})
             }, 
             alt = nest_ {
-                tp1 = _txt.enc.number {
-                    n = 2, x = x[1][1], y = y.enc, label = false
-                } :param('tp 1'),
-                tp2 = _txt.enc.number {
-                    n = 3, x = x[2][1], y = y.enc, label = false
+                wgrt = _txt.enc.control {
+                    n = 2, x = x[1][1], y = y.enc
+                } :param('wgrt'),
+                tp = _txt.enc.number {
+                    n = 3, x = x[1.5], y = y.enc
                 } :param('tp 2'),
                 trans = _trans(1, {})
             }
