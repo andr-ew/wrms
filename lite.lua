@@ -51,7 +51,7 @@ local x, y = wrms.pos.x, wrms.pos.y
 
 local _rec = function(i)
     return _txt.key.toggle {
-        n = i+1, x = x[i][1], y = y.key,
+        n = 2, x = x[i][1], y = y.key,
         label = 'rec', edge = 'falling',
         v = function() return params:get('rec '..i) end,
         action = function(s, v, t)
@@ -147,6 +147,7 @@ wrms_ = nest_ {
 function init()
     params:set('>', 0)
     params:set('<', 1)
+    params:set('input routing', 2)
 
     wrms.setup()
     params:read()
@@ -158,5 +159,5 @@ end
 
 function cleanup()
     -- wrms.save()
-    -- params:write()
+    params:write()
 end
