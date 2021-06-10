@@ -51,7 +51,7 @@ local x, y = wrms.pos.x, wrms.pos.y
 
 local _rec = function(i)
     return _txt.key.toggle {
-        n = i+1, x = x[i][2], y = y.key,
+        n = i+1, x = x[i][1], y = y.key,
         label = 'rec', edge = 'falling',
         v = function() return params:get('rec '..i) end,
         action = function(s, v, t)
