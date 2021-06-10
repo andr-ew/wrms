@@ -60,12 +60,12 @@ the first time you meet the wrms, wrm1 (on the left) will be set up as a delay &
 
 holding K1 reveals a hidden batch of controls behind every page. these are meant to be complimentary to the main performance controls - extra tweaks & easter eggs that open up new sounds once some familiarity has been established. note that in the case of pages **s** and **f**, the alt page simply reveals the same controls mapped to wrm2.
 
-- **fd:** set the crossfade time for loop playback - most noticible for small loops in shared space.
 - **sk:** skew the length of each loop channel in the stereo spectrum. great for stereofying mono sources.
 - **res:** trigger playhead from 0. this is most useful as a mapping destination for crow triggers, which allows for synced delays in a modular context. 
 - **ph:** set the phase separation of loop playback in the stereo spectrum.
 - **tap:** a tap tempo control for delay or loop lengths
-- **0 + 0th**: semitone pitch transposition, also useful as a wide-range pitch bend
+- **wgrt:** rate of the wgl LFO
+- **tp**: semitone pitch transposition, also useful as a wide-range pitch bend
 - **pan**: sets the _input_ pan for each wrm. K2 on this screen sets the overdub mode for wrm1 - in the default ping-pong mode, panning a mono source will bring in the the stereo ping-pong effect.
 - **aliasing:** toggling on wil disable anti-aliasing for both record heads. the effect is most noticible when recording at non-1 rates, especially when bent & wiggled.
 
