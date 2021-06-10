@@ -67,7 +67,7 @@ holding K1 reveals a hidden batch of controls behind every page. these are meant
 - **wgrt:** rate of the wgl LFO
 - **tp**: semitone pitch transposition, also useful as a wide-range pitch bend
 - **pan**: sets the _input_ pan for each wrm. K2 on this screen sets the overdub mode for wrm1 - in the default ping-pong mode, panning a mono source will bring in the the stereo ping-pong effect.
-- **aliasing:** toggling on wil disable anti-aliasing for both record heads. the effect is most noticible when recording at non-1 rates, especially when bent & wiggled.
+- **aliasing:** toggling on will disable anti-aliasing for both record heads. the effect is most noticible when recording at lower rates, especially when bent & wiggled.
 
 # templates
 
