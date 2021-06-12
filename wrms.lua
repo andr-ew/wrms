@@ -45,7 +45,7 @@ include 'wrms/lib/nest/core'
 include 'wrms/lib/nest/norns'
 include 'wrms/lib/nest/txt'
 cartographer, Slice = include 'wrms/lib/cartographer/cartographer'
-crowify = include 'lib/crowify/lib/crowify' .new(0.01)
+crowify = include 'wrms/lib/crowify/lib/crowify' .new(0.01)
 cs = require 'controlspec'
 
 wrms = include 'wrms/lib/globals'      --saving, loading, values, etc
