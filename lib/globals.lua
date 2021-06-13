@@ -96,7 +96,7 @@ end
 function wrms.save(n)
     local filename = norns.state.data..'wrms-'..(n or 0)..'.data'
     tab.save({
-        preset = wrms.preset:save(),
+        -- preset = wrms.preset:save(),
         length = sc.length:save(),
         punch_in = sc.punch_in:save()
     }, filename)
@@ -108,12 +108,12 @@ function wrms.load(n)
     local data = util.file_exists(filename)
         and tab.load(filename)
         or {
-            preset = wrms.preset:save(),
+            -- preset = wrms.preset:save(),
             length = { { 0.4, 0 }, { 0, 0 } },
             punch_in = { true, false }
         }
 
-    wrms.preset:load(data.preset)
+    wrms.preset:load(wrms.preset:save())
     sc.length.load(data.length)
     sc.punch_in:load(data.punch_in)
 

@@ -181,7 +181,7 @@ params:add {
     action = function(v) 
         if v==1 then
             sc.buf:assign(2, 1, 1)  --play[1][1] or play[2][1]
-            sc.stereo('play', 2, 1)
+            sc.punch_in[2].play = 1; sc.punch_in:update_play(2)
             if sc.punch_in[2].play == 0 then wrms.gfx:wake(2) end
         else
             sc.buf:assign(2, 2, 1) 
