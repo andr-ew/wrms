@@ -1,69 +1,104 @@
 # ~ wrms ~~
-dual asyncronous time-wigglers / echo loopers
 
+dual stereo time-wigglers / echo loopers
 
-![screen shot](wrm.gif)
+two time-travel wrms for loops, delays, & everything in-between
+
+![screen recording](lib/img/wrm.gif)
 
 ### requirements
-a norns !
+
+- norns (update 210607 or later)
+- audio input
 
 ### download
-head to `norns.local` + click on the books
-tab ovr to available & refresh community catalog
 
+head to `norns.local` + click on the books, tab over to available, then scroll way down to wrms & click install
 
-# documentation
+# how 2 wrm
 
-### basics
+the first thing you should know is that E1 changes which page is displayed. pages contain different controls, mapped to the lower keys and encoders. the location of the control on-screen (left, right, center) shows which wrm will be affected by your control messing.
 
-two wrms (stereo loops), similar in function but each with thier own quirks + abilities
+the first time you meet the wrms, wrm1 (on the left) will be set up as a delay & wrm 2 (on the right) will be configured as a looper pedal. feed the wrms some audio to begin exploring ! tap K3 once to begin recording a loop, then again to begin playback.
 
-`E1` up top changes which page is displayed. pages contain controls, mapped to norns' lower keys and encoders. the location of the control dictates which wrm will b affected.
+# controls
 
-### v o b s >
+## main screen
 
-let's start with page `v`, ok ?
+![main screen](lib/img/main.png)
 
-generally, `rec` decides whether new time is gobbled. notice at load, `wrm1` is echoing via continuously gobbling new time and fading old time. `wrm2` however, is dead asleep. wake her up by toggling record once, and then again. the length of her orbit is detirmined by the time between these initial toggles - after which gobble toggling returns to normal. to go back to sleep, hold `rec`, and begin again. (`wrm2` mimics many of yr fav loop pedals). notice that `wrm1` feeds into `wrm2`. we'll get back to this later.
+- **vol:** the easy one ! change the volume of each respective wrm
+- **rec:** set the record state.
+  - if the wrm is asleep (flat line) toggling rec will punch in a new loop time.
+  - for an awake wrm (wiggling), rec sets whether the loop is overdubbing new material, or causes a stutter freeze in a delay.
+  - in an awake state, hold rec to clear the loop (or delay) and put the wrm to sleep. if wrm 1 is being a delay, you can use rec to turn it into a second looper (!!).
+  - you can map this to a midi food pedal (**rec** & **clear** params)
+- **old:** set the overdub/delay feedback level - or the rate at which old material fades away. turn it up in a delay for long echo tails, or turn it down in a loop for tape decay memory loss.
+- **bnd:** bnd is the simplest time warping control - K2 fine-tunes wrm1 between 1x & 2x pitch/speed for instant delay bendiness
+  - <Summmary> (when orbiting a black hole, the rate of time is inversely proportional to orbital altitude). </Summary>
+- **wgl:** wgl is a slow LFO routed to the pitch of both wrms, causing various orbital instabilities. set it to around 0.08 for pleasant tape wow/flutter, or paitiently turn it up to 100 to pass through the singularity.
+- **<< & >>:** octave transports double and halve the rate of time. hold & release a key for a playable tape glide effect. pressing and releasing both keys at once will reverse time.
+- **s & l:** the start & length of the playback window.
+  - in delay mode, "l" is the most useful as it sets the time between repeats - ranging from 4-second phrase repeats down to resonator-like phasing at 1 millisecond.
+  - in loop scenarios (esp. with shared buffers) both controls can be used to modify the playback window or scan around buffer space for microlooping or pseudo-granular textures.
+  - (hint: if you cleared wrm1 to put it to sleep, "l" is how you wake it back up as a delay - just increase length from 0.)
+- **> & <:** the feed controls set the routing between wrms. by default, the delaying wrm is feed into a looping one, but some may prefer loop into delay. you can also turn up both mix points for a chaotic feedback loop, or set up an infinitely rising pitch cascade when sharing buffers at different recording rates.
+- **buf:** simple on the surface, but radical in application, buffer selection allows the wrms to share the same chunk of spacetime memory.
+  - assigning wrm 1 to buffer 2 yeilds a second asynchronous window into a loop, which you can fine-tune with s, l, and playback speeds.
+  - assignign wrm 2 to buffer 1 yeilds a second delay tap which can re-pitch the audio recorded into wrm 1 (in the style of [alliterate](https://github.com/andr-ew/prosody#alliterate), stymon magneto, count to five).
+  - (hint: sharing buffers will always result in clicks whenever the two playheads cross, but the filters help soften things & they kick in automatically when buf is changed)
+- **f & q:** these set a wrm's filter cutoff & resonance. the K2&3 below set the filter responce (you'll need to take things off of dry befor you hear anything). by default, wrm1's delay will feed back through the filter each repeat which makes for a pleasant analog tone but can get screachy at higher resonances.
 
-oh, and `vol` controls the volumes
+## params
 
-page `o` is for the past.
+- the **mix** section has a handful of useful level controls not available on the main screen. **input routing** will be important when using mono inputs.
+  - "mono" sends both inputs to both wrms in mono
+  - "2x mono" sends L in to wrm 1 only and R in to wrm 2 only
+- in the **wrms** section all main & alt params are available for midi mapping (including for midi foot switches)
+- the **crow** section allows you to map most controls to crow inputs (using @21echos' crowify).
 
-`old` decides how loud the past is, && how long it resonates. use `old` to alter `wrm1`'s echo chain, or fade `wrm2`'s past to make room for the future. with a high `old`, `wrm1` can be used more like a looper. likewise, a low `old` on a shorter `wrm2` will sound an echo.
+## alt
 
-`b` wiggles time
+![alt screen](lib/img/alt.png)
 
-`bnd` is the most tactile example. bend `wrm1` between single and double time rate as she approaches light speed. `wrm2` has more flexibility - `<<` and `>>` halve and double time, hapily gliding between while you hold and release.
+holding K1 reveals a hidden batch of controls behind every page. these are meant to be complimentary to the main performance controls - extra tweaks & easter eggs that open up new sounds once some familiarity has been established. note that in the case of pages **s** and **f**, the alt page simply reveals the same controls mapped to wrm2.
 
-(a technicality: the rate of time is inversely proportional to orbital altitude)
+- **sk:** skew the length of each loop channel in the stereo spectrum. great for stereofying mono sources.
+- **res:** trigger playhead from 0. this is most useful as a mapping destination for crow triggers, which allows for synced delays in a modular context.
+- **ph:** set the phase separation of loop playback in the stereo spectrum.
+- **tap:** a tap tempo control for delay or loop lengths
+- **wgrt:** rate of the wgl LFO
+- **tp**: semitone pitch transposition, also useful as a wide-range pitch bend
+- **pan**: sets the _input_ pan for each wrm. K2 on this screen sets the overdub mode for wrm1 - in the default ping-pong mode, panning a mono source will bring in the the stereo ping-pong effect.
+- **aliasing:** toggling on will disable anti-aliasing for both record heads. the effect is most noticible when recording at lower rates, especially when bent & wiggled.
 
-`wgl` scales time-varying orbits for both wrms - a low value makes a nice wobbly sound, very low adds subtle character. a high wiggle will start to pass through the singularity, but i'll let you decide whether that's an issue :~)
+# templates
 
-`s` affects `wrm1` alone
+templates are variations of the main UI to fit a person's specific needs & preferences or even add new features. you could make a new template to remove an unused feature to declutter the UI, add an additonal page with some frequently used alt controls, or hack in new softcut features from another app. templates are just lua script that pulls in wrm's various libraries & hooks them all together with an on-screen user interface.
 
-finally, here, we can make `wrm1` longer using `l` (which admittedly just looks like a vertical line, lol). with `s` we can scoot wrm for subtle delay fizzles or sub-loop glitchy stuff. `<<` and `>>` repeat actions from the previous page to `wrm1`, useful for dual phase-orbiting looping configurations.
+## wrms/lite
 
-`>` communicates
+![lite screen](lib/img/lite.png)
 
-remember how `wrm1` feeds into `wrm2` ? we can change that with `>` and `<`. feel free to place your delay after the loop for an alternate workflow, or feed both wrms to each other for more suprising results.
+wrms ships with the "lite" template, which you can access from the main SELECT menu on norns. It's essentially a much simplified version of vanilla wrms that falls closer to a traditional dealy & looper pedal. this might be a good place to start if you're new to norns ! (the chosen controls & presets were based on those used on jade islan sayson's [paru paro](https://jadeislansayson.bandcamp.com/album/paru-paro))
 
-feed a stereo panned field to `wrm1` to hear the effect of `pp` - it reverses `old` on each pass for a ping-pong effect
+- **rec:** record a loop in wrm 2. tap K2 once to begin recording a loop, then again to begin playback. while playing, rec toggles whether new audio is overdubbed. hold K2 to clear.
+- **v:** set the volume of the wrm 1 echo
+- **l:** set the length of time bewteen echos
+- **old:** set decide how much old audio remains between repeats. turn it up on wrm 1 for longer echo tails, or turn it down in wrm 2 for tape decay memory loss.
+- **bnd:** pitch bend wrm 1. this changes the echo time and repitches the echo momentarily.
+- **wgl:** add a slow, tape-like pitch wobble to both wrms. set it to around 0.08 for pleasant tape wow/flutter, or paitiently turn it up to 100 to pass through the singularity.
+- **<< & >>:** octave transports to double and halve the rate of time in wrm 2. hold & release a key for a playable tape glide effect. pressing and releasing both keys at once will reverse time.
 
-lastly - `share` creates a new instrument. toggle a shared past and memory for both wrms + telepathic time loop conversations. obviously this unlocks new feaures underneath every other control, but i won't spoil them !
+even in the lite template, the full collection of controls are still accessible under PARAMS > EDIT.
 
+## custom
 
-# roadmap
+to create a new template in maiden, hit the "+" to make a new lua file in your top-level `code` folder & paste in the full code from `wrms.lua` (keeping your template out of the main wrms folder ensures that your tempate won't be overwritten on updates). at the top of the script you'll see various library scripts being pulled in & a bit further down there's a comment that says `default wrms template`. this is a [`nest_`](https://github.com/andr-ew/nest_) - essentially a fancy table that can draw controls (or `_affordances` in nest parlace) to the screen & sync data with the params system & more. you probably don't need to know much about it other than the fact that you can shuffle around the controls in the various tables within tables and it'll affect where they appear onscreen.
 
-### 1.1 
+essentially:
 
-- get more than 0 params in there sheesh
-    - input mixer
-    - param per control for midi mapping
-    - ?
-- wrms mods (!!!)
-- wrms mod synth engine combos
-
-### 2.0 ?
-
-- `K1`alt menu with pattern record + presets per page
+- theres a `pages` table within the main `wrms_` table and within pages there's a table for the letter of each page on screen.
+  - oh, and a little further up the `tab` table has an `options` table that lists out all of the page names in order, so new pages will need to update this bit as well.
+- in each page table (like `v`) theres a `main` table and an `alt` table and inside of _those_ tables there should be some tables named after the controls appearing onscreen. these are the aformentioned `_affordances`, and you may scoot them around, delete them, or stick them in new `nest_` tables as desired.
+  - note that most of these tables have various `:` function calls attatched to them (and even functions in those functions with affordances in the functions), and you'll want those to stick around as you scoot.
