@@ -7,7 +7,7 @@ local wrms = {
             [1] = { mar, mar + mul },
             [1.5] = mar + mul*1.5,
             [2] = { mar + mul*2, mar + mul*3 },
-            tab = sh and 128 or 1
+            tab = sh and 128-6 or 1
         }, 
         y = {
             tab = 10,
