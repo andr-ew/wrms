@@ -9,7 +9,7 @@ params:add {
 }
 for i = 1,2 do
     params:add {
-        type = 'control', id = 'in lvl '..i, controlspec = cs.def { default = 1 },
+        type = 'control', id = 'in lvl '..i, controlspec = cs.def { default = 1, step = 0.01 },
         action = function(v) sc.inmx[i].vol = v; sc.inmx:update(i) end
     }
     params:add {
@@ -26,7 +26,7 @@ for i = 1,2 do
     params:add {
         type = 'control',
         id = 'vol ' .. i,
-        controlspec = cs.def { default = 1, max = 2 },
+        controlspec = cs.def { default = 1, max = 2, step = 0.01 },
         action = function(v)
             sc.lvlmx[i].vol = v
             sc.lvlmx:update(i)
@@ -35,7 +35,7 @@ for i = 1,2 do
     params:add {
         type = 'control',
         id = 'old ' .. i,
-        controlspec = cs.def { default = i==1 and 0.5 or 1 },
+        controlspec = cs.def { default = i==1 and 0.5 or 1, step = 0.01 },
         action = function(v)
             sc.oldmx[i].old = v
             sc.oldmx:update(i)
@@ -96,7 +96,7 @@ for i = 1,2 do
 end
 params:add {
     type = 'control', id = 'bnd 1',
-    controlspec = cs.def { default = 1, min = 1, max = 2 },
+    controlspec = cs.def { default = 1, min = 1, max = 2, step = 0.01 },
     action = function(v)
         sc.ratemx[1].bnd = v
         sc.ratemx:update(1)
@@ -123,7 +123,7 @@ for i = 1,2 do
 end
 params:add {
     type = 'control', id = 'wgl',
-    controlspec = cs.def { min = 0, max = 100, quantum = 0.01/100 },
+    controlspec = cs.def { min = 0, max = 100, quantum = 0.01/100, step = 0.01/100 },
     action = function(v) 
         local d = (util.linexp(0, 1, 0.01, 1, v) - 0.01) * 100
         sc.mod[1].mul = d * 0.01 
@@ -131,14 +131,14 @@ params:add {
 }
 params:add {
     type = 'control', id = 'wgrt',
-    controlspec = cs.def { min = 0, max = 20, default = 0.4, quantum = 1/100 },
+    controlspec = cs.def { min = 0, max = 20, default = 0.4, quantum = 1/100, step = 1/100 },
     action = function(v) 
         sc.mod[1].rate = v
     end
 }
 params:add {
     type = 'control', id = 'wgl in',
-    controlspec = cs.def { default = 0, min = -2, max = 2, quant = 0.01/4 },
+    controlspec = cs.def { default = 0, min = -2, max = 2, quant = 0.01/4, step = 0.01/4 },
     action = function(v)
         for i = 1,2 do
             sc.ratemx[i].pitch = v
@@ -160,12 +160,12 @@ for i = 1,2 do
 end
 params:add {
     type = 'control', id = '>',
-    controlspec = cs.def { default = 1 },
+    controlspec = cs.def { default = 1 , step = 0.01},
     action = function(v) sc.lvlmx[1].send = v; sc.lvlmx:update(1) end
 }
 params:add {
     type = 'control', id = '<',
-    controlspec = cs.def { default = 0 },
+    controlspec = cs.def { default = 0, step = 0.01 },
     action = function(v) sc.lvlmx[2].send = v; sc.lvlmx:update(2) end
 }
 params:add {
@@ -194,7 +194,7 @@ for i = 1,2 do
     params:add {
         type = 'control', id = 'f '..i,
         --controlspec = cs.new(20,20000,'exp',0,20000,'hz'),
-        controlspec = cs.def { default = 1, quantum = 1/100/2, step = 0 },
+        controlspec = cs.def { default = 1, quantum = 1/100/2, step = 0.01 },
         action = function(v) 
             sc.stereo('post_filter_fc', i, util.linexp(0, 1, 20, 20000, v)) 
         end
@@ -202,7 +202,7 @@ for i = 1,2 do
     params:add {
         type = 'control', id = 'q '..i,
         --controlspec = cs.new(min,max,'exp',0,10),
-        controlspec = cs.def { default = 0.4 },
+        controlspec = cs.def { default = 0.4, step = 0.01 },
         action = function(v)
             sc.stereo('post_filter_rq', i, util.linexp(0, 1, 0.01, 20, 1 - v))
         end
