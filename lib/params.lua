@@ -1,5 +1,5 @@
 params:add_separator('mix')
-local ir_op = { 'stereo', 'mono', '2x mono' } 
+local ir_op = { 'stereo', 'mono', '2x mono', 'left', 'right' } 
 params:add {
     type = 'option', id = 'input routing', options = ir_op,
     action = function(v)

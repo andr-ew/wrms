@@ -213,6 +213,16 @@ local sc = {
 
                 softcut.level_input_cut(n, off + 1, v * ((p > 0) and 1 - p or 1))
                 softcut.level_input_cut(n, off + 2, v * ((p < 0) and 1 + p or 1))
+            elseif s.route == 'left' then
+                softcut.level_input_cut(1, off + 1, v * ((p > 0) and 1 - p or 1))
+                softcut.level_input_cut(1, off + 2, v * ((p < 0) and 1 + p or 1))
+                softcut.level_input_cut(2, off + 1, 0)
+                softcut.level_input_cut(2, off + 2, 0)
+            elseif s.route == 'right' then
+                softcut.level_input_cut(1, off + 1, 0)
+                softcut.level_input_cut(1, off + 2, 0)
+                softcut.level_input_cut(2, off + 1, v * ((p > 0) and 1 - p or 1))
+                softcut.level_input_cut(2, off + 2, v * ((p < 0) and 1 + p or 1))
             end
         end
     },
