@@ -277,7 +277,7 @@ local sc = {
                 s[buf].big = true
                 s[buf].recording = false
 
-                wrms.gfx:wake(buf)
+                wrms_gfx:wake(buf)
             end
         end,
         manual = function(s, pair)
@@ -293,7 +293,7 @@ local sc = {
                 s[buf].play = 1; s:update_play(buf)
 
                 s[buf].recorded = true
-                wrms.gfx:wake(buf)
+                wrms_gfx:wake(buf)
             end
         end,
         untap = function(s, pair)
@@ -349,7 +349,7 @@ local sc = {
                 reg.play[buf][j]:set_length(0)
             end
                 
-            wrms.gfx:sleep(buf)
+            wrms_gfx:sleep(buf)
         end,
         save = function(s)
             local data = {}

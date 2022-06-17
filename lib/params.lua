@@ -102,15 +102,6 @@ params:add {
         sc.ratemx:update(1)
     end
 }
-local intervals = {
-    "0th", "min 2nd", "maj 2nd",
-    "min 3rd", "maj 3rd", "4th",
-    "tritone", "5th", "min 6th",
-    "maj 6th", "min 7th", "maj 7th"
-}
-local tp_fm = function(s) return 
-    math.tointeger(s.value//12).." + "..intervals[s.value%12 + 1] 
-end
 for i = 1,2 do
     params:add {
         type = 'number', id = 'tp '..i, formatter = tp_fm,
@@ -123,7 +114,7 @@ for i = 1,2 do
 end
 params:add {
     type = 'control', id = 'wgl',
-    controlspec = cs.def { min = 0, max = 100, quantum = 0.01/100 },
+    controlspec = cs.def { min = 0, max = 10, quantum = 0.01/10 },
     action = function(v) 
         local d = (util.linexp(0, 1, 0.01, 1, v) - 0.01) * 100
         sc.mod[1].mul = d * 0.01 
@@ -182,11 +173,11 @@ params:add {
         if v==1 then
             sc.buf:assign(2, 1, 1)  --play[1][1] or play[2][1]
             sc.punch_in[2].play = 1; sc.punch_in:update_play(2)
-            if sc.punch_in[2].play == 0 then wrms.gfx:wake(2) end
+            if sc.punch_in[2].play == 0 then wrms_gfx:wake(2) end
         else
             sc.buf:assign(2, 2, 1) 
             sc.punch_in:update_play(2)
-            if sc.punch_in[2].play == 0 then wrms.gfx:sleep(2) end
+            if sc.punch_in[2].play == 0 then wrms_gfx:sleep(2) end
         end
     end
 }
