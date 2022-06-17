@@ -87,7 +87,7 @@ local _app = Wrms()
 
 nest.connect_enc(_app)
 nest.connect_key(_app)
-nest.connect_screen(_app, 24)
+nest.connect_screen(_app, 60)
 
 --init/cleanup
 
