@@ -150,11 +150,16 @@ local sc = {
         end
     },
     mod = {  
-        { rate = 0.4, mul = 0, phase = 0,
+        { 
+            rate = 0.4, mul = 0, phase = 0,
             shape = function(p) return math.sin(2 * math.pi * p) end,
-            action = function(v) for i = 1,2 do
-                sc.ratemx[i].mod = v; sc.ratemx:update(i)
-            end end
+            dest = 'both',
+            action = function(v, s) 
+                for i = 1,2 do
+                    sc.ratemx[i].mod = (s.dest == 'both' or s.dest == i) and v or 0
+                    sc.ratemx:update(i)
+                end 
+            end
         },
         quant = 0.01, 
         init = function(s, n)
@@ -167,7 +172,7 @@ local sc = {
                     s[n].phase = s[n].phase + d
                     while s[n].phase > 1 do s[n].phase = s[n].phase - 1 end
 
-                    s[n].action(s[n].shape(s[n].phase) * s[n].mul)
+                    s[n].action(s[n].shape(s[n].phase) * s[n].mul, s[n])
                 end
             end)
         end

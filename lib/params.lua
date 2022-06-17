@@ -1,6 +1,13 @@
+local param_ids = {}
+local function add_param(args)
+    table.insert(param_ids, args.id)
+    params:add(args)
+end
+
+
 params:add_separator('mix')
 local ir_op = { 'stereo', 'mono', '2x mono', 'left', 'right' } 
-params:add {
+add_param{
     type = 'option', id = 'input routing', options = ir_op,
     action = function(v)
         sc.inmx.route = ir_op[v]
@@ -8,22 +15,23 @@ params:add {
     end
 }
 for i = 1,2 do
-    params:add {
+    add_param{
         type = 'control', id = 'in lvl '..i, controlspec = cs.def { default = 1 },
         action = function(v) sc.inmx[i].vol = v; sc.inmx:update(i) end
     }
-    params:add {
+    add_param{
         type = 'control', id = 'in pan '..i, controlspec = cs.PAN,
         action = function(v) sc.inmx[i].pan = v; sc.inmx:update(i) end
     }
-    params:add {
+    add_param{
         type = 'control', id = 'out pan '..i, controlspec = cs.PAN,
         action = function(v) sc.lvlmx[i].pan = v; sc.lvlmx:update(i) end
     }
 end
-params:add_separator('wrms')
+
+params:add_separator('wrm controls')
 for i = 1,2 do 
-    params:add {
+    add_param{
         type = 'control',
         id = 'vol ' .. i,
         controlspec = cs.def { default = 1, max = 2 },
@@ -32,7 +40,7 @@ for i = 1,2 do
             sc.lvlmx:update(i)
         end
     }
-    params:add {
+    add_param{
         type = 'control',
         id = 'old ' .. i,
         controlspec = cs.def { default = i==1 and 0.5 or 1 },
@@ -42,7 +50,7 @@ for i = 1,2 do
         end
     }
     local options = { 'overdub', 'feedback', 'ping-pong' } 
-    params:add {
+    add_param{
         type = 'option',
         id = 'old mode ' .. i,
         options = options, default = i==1 and 3 or 1,
@@ -52,7 +60,7 @@ for i = 1,2 do
         end
     }
 end
-params:add {
+add_param{
     type = 'binary',
     behavior = 'toggle',
     id = 'rec 1', default = 1,
@@ -60,7 +68,7 @@ params:add {
         sc.punch_in:toggle(1, v)
     end
 }
-params:add {
+add_param{
     type = 'binary',
     behavior = 'trigger',
     id = 'clear 1',
@@ -70,7 +78,7 @@ params:add {
         sc.punch_in:clear(1)
     end
 }
-params:add {
+add_param{
     type = 'binary',
     behavior = 'toggle',
     id = 'rec 2',
@@ -78,7 +86,7 @@ params:add {
         sc.punch_in:toggle(2, v)
     end
 }
-params:add {
+add_param{
     type = 'binary',
     behavior = 'trigger',
     id = 'clear 2',
@@ -89,12 +97,12 @@ params:add {
     end
 }
 for i = 1,2 do
-    params:add {
+    add_param{
         type = 'binary', behavior = 'trigger', id = 'res '..i,
         action = function() reg.play:trigger(i) end
     }
 end
-params:add {
+add_param{
     type = 'control', id = 'bnd 1',
     controlspec = cs.def { default = 1, min = 1, max = 2 },
     action = function(v)
@@ -103,7 +111,7 @@ params:add {
     end
 }
 for i = 1,2 do
-    params:add {
+    add_param{
         type = 'number', id = 'tp '..i, formatter = tp_fm,
         default = 0, min = -10*12, max = 4*12,
         action = function(v)
@@ -112,22 +120,22 @@ for i = 1,2 do
         end
     }
 end
-params:add {
+add_param{
     type = 'control', id = 'wgl',
-    controlspec = cs.def { min = 0, max = 10, quantum = 0.01/10 },
+    controlspec = cs.def { min = 0, max = 10, quantum = 0.01/10, default = 0.05 },
     action = function(v) 
         local d = (util.linexp(0, 1, 0.01, 1, v) - 0.01) * 100
         sc.mod[1].mul = d * 0.01 
     end
 }
-params:add {
+add_param{
     type = 'control', id = 'wgrt',
     controlspec = cs.def { min = 0, max = 20, default = 0.4, quantum = 1/100 },
     action = function(v) 
         sc.mod[1].rate = v
     end
 }
-params:add {
+add_param{
     type = 'control', id = 'wgl in',
     controlspec = cs.def { default = 0, min = -2, max = 2, quant = 0.01/4 },
     action = function(v)
@@ -138,35 +146,35 @@ params:add {
     end
 }
 for i = 1,2 do
-    params:add {
+    add_param{
         type = 'number', id = 'oct '..i,
         min = -32, max = 4, default = 0,
         action = function(v) sc.ratemx[i].oct = v; sc.ratemx:update(i) end
     }
     local options = { -1, 1 }
-    params:add {
+    add_param{
         type = 'option', id = 'dir '..i, options = options, default = 2,
         action = function(v) sc.ratemx[i].dir = options[v]; sc.ratemx:update(i) end
     }
 end
-params:add {
+add_param{
     type = 'control', id = '>',
     controlspec = cs.def { default = 1 },
     action = function(v) sc.lvlmx[1].send = v; sc.lvlmx:update(1) end
 }
-params:add {
+add_param{
     type = 'control', id = '<',
     controlspec = cs.def { default = 0 },
     action = function(v) sc.lvlmx[2].send = v; sc.lvlmx:update(2) end
 }
-params:add {
+add_param{
     type = 'number', id = 'buf 1', default = 1,
     min = 1, max = 2, wrap = true,
     action = function(v) 
         sc.buf:assign(1, v, v) -- play[1][1] or play[2][2]
     end
 }
-params:add {
+add_param{
     type = 'number', id = 'buf 2', default = 2,
     min = 1, max = 2, wrap = true,
     action = function(v) 
@@ -182,15 +190,15 @@ params:add {
     end
 }
 for i = 1,2 do
-    params:add {
+    add_param{
         type = 'control', id = 'f '..i,
         --controlspec = cs.new(20,20000,'exp',0,20000,'hz'),
-        controlspec = cs.def { default = 1, quantum = 1/100/2, step = 0 },
+        controlspec = cs.def { default = ({ 0.7, 1 })[i], quantum = 1/100/2, step = 0 },
         action = function(v) 
             sc.stereo('post_filter_fc', i, util.linexp(0, 1, 20, 20000, v)) 
         end
     }
-    params:add {
+    add_param{
         type = 'control', id = 'q '..i,
         --controlspec = cs.new(min,max,'exp',0,10),
         controlspec = cs.def { default = 0.4 },
@@ -199,16 +207,16 @@ for i = 1,2 do
         end
     }
     local options = { 'dry', 'lp', 'hp', 'bp' } 
-    params:add {
+    add_param{
         type = 'option', id = 'filter type '..i,
-        options = options,
+        options = options, default = ({ 2, 1 })[i],
         action = function(v)
             for _,k in pairs(options) do sc.stereo('post_filter_'..k, i, 0) end
             sc.stereo('post_filter_'..options[v], i, 1)
         end
     }
 end
-params:add {
+add_param{
     type = 'binary', id = 'aliasing', behavior = 'toggle', default = 0,
     action = function(v)
         for i = 1,4 do
@@ -220,6 +228,29 @@ params:add {
                 softcut.pre_filter_lp(i, 1)
             end
         end
+    end
+}
+
+params:add_separator('options')
+do
+    local options = { 'both', 'wrm1', 'wrm2' }
+    add_param{
+        type = 'option', id = 'wgl dest', options = options,
+        action = function(v)
+            sc.mod[1].dest = ({ 'both', 1, 2 })[v]
+        end
+    }
+end
+params:add {
+    id = 'reset', type = 'binary', behavior = 'trigger',
+    action = function()
+        for i,id in ipairs(param_ids) do
+            local p = params:lookup_param(id)
+            params:set(id, p.default or (p.controlspec and p.controlspec.default) or 0)
+        end
+
+        wrms.reset()
+        params:bang()
     end
 }
 

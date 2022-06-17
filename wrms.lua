@@ -6,7 +6,7 @@
 -- dual stereo time-wigglers
 -- / echo loopers
 --
--- version 2.0.0 @andrew
+-- version 2.1.0 @andrew
 -- https://norns.community/
 -- authors/andrew/wrms
 --
