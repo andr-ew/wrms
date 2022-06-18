@@ -76,7 +76,7 @@ holding K1 reveals a hidden batch of controls behind every page. these are meant
 
 ![lite screen](lib/img/lite.png)
 
-wrms ships with an alternate UI, "lite", which you can access from the main SELECT menu on norns. It's essentially a simplified version of vanilla wrms that falls closer to a traditional dealy & looper pedal. this might be a good place to start if you're new to wrms ! (the chosen controls & presets were based on those used on jade islan sayson's [paru paro](https://jadeislansayson.bandcamp.com/album/paru-paro))
+wrms ships with an alternate version of the script, "lite", which you can access from the main SELECT menu on norns. It's essentially a simplified version of vanilla wrms that falls closer to a traditional dealy & looper pedal. this might be a good place to start if you're new to wrms ! (the chosen controls & presets were based on those used on jade islan sayson's [paru paro](https://jadeislansayson.bandcamp.com/album/paru-paro))
 
 - **rec:** record a loop in wrm 2. tap K2 once to begin recording a loop, then again to begin playback. while playing, rec toggles whether new audio is overdubbed. hold K2 to clear.
 - **v:** set the volume of the wrm 1 echo
