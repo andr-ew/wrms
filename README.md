@@ -6,24 +6,23 @@ two time-travel wrms for loops, delays, & everything in-between
 
 ![screen recording](lib/img/wrm.gif)
 
-### requirements
+## requirements
 
 - norns (update 210607 or later)
 - audio input
 
-### download
+## download
 
-head to `norns.local` + click on the books, tab over to available, then scroll way down to wrms & click install
+available from the maiden catalog
 
-# how 2 wrm
+## documentation
 
 the first thing you should know is that E1 changes which page is displayed. pages contain different controls, mapped to the lower keys and encoders. the location of the control on-screen (left, right, center) shows which wrm will be affected by your control messing.
 
 the first time you meet the wrms, wrm1 (on the left) will be set up as a delay & wrm 2 (on the right) will be configured as a looper pedal. feed the wrms some audio to begin exploring ! tap K3 once to begin recording a loop, then again to begin playback.
 
-# controls
 
-## main screen
+### main screen
 
 ![main screen](lib/img/main.png)
 
@@ -49,15 +48,18 @@ the first time you meet the wrms, wrm1 (on the left) will be set up as a delay &
   - (hint: sharing buffers will always result in clicks whenever the two playheads cross, but the filters help soften things & they kick in automatically when buf is changed)
 - **f & q:** these set a wrm's filter cutoff & resonance. the K2&3 below set the filter responce (you'll need to take things off of dry befor you hear anything). by default, wrm1's delay will feed back through the filter each repeat which makes for a pleasant analog tone but can get screachy at higher resonances.
 
-## params
+### params
 
 - the **mix** section has a handful of useful level controls not available on the main screen. **input routing** will be important when using mono inputs.
   - "mono" sends both inputs to both wrms in mono
   - "2x mono" sends L in to wrm 1 only and R in to wrm 2 only
 - in the **wrms** section all main & alt params are available for midi mapping (including for midi foot switches)
+- **options** contains a few extra settings
+  - **wgl dest:** set whether wrm 1, wrm 2, or both are affected by the wgl LFO. set this to wrm1 to wiggle just the delay & record your wiggles into the wrm2 loop
+  - **reset:** reset all params to their default values
 - the **crow** section allows you to map most controls to crow inputs (using @21echos' crowify).
 
-## alt
+### alt
 
 ![alt screen](lib/img/alt.png)
 
@@ -72,7 +74,7 @@ holding K1 reveals a hidden batch of controls behind every page. these are meant
 - **pan**: sets the _input_ pan for each wrm. K2 on this screen sets the overdub mode for wrm1 - in the default ping-pong mode, panning a mono source will bring in the the stereo ping-pong effect.
 - **aliasing:** toggling on will disable anti-aliasing for both record heads. the effect is most noticible when recording at lower rates, especially when bent & wiggled.
 
-# wrms/lite
+### wrms/lite
 
 ![lite screen](lib/img/lite.png)
 
