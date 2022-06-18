@@ -72,15 +72,11 @@ holding K1 reveals a hidden batch of controls behind every page. these are meant
 - **pan**: sets the _input_ pan for each wrm. K2 on this screen sets the overdub mode for wrm1 - in the default ping-pong mode, panning a mono source will bring in the the stereo ping-pong effect.
 - **aliasing:** toggling on will disable anti-aliasing for both record heads. the effect is most noticible when recording at lower rates, especially when bent & wiggled.
 
-# templates
-
-templates are variations of the main UI to fit a person's specific needs & preferences or even add new features. you could make a new template to remove an unused feature to declutter the UI, add an additonal page with some frequently used alt controls, or hack in new softcut features from another app. templates are just lua script that pulls in wrm's various libraries & hooks them all together with an on-screen user interface.
-
-## wrms/lite
+# wrms/lite
 
 ![lite screen](lib/img/lite.png)
 
-wrms ships with the "lite" template, which you can access from the main SELECT menu on norns. It's essentially a much simplified version of vanilla wrms that falls closer to a traditional dealy & looper pedal. this might be a good place to start if you're new to norns ! (the chosen controls & presets were based on those used on jade islan sayson's [paru paro](https://jadeislansayson.bandcamp.com/album/paru-paro))
+wrms ships with an alternate UI, "lite", which you can access from the main SELECT menu on norns. It's essentially a simplified version of vanilla wrms that falls closer to a traditional dealy & looper pedal. this might be a good place to start if you're new to wrms ! (the chosen controls & presets were based on those used on jade islan sayson's [paru paro](https://jadeislansayson.bandcamp.com/album/paru-paro))
 
 - **rec:** record a loop in wrm 2. tap K2 once to begin recording a loop, then again to begin playback. while playing, rec toggles whether new audio is overdubbed. hold K2 to clear.
 - **v:** set the volume of the wrm 1 echo
