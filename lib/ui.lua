@@ -1,60 +1,63 @@
 local x, y = wrms.pos.x, wrms.pos.y
 
-local function App(args)
-    local function Rec(args)
-        local i = args.i
-        local _rec = Text.key.toggle()
+local function Rec(args)
+    local i = args.i
+    local _rec = Text.key.toggle()
 
-        return function()
-            _rec{
-                n = i+1, x = x[i][1], y = y.key,
-                label = 'rec', edge = 'falling',
-                state = { params:get('rec '..i) },
-                action = function(v, t)
-                    if t < 0.5 then params:set('rec '..i, v)
-                    else params:delta('clear '..i, 1) end
-                end
-            }
-        end
-    end
-
-    local function Trans(args)
-        local i = args.i
-
-        local blinktime = 0.2
-
-        local _trans = to.pattern(mpat, '<< >> '..i, Text.key.trigger, function() 
-            return {
-                label = { '<<', '>>' },
-                edge = 'falling',
-                blinktime = function() return blinktime end, --not best practice
-                n = { 2, 3 },
-                y = y.key, x = { { x[i][1] }, { x[i][2] } },
-                action = function(v, t, d, add, rem, l)
-                    blinktime = sc.slew(i, t[add]) / 2
-
-                    if #l == 2 then
-                        params:set('dir '..i, params:get('dir '..i)==1 and 2 or 1)
-                    else
-                        params:delta('oct '..i, add==2 and 1 or -1)
-                    end
-                end
-            }
-        end)
-
-        return function()
-            _trans()
-        end
-    end
-
-    local function Gfx()
-        return function()
-            if nest.screen.is_drawing() then
-                wrms_gfx.draw()
-                nest.screen.make_dirty() --redraw every frame while graphics are shown
+    return function()
+        _rec{
+            n = i+1, x = x[i][1], y = y.key,
+            label = 'rec', edge = 'falling',
+            state = { params:get('rec '..i) },
+            action = function(v, t)
+                if t < 0.5 then params:set('rec '..i, v)
+                else params:delta('clear '..i, 1) end
             end
+        }
+    end
+end
+
+local function Trans(args)
+    local i = args.i
+
+    local blinktime = 0.2
+
+    local _trans = to.pattern(mpat, '<< >> '..i, Text.key.trigger, function() 
+        return {
+            label = { '<<', '>>' },
+            edge = 'falling',
+            blinktime = function() return blinktime end, --not best practice
+            n = { 2, 3 },
+            y = y.key, x = { { x[i][1] }, { x[i][2] } },
+            action = function(v, t, d, add, rem, l)
+                blinktime = sc.slew(i, t[add]) / 2
+
+                if #l == 2 then
+                    params:set('dir '..i, params:get('dir '..i)==1 and 2 or 1)
+                else
+                    params:delta('oct '..i, add==2 and 1 or -1)
+                end
+            end
+        }
+    end)
+
+    return function()
+        _trans()
+    end
+end
+
+local function Gfx()
+    return function()
+        if nest.screen.is_drawing() then
+            wrms_gfx.draw()
+            nest.screen.make_dirty() --redraw every frame while graphics are shown
         end
     end
+end
+
+local App = {}
+
+function App.vanilla(args)
     local _gfx = Gfx()
 
     local alt = 0
@@ -455,6 +458,117 @@ local function App(args)
         }
 
         for _, _ctl in pairs(_pages[page][alt==1 and 'alt' or 'main']) do _ctl() end
+    end
+end
+
+function App.lite(args)
+    local _gfx = Gfx()
+
+    local page = 1
+    local _tab = Text.enc.option()
+
+    local page_names = { 1, 2, 3 }
+
+    local _pages = {}
+    for i,page_name in ipairs(page_names) do
+        _pages[page_name] = { main = {} }
+    end
+                
+    do
+        local _pg = _pages[1].main
+        do
+            local i = 1
+            local id = 'vol '..i
+            _pg[id] = to.pattern(mpat, id, Text.enc.control, function() 
+                return {
+                    n = i + 1, x = x[i][1], y = y.enc, label = 'vol',
+                    state = of.param(id), controlspec = of.controlspec(id)
+                }
+            end)
+        end
+        do
+            local id = 'l'
+            _pg[id] = to.pattern(mpat, id, Text.enc.number, function()
+                local len = reg.play:get_length(1)
+                return {
+                    min = 0, max = math.huge, inc = 0.01,
+                    n = 3, x = x[1][2], y = y.enc, step = 1/100/100/100,
+                    sens = sc.punch_in[sc.buf[1]].big and (
+                        len <= 0.00019 and 1/100/100 or len <= 0.019 and 1/100 or 1 
+                    ) or 1,
+                    label = id,
+                    state = { len },
+                    action = function(v)
+                        reg.play:set_length(1, v)
+                        
+                        if v > 0 and not sc.punch_in[sc.buf[1]].recorded then 
+                            params:set('rec 1', 1, true)
+                            sc.punch_in:manual(1) 
+                        end
+                        sc.punch_in:big(1, v)
+                        sc.fade(1, v)
+                        sc.punch_in:untap(1)
+                    end
+                }
+            end)
+        end
+        do
+            local i = 2
+            local id = 'rec '..i
+            _pg[id] = Rec{ i = i }
+        end
+    end
+    do
+        local _pg = _pages[2].main
+        for i = 1,2 do
+            local id = 'old '..i
+            _pg[id] = to.pattern(mpat, id, Text.enc.control, function() 
+                return {
+                    n = i + 1, x = x[i][1], y = y.enc, label = 'old',
+                    state = of.param(id), controlspec = of.controlspec(id)
+                }
+            end)
+        end
+        do
+            local i = 2
+            local id = 'rec '..i
+            _pg[id] = Rec{ i = i }
+        end
+    end
+    do
+        local _pg = _pages[3].main
+        do
+            local id = 'bnd 1'
+            _pg[id] = to.pattern(mpat, id, Text.enc.control, function() 
+                return {
+                    n = 2, x = x[1][1], y = y.enc, label = 'bnd',
+                    state = of.param(id), controlspec = of.controlspec(id)
+                }
+            end)
+        end
+        do
+            local id = 'wgl'
+            _pg[id] = to.pattern(mpat, id, Text.enc.control, function()
+                return {
+                    n = 3, x = x[1.5], y = y.enc, label = id,
+                    state = of.param(id), controlspec = of.controlspec(id)
+                }
+            end)
+        end
+        _pg['trans'] = Trans{ i = 2 }
+    end
+
+    return function(props)
+        _gfx()
+
+        _tab{
+            n = 1, x = x.tab, y = y.tab, sens = 0.5, align = sh and 'right' or 'left', 
+            margin = 2, flow = 'y', options = page_names,
+            lvl = true and { 1, 15 } or { 4, 15 },
+            action = function(v) page = page_names[v//1] end
+        }
+
+        for _, _ctl in pairs(_pages[page].main) do _ctl() end
     end
 end
 

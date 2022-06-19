@@ -83,7 +83,7 @@ end
 
 --set up nest v2 UI
 
-local _app = Wrms()
+local _app = Wrms.vanilla()
 
 nest.connect_enc(_app)
 nest.connect_key(_app)
