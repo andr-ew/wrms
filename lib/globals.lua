@@ -18,45 +18,54 @@ local wrms = {
     }
 }
 
-wrms.preset = { 
-    data = {
-        buf = {
-            [0] = {
-                ['rec 1'] = 1, 
-                ['>'] = 0, ['<'] = 0, 
-                ['filter type 1'] = 2, 
-                ['filter type 2'] = 2,
-                ['f 1'] = 0.7, ['f 2'] = 0.7,
-                ['oct 1'] = 0, ['oct 2'] = -1,
-                ['dir 1'] = 2, ['dir 2'] = 1
+local function preset_default()
+    return {
+        data = {
+            buf = {
+                [0] = {
+                    ['rec 1'] = 1, 
+                    ['>'] = 0, ['<'] = 0, 
+                    ['filter type 1'] = 2, 
+                    ['filter type 2'] = 2,
+                    ['f 1'] = 0.7, ['f 2'] = 0.7,
+                    ['oct 1'] = 0, ['oct 2'] = -1,
+                    ['dir 1'] = 2, ['dir 2'] = 1
+                },
+                [3] = {
+                    ['rec 1'] = 0, 
+                    ['>'] = 0, ['<'] = 0, 
+                    ['filter type 1'] = 2, 
+                    ['filter type 2'] = 2,
+                    ['f 1'] = 0.9, ['f 2'] = 0.9,
+                    ['oct 1'] = 1, ['oct 2'] = 0,
+                    ['dir 1'] = 2, ['dir 2'] = 2
+                }
             },
-            [3] = {
-                ['rec 1'] = 0, 
-                ['>'] = 0, ['<'] = 0, 
-                ['filter type 1'] = 2, 
-                ['filter type 2'] = 2,
-                ['f 1'] = 0.9, ['f 2'] = 0.9,
-                ['oct 1'] = 1, ['oct 2'] = 0,
-                ['dir 1'] = 2, ['dir 2'] = 2
-            }
+            ['manual 1'] = {
+                [false] = {
+                    ['old 1'] = 1,
+                    ['old mode 1'] = 1 --overdub
+                }
+            },
+            ['manual 2'] = {
+                [true] = {
+                    ['old 2'] = 0.5,
+                }
+            },
         },
-        ['manual 1'] = {
-            [false] = {
-                ['old 1'] = 1,
-                ['old mode 1'] = 1 --overdub
-            }
+        active = {
+            buf = 2,
+            ['manual 1'] = true,
+            ['manual 2'] = false
         },
-        ['manual 2'] = {
-            [true] = {
-                ['old 2'] = 0.5,
-            }
-        },
-    },
-    active = {
-        buf = 2,
-        ['manual 1'] = true,
-        ['manual 2'] = false
-    },
+    }
+end
+
+local def = preset_default()
+
+wrms.preset = { 
+    data = def.data,
+    active = def.active,
     remember = function(s, id, i) 
         local _, any = next(s.data[id]) --any table value
         s.data[id][i] = {}
@@ -68,6 +77,11 @@ wrms.preset = {
     save = function(s)
         for id,v in pairs(s.data) do s:remember(id, s.active[id]) end
         return s.data
+    end,
+    reset = function(s)
+        local d = preset_default()
+        s.data = d.data
+        s.active = d.active
     end,
     load = function(s, data)
         --reset some of the pitch data
@@ -102,20 +116,36 @@ function wrms.save(n)
     }, filename)
 end
 
+local default_data = {
+    -- preset = wrms.preset:save(),
+    length = { { 0.4, 0 }, { 0, 0 } },
+    punch_in = { true, false }
+}
+
 function wrms.load(n)
     local filename = norns.state.data..'wrms-'..(n or 0)..'.data'
 
     local data = util.file_exists(filename)
         and tab.load(filename)
-        or {
-            -- preset = wrms.preset:save(),
-            length = { { 0.4, 0 }, { 0, 0 } },
-            punch_in = { true, false }
-        }
+        or default_data
 
     wrms.preset:load(wrms.preset:save())
     sc.length.load(data.length)
     sc.punch_in:load(data.punch_in)
+
+    --reset non-preset rate params
+    params:set('bnd 1', 1)
+    for i = 1,2 do 
+        params:set('tp '..i, 0)
+    end
+end
+
+function wrms.reset()
+    wrms.preset:reset()
+    wrms.preset:load(wrms.preset:save())
+
+    sc.length.load(default_data.length)
+    sc.punch_in:load(default_data.punch_in)
 
     --reset non-preset rate params
     params:set('bnd 1', 1)

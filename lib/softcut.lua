@@ -150,11 +150,16 @@ local sc = {
         end
     },
     mod = {  
-        { rate = 0.4, mul = 0, phase = 0,
+        { 
+            rate = 0.4, mul = 0, phase = 0,
             shape = function(p) return math.sin(2 * math.pi * p) end,
-            action = function(v) for i = 1,2 do
-                sc.ratemx[i].mod = v; sc.ratemx:update(i)
-            end end
+            dest = 'both',
+            action = function(v, s) 
+                for i = 1,2 do
+                    sc.ratemx[i].mod = (s.dest == 'both' or s.dest == i) and v or 0
+                    sc.ratemx:update(i)
+                end 
+            end
         },
         quant = 0.01, 
         init = function(s, n)
@@ -167,7 +172,7 @@ local sc = {
                     s[n].phase = s[n].phase + d
                     while s[n].phase > 1 do s[n].phase = s[n].phase - 1 end
 
-                    s[n].action(s[n].shape(s[n].phase) * s[n].mul)
+                    s[n].action(s[n].shape(s[n].phase) * s[n].mul, s[n])
                 end
             end)
         end
@@ -213,6 +218,16 @@ local sc = {
 
                 softcut.level_input_cut(n, off + 1, v * ((p > 0) and 1 - p or 1))
                 softcut.level_input_cut(n, off + 2, v * ((p < 0) and 1 + p or 1))
+            elseif s.route == 'left' then
+                softcut.level_input_cut(1, off + 1, v * ((p > 0) and 1 - p or 1))
+                softcut.level_input_cut(1, off + 2, v * ((p < 0) and 1 + p or 1))
+                softcut.level_input_cut(2, off + 1, 0)
+                softcut.level_input_cut(2, off + 2, 0)
+            elseif s.route == 'right' then
+                softcut.level_input_cut(1, off + 1, 0)
+                softcut.level_input_cut(1, off + 2, 0)
+                softcut.level_input_cut(2, off + 1, v * ((p > 0) and 1 - p or 1))
+                softcut.level_input_cut(2, off + 2, v * ((p < 0) and 1 + p or 1))
             end
         end
     },
@@ -267,7 +282,7 @@ local sc = {
                 s[buf].big = true
                 s[buf].recording = false
 
-                wrms.gfx:wake(buf)
+                wrms_gfx:wake(buf)
             end
         end,
         manual = function(s, pair)
@@ -283,7 +298,7 @@ local sc = {
                 s[buf].play = 1; s:update_play(buf)
 
                 s[buf].recorded = true
-                wrms.gfx:wake(buf)
+                wrms_gfx:wake(buf)
             end
         end,
         untap = function(s, pair)
@@ -339,7 +354,7 @@ local sc = {
                 reg.play[buf][j]:set_length(0)
             end
                 
-            wrms.gfx:sleep(buf)
+            wrms_gfx:sleep(buf)
         end,
         save = function(s)
             local data = {}

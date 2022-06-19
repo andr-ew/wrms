@@ -6,24 +6,23 @@ two time-travel wrms for loops, delays, & everything in-between
 
 ![screen recording](lib/img/wrm.gif)
 
-### requirements
+## requirements
 
 - norns (update 210607 or later)
 - audio input
 
-### download
+## download
 
-head to `norns.local` + click on the books, tab over to available, then scroll way down to wrms & click install
+available from the maiden catalog
 
-# how 2 wrm
+## documentation
 
 the first thing you should know is that E1 changes which page is displayed. pages contain different controls, mapped to the lower keys and encoders. the location of the control on-screen (left, right, center) shows which wrm is mapped to that control.
 
 the first time you meet the wrms, wrm1 (on the left) will be set up as a delay & wrm 2 (on the right) will be configured as a looper pedal. feed the wrms some audio to begin exploring ! tap K3 once to begin recording a loop, then again to begin playback.
 
-# controls
 
-## main screen
+### main screen
 
 ![main screen](lib/img/main.png)
 
@@ -49,15 +48,18 @@ the first time you meet the wrms, wrm1 (on the left) will be set up as a delay &
   - (hint: sharing buffers will always result in clicks whenever the two playheads cross, but the filters help soften things & they kick in automatically when buf is changed)
 - **f & q:** these set a wrm's filter cutoff & resonance. the K2&3 below set the filter responce (you'll need to take things off of dry befor you hear anything). by default, wrm1's delay will feed back through the filter each repeat which makes for a pleasant analog tone but can get screachy at higher resonances.
 
-## params
+### params
 
 - the **mix** section has a handful of useful level controls not available on the main screen. **input routing** will be important when using mono inputs.
   - "mono" sends both inputs to both wrms in mono
   - "2x mono" sends L in to wrm 1 only and R in to wrm 2 only
 - in the **wrms** section all main & alt params are available for midi mapping (including for midi foot switches)
+- **options** contains a few extra settings
+  - **wgl dest:** set whether wrm 1, wrm 2, or both are affected by the wgl LFO. set this to wrm1 to wiggle just the delay & record your wiggles into the wrm2 loop
+  - **reset:** reset all params to their default values
 - the **crow** section allows you to map most controls to crow inputs (using @21echos' crowify).
 
-## alt
+### alt
 
 ![alt screen](lib/img/alt.png)
 
@@ -72,15 +74,11 @@ holding K1 reveals a hidden batch of controls behind every page. these are meant
 - **pan**: sets the _input_ pan for each wrm. K2 on this screen sets the overdub mode for wrm1 - in the default ping-pong mode, panning a mono source will bring in the the stereo ping-pong effect.
 - **aliasing:** toggling on will disable anti-aliasing for both record heads. the effect is most noticible when recording at lower rates, especially when bent & wiggled.
 
-# templates
-
-templates are variations of the main UI to fit a person's specific needs & preferences or even add new features. you could make a new template to remove an unused feature to declutter the UI, add an additonal page with some frequently used alt controls, or hack in new softcut features from another app. templates are just lua script that pulls in wrm's various libraries & hooks them all together with an on-screen user interface.
-
-## wrms/lite
+### wrms/lite
 
 ![lite screen](lib/img/lite.png)
 
-wrms ships with the "lite" template, which you can access from the main SELECT menu on norns. It's essentially a much simplified version of vanilla wrms that falls closer to a traditional dealy & looper pedal. this might be a good place to start if you're new to norns or just want to get your feet wet. the chosen controls & presets were based on those used on jade islan sayson's [paru paro](https://jadeislansayson.bandcamp.com/album/paru-paro) EP.
+wrms ships with an alternate version of the script, "lite", which you can access from the main SELECT menu on norns. It's essentially a simplified version of vanilla wrms that falls closer to a traditional dealy & looper pedal. this might be a good place to start if you're new to wrms ! (the chosen controls & presets were based on those used on jade islan sayson's [paru paro](https://jadeislansayson.bandcamp.com/album/paru-paro))
 
 - **rec:** record a loop in wrm 2. tap K2 once to begin recording a loop, then again to begin playback. while playing, rec toggles whether new audio is overdubbed. hold K2 to clear.
 - **v:** set the volume of the wrm 1 echo
@@ -91,15 +89,3 @@ wrms ships with the "lite" template, which you can access from the main SELECT m
 - **<< & >>:** octave transports to double and halve the rate of time in wrm 2. hold & release a key for a playable tape glide effect. pressing and releasing both keys at once will reverse time.
 
 even in the lite template, the full collection of controls are still accessible under PARAMS > EDIT.
-
-## custom
-
-to create a new template in maiden, hit the "+" to make a new lua file in your top-level `code` folder & paste in the full code from `wrms.lua` (keeping your template out of the main wrms folder ensures that your tempate won't be overwritten on updates). at the top of the script you'll see various library scripts being pulled in & a bit further down there's a comment that says `default wrms template`. this is a [`nest_`](https://github.com/andr-ew/nest_) - essentially a fancy table that can draw controls (or `_affordances` in nest parlace) to the screen & sync data with the params system & more. you probably don't need to know much about it other than the fact that you can shuffle around the controls in the various tables within tables and it'll affect where they appear onscreen.
-
-essentially:
-
-- theres a `pages` table within the main `wrms_` table and within pages there's a table for the letter of each page on screen.
-  - oh, and a little further up the `tab` table has an `options` table that lists out all of the page names in order, so new pages will need to update this bit as well.
-- in each page table (like `v`) theres a `main` table and an `alt` table and inside of _those_ tables there should be some tables named after the controls appearing onscreen. these are the aformentioned `_affordances`, and you may scoot them around, delete them, or stick them in new `nest_` tables as desired.
-  - note that most of these tables have various `:` function calls attatched to them (and even functions in those functions with affordances in the functions), and you'll want those to stick around as you scoot.
-    - these are [param binders](https://github.com/andr-ew/nest_/blob/master/study/study4.md#value-of-a-value) - they link up affordances to [params](https://monome.org/docs/norns/reference/params) that have been defined in `lib/params.lua`. so if you're looking to change a property in the affordance & it's not there, you might want to check what properties are defined in the param with the the `id` provided to the binder.
