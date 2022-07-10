@@ -8,7 +8,7 @@ two time-travel wrms for loops, delays, & everything in-between
 
 ## requirements
 
-- norns (update 210607 or later)
+- [norns](https://github.com/p3r7/awesome-monome-norns) (update 210607 or later)
 - audio input
 
 ## download
