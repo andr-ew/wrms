@@ -233,11 +233,11 @@ add_param{
 
 params:add_separator('options')
 do
-    local options = { 'both', 'wrm1', 'wrm2' }
+    local options = { 'wrm1',  'both', 'wrm2' }
     add_param{
         type = 'option', id = 'wgl dest', options = options,
         action = function(v)
-            sc.mod[1].dest = ({ 'both', 1, 2 })[v]
+            sc.mod[1].dest = ({ 1, 'both', 2 })[v]
         end
     }
 end
