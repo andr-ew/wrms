@@ -65,6 +65,7 @@ Wrms = include 'wrms/lib/ui'           --nest v2 UI components
 
 --pattern recorders are only created for use with orgnwrms
 
+
 function pattern_time:resume()
     if self.count > 0 then
         self.prev_time = util.time()
@@ -94,7 +95,7 @@ nest.connect_screen(_app, 60)
 function init()
     wrms.setup()
     params:read()
-    wrms.load()
+    -- wrms.load()
 
     params:bang()
 end

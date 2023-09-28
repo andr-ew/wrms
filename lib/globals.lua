@@ -72,7 +72,7 @@ wrms.preset = {
         for k,_ in pairs(any) do s.data[id][i][k] = params:get(k) end
     end,
     recall = function(s, id, i)
-        if s.data[id][i] then for k,v in pairs(s.data[id][i]) do params:set(k, v) end end
+        -- if s.data[id][i] then for k,v in pairs(s.data[id][i]) do params:set(k, v) end end
     end,
     save = function(s)
         for id,v in pairs(s.data) do s:remember(id, s.active[id]) end

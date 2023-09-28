@@ -239,7 +239,7 @@ local sc = {
             s[pair] = buf
             cartographer.assign(reg.play[buf][slice], 1 + off, 2 + off)
 
-            wrms.preset:set('buf', (s[1]-1) + (s[2]-1)*2)
+            -- wrms.preset:set('buf', (s[1]-1) + (s[2]-1)*2)
         end
     },
     punch_in = {
@@ -269,7 +269,7 @@ local sc = {
                 sc.oldmx[buf].rec = 1; sc.oldmx:update(buf)
 
                 s[buf].manual = false
-                wrms.preset:set('manual '..buf, s[buf].manual)
+                -- wrms.preset:set('manual '..buf, s[buf].manual)
 
                 s[buf].recording = true
             elseif s[buf].recording then
@@ -292,7 +292,7 @@ local sc = {
                 reg.rec[buf]:set_length(1, 'fraction')
                 
                 s[buf].manual = true
-                wrms.preset:set('manual '..buf, s[buf].manual)
+                -- wrms.preset:set('manual '..buf, s[buf].manual)
 
                 sc.oldmx[buf].rec = 1; sc.oldmx:update(buf)
                 s[buf].play = 1; s:update_play(buf)
