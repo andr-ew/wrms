@@ -138,6 +138,7 @@ function wrms.load(n)
     for i = 1,2 do 
         params:set('tp '..i, 0)
     end
+    params:set('filter type 2', 2)
 end
 
 function wrms.reset()

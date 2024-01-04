@@ -96,6 +96,8 @@ function init()
     params:read()
     wrms.load()
 
+    params:set('filter type 2', 2, true)
+
     params:bang()
 end
 
